@@ -12,11 +12,13 @@ Plataforma interna de VEXA (4 socios): tablero de sprints y tareas, registro de 
 
 ## Stack
 
-- React + Vite + TypeScript (strict) + Tailwind CSS + React Router
+- React + Vite + TypeScript (strict) + Tailwind CSS 4 + React Router. Tailwind se integra con `@tailwindcss/vite` (sin `tailwind.config`); los colores viven como tokens en `src/index.css`.
+- Iconos: lucide-react. Alias de imports: `@/` apunta a `src/`.
 - Estado del servidor: TanStack Query. Formularios: react-hook-form + zod. Drag & drop del kanban: @dnd-kit
 - Fechas: date-fns. Zona horaria del negocio: `America/Lima` (UTC-5, sin horario de verano). Guardar fechas en ISO UTC; convertir a Lima solo para mostrar y para cortes de semana/mes.
 - PWA: vite-plugin-pwa (manifest + service worker)
-- Tests: Vitest para lógica pura (cálculos de equity, cumplimiento, reglas)
+- Tests: Vitest para lógica pura (cálculos de equity, cumplimiento, reglas, fechas). Los archivos van junto al código: `*.test.ts`.
+- Lint: **oxlint** (no ESLint), configurado en `.oxlintrc.json`.
 - Hosting: Vercel (SPA, `vercel.json` con rewrite de todas las rutas a `/index.html`)
 
 ## Comandos
@@ -24,9 +26,11 @@ Plataforma interna de VEXA (4 socios): tablero de sprints y tareas, registro de 
 ```bash
 npm run dev          # servidor local
 npm run build        # build de producción
-npm run lint         # ESLint
-npm run typecheck    # tsc --noEmit
-npm run test         # Vitest
+npm run lint         # oxlint
+npm run typecheck    # tsc -b --noEmit
+npm run test         # Vitest (una pasada)
+npm run test:watch   # Vitest en modo watch
+npm run preview      # sirve el build de producción
 ```
 
 Antes de dar una tarea por terminada: `npm run typecheck && npm run lint && npm run test && npm run build` sin errores.
@@ -50,8 +54,9 @@ src/
     index.ts                elige la implementación según VITE_DATA_SOURCE
     mock/                   implementación simulada + seed.ts
     supabase/               (vacío hasta la etapa 2)
-  lib/                      dates.ts (helpers America/Lima), utils
-public/                     íconos y manifest
+  lib/                      dates.ts (helpers America/Lima), format.ts (montos), labels.ts, utils.ts
+public/                     vexa-mark.svg (logo y favicon) e íconos PWA
+vercel.json                 rewrite de la SPA y caché de /assets
 ```
 
 ## Capa de datos
@@ -96,13 +101,14 @@ public/                     íconos y manifest
 - Textos de la UI en español (Perú). Montos en soles con formato `S/ 1,234.50`; fechas `dd/mm/yyyy`.
 - Modo claro y oscuro. Estados de carga, vacío y error en toda pantalla con datos.
 - Accesible: labels en formularios, foco visible, contraste suficiente.
+- Identidad visual tomada de vexa.space: verde de marca `#548d7b`, fondo oscuro `#0a0a0a`, superficie `#1a1a1a`; fuentes Inter (texto) y Plus Jakarta Sans (títulos). El modo claro es una derivación con variantes que cumplen contraste AA. Usa los tokens (`bg-primary-solid`, `text-primary-text`, `bg-surface`, `text-muted`…), no colores fijos.
 
 ## Convenciones
 
 - Código en inglés (`camelCase` en TS, `PascalCase` en componentes). Textos visibles en español.
 - Componentes funcionales y hooks. Sin lógica de negocio en `components/ui/`.
-- Nada de `any`. Validación de formularios con zod, reutilizando los tipos del dominio.
-- Commits en formato Conventional Commits (`feat:`, `fix:`, `chore:`…). Una rama y un PR por tarea.
+- Nada de `any` (oxlint lo marca como error). Validación de formularios con zod, reutilizando los tipos del dominio.
+- Commits en formato Conventional Commits, con el tipo en inglés y la descripción en español (`feat(domain): agrega reglas de puntos`, `fix: corrige el corte de mes`, `chore: actualiza dependencias`). Una rama y un PR por tarea.
 - No agregar librerías fuera del stack sin justificarlo.
 
 ## Cómo trabajar en este repo
