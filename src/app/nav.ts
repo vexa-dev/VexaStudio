@@ -3,8 +3,8 @@ import {
   FolderKanban,
   LayoutDashboard,
   ListChecks,
-  Receipt,
   Users,
+  Wallet,
   type LucideIcon,
 } from 'lucide-react'
 
@@ -21,6 +21,6 @@ export const navItems: NavItem[] = [
   { to: '/proyectos', label: 'Proyectos', icon: FolderKanban, mobile: false },
   { to: '/tareas', label: 'Mis tareas', icon: ListChecks, mobile: true },
   { to: '/horas', label: 'Horas', icon: Clock, mobile: true },
-  { to: '/gastos', label: 'Gastos', icon: Receipt, mobile: true },
+  { to: '/gastos', label: 'Gastos', icon: Wallet, mobile: true },
   { to: '/equipo', label: 'Equipo', icon: Users, mobile: true },
 ]

@@ -2,6 +2,7 @@ import { Check, FolderKanban, LogOut, UserRound } from 'lucide-react'
 import { useCallback, useEffect, useRef, useState, type KeyboardEvent } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { Avatar } from '@/components/ui/Avatar'
+import { Badge } from '@/components/ui/Badge'
 import { useAuth } from '@/features/auth/hooks/useAuth'
 import { useLoginProfiles } from '@/features/auth/hooks/useLoginProfiles'
 import { areaLabel } from '@/lib/labels'
@@ -9,7 +10,10 @@ import { areaLabel } from '@/lib/labels'
 const itemClass = 'flex min-h-11 w-full items-center gap-3 rounded-lg px-3 py-2 text-left text-sm hover:bg-surface-2'
 const ITEM_SELECTOR = '[role^="menuitem"]'
 
-/** Menú del usuario: cambio rápido de socio (para probar permisos), perfil y cierre de sesión. */
+/**
+ * Menú del usuario. Arriba, la navegación de la persona (perfil, proyectos, salir). Abajo, el bloque
+ * "Modo de pruebas" con el cambio rápido de socio: se retira en la etapa 2 sin rediseñar el menú.
+ */
 export function UserMenu() {
   const { user, signIn, signOut } = useAuth()
   const { data: profiles } = useLoginProfiles()
@@ -27,10 +31,8 @@ export function UserMenu() {
 
   useEffect(() => {
     if (!open) return
-    // Al abrir, el foco entra al menú: al usuario actual (o al primer ítem).
-    const items = menuRef.current?.querySelectorAll<HTMLElement>(ITEM_SELECTOR)
-    const current = menuRef.current?.querySelector<HTMLElement>('[aria-checked="true"]')
-    ;(current ?? items?.[0])?.focus()
+    // Al abrir, el foco entra al menú, en el primer ítem.
+    menuRef.current?.querySelector<HTMLElement>(ITEM_SELECTOR)?.focus()
 
     const onPointer = (e: PointerEvent) => {
       if (!containerRef.current?.contains(e.target as Node)) close(false)
@@ -80,32 +82,8 @@ export function UserMenu() {
           role="menu"
           aria-label="Menú de usuario"
           onKeyDown={onMenuKeyDown}
-          className="absolute right-0 z-30 mt-2 w-72 rounded-xl border border-border bg-surface p-2 shadow-lg"
+          className="pop-in absolute right-0 z-30 mt-2 w-72 rounded-xl border border-border bg-surface p-2 shadow-pop"
         >
-          <p className="px-3 pb-1 pt-2 text-xs font-medium uppercase tracking-wide text-muted">
-            Cambiar de usuario
-          </p>
-          {profiles?.map((p) => (
-            <button
-              key={p.id}
-              type="button"
-              role="menuitemradio"
-              aria-checked={p.id === user.id}
-              className={itemClass}
-              onClick={async () => {
-                await signIn(p.id)
-                close(true)
-              }}
-            >
-              <Avatar name={p.name} size="sm" />
-              <span className="flex min-w-0 flex-1 flex-col">
-                <span className="truncate">{p.name}</span>
-                <span className="text-xs text-muted">{areaLabel[p.area]}</span>
-              </span>
-              {p.id === user.id ? <Check className="size-4 text-primary-text" aria-hidden="true" /> : null}
-            </button>
-          ))}
-          <hr className="my-2 border-border" />
           <Link role="menuitem" to="/perfil" className={itemClass} onClick={() => close(false)}>
             <UserRound className="size-4" aria-hidden="true" /> Mi perfil
           </Link>
@@ -128,6 +106,32 @@ export function UserMenu() {
           >
             <LogOut className="size-4" aria-hidden="true" /> Cerrar sesión
           </button>
+
+          <hr className="my-2 border-border" />
+          <div className="flex items-center justify-between px-3 pb-1 pt-1.5">
+            <p className="text-xs font-medium text-muted">Cambiar de usuario</p>
+            <Badge tone="warning">Modo de pruebas</Badge>
+          </div>
+          {profiles?.map((p) => (
+            <button
+              key={p.id}
+              type="button"
+              role="menuitemradio"
+              aria-checked={p.id === user.id}
+              className={itemClass}
+              onClick={async () => {
+                await signIn(p.id)
+                close(true)
+              }}
+            >
+              <Avatar name={p.name} size="sm" />
+              <span className="flex min-w-0 flex-1 flex-col">
+                <span className="truncate">{p.name}</span>
+                <span className="text-xs text-muted">{areaLabel[p.area]}</span>
+              </span>
+              {p.id === user.id ? <Check className="size-4 text-primary-text" aria-hidden="true" /> : null}
+            </button>
+          ))}
         </div>
       ) : null}
     </div>
