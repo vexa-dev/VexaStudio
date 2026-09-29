@@ -24,3 +24,10 @@ export function formatHours(hours: number): string {
 export function formatPercent(fraction: number): string {
   return `${Math.round(fraction * 100)} %`
 }
+
+const integerFormat = new Intl.NumberFormat('en-US', { maximumFractionDigits: 0 })
+
+/** Entero con separador de miles: `1,234`. */
+export function formatInt(value: number): string {
+  return integerFormat.format(Math.round(value))
+}

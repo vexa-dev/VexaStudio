@@ -4,16 +4,14 @@
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/vexa-mark.svg" />
     <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="theme-color" content="#548d7b" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content"
+    />
+    <meta name="theme-color" content="#0a0a0a" />
+    <meta name="color-scheme" content="light dark" />
     <meta name="description" content="Plataforma interna de trabajo de VEXA." />
     <title>VEXA Studio</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@600;700;800&display=swap"
-      rel="stylesheet"
-    />
     <script>
       // Aplica el tema antes de pintar para evitar el parpadeo. Debe coincidir con ThemeProvider.
       try {
@@ -23,6 +21,9 @@
           ((stored === null || stored === 'system') &&
             window.matchMedia('(prefers-color-scheme: dark)').matches)
         if (dark) document.documentElement.classList.add('dark')
+        document
+          .querySelector('meta[name="theme-color"]')
+          .setAttribute('content', dark ? '#0a0a0a' : '#f8fafc')
       } catch (e) {}
     </script>
   </head>

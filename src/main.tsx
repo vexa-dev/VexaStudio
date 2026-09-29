@@ -5,6 +5,8 @@ import { BrowserRouter } from 'react-router-dom'
 import { registerSW } from 'virtual:pwa-register'
 import { ThemeProvider } from '@/app/ThemeProvider'
 import { AuthProvider } from '@/features/auth/AuthProvider'
+import '@fontsource-variable/inter'
+import '@fontsource-variable/plus-jakarta-sans'
 import App from './App.tsx'
 import './index.css'
 

@@ -19,6 +19,8 @@ export default defineConfig({
       registerType: 'autoUpdate',
       includeAssets: ['vexa-mark.svg', 'apple-touch-icon.png'],
       workbox: {
+        // Se precachean solo las fuentes latinas (cubren el español); el resto se pide bajo demanda.
+        globPatterns: ['**/*.{js,css,html,svg,png,ico,webmanifest}', '**/*-latin-wght-normal-*.woff2'],
         // SPA: cualquier ruta sin archivo se sirve desde el index.html precacheado.
         navigateFallback: '/index.html',
       },

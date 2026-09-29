@@ -1,3 +1,5 @@
+import type { CSSProperties } from 'react'
+
 /** Une clases CSS ignorando valores vacíos. */
 export function cn(...classes: (string | false | null | undefined)[]): string {
   return classes.filter(Boolean).join(' ')
@@ -11,4 +13,9 @@ export function initials(name: string): string {
     .slice(0, 2)
     .map((part) => part[0].toUpperCase())
     .join('')
+}
+
+/** Orden de entrada de un elemento en una secuencia escalonada (ver clase `.enter` en index.css). */
+export function stagger(index: number): CSSProperties {
+  return { '--i': index } as CSSProperties
 }
