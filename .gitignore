@@ -27,3 +27,6 @@ dist-ssr
 
 # Impeccable (estado local de la herramienta de diseño)
 .impeccable/
+
+# Binario de Impeccable: el lanzador lo descarga en la primera ejecución
+.claude/skills/impeccable/scripts/bin/
