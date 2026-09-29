@@ -35,7 +35,7 @@ export function useProjectSummaries() {
         const tasksByStatus = emptyCounts()
         for (const task of scoped) tasksByStatus[task.status] += 1
         const monthHours = entries
-          .filter((e) => projectOfTask.get(e.taskId) === project.id)
+          .filter((e) => !e.voidedAt && projectOfTask.get(e.taskId) === project.id)
           .reduce((sum, e) => sum + e.hours, 0)
         return { project, sprint, tasksByStatus, taskCount: scoped.length, monthHours }
       })

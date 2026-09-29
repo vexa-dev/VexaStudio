@@ -113,3 +113,9 @@ export function canEditEntry(
 function round2(n: number): number {
   return Math.round(n * 100) / 100
 }
+
+/** Horas entre dos instantes ISO, con 2 decimales. Nunca negativas. */
+export function hoursBetween(startedAt: string, endedAt: string): number {
+  const ms = new Date(endedAt).getTime() - new Date(startedAt).getTime()
+  return round2(Math.max(ms, 0) / (60 * 60 * 1000))
+}

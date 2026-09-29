@@ -13,7 +13,7 @@ import type {
 } from '../types'
 import { getDb, getSessionUserId, setSessionUserId } from './db'
 import { dashboard } from './dashboard'
-import { sprints, tasks, time } from './reads'
+import { sprints, tasks, time } from './work'
 import { delay, notImplemented } from './utils'
 
 const auth: AuthService = {

@@ -6,6 +6,7 @@ import {
   entryPoints,
   expenseNeedsApproval,
   expensePoints,
+  hoursBetween,
   monthlyMinimum,
   resolveExpenseStatus,
 } from './rules'
@@ -135,5 +136,15 @@ describe('canEditEntry', () => {
     const now = new Date('2026-09-02T00:00:00Z')
     expect(canEditEntry({ ...entry, validated: true }, now, settings)).toBe(false)
     expect(canEditEntry({ ...entry, voidedAt: created }, now, settings)).toBe(false)
+  })
+})
+
+describe('hoursBetween', () => {
+  it('calcula horas con 2 decimales', () => {
+    expect(hoursBetween('2026-09-01T14:00:00Z', '2026-09-01T15:30:00Z')).toBe(1.5)
+    expect(hoursBetween('2026-09-01T14:00:00Z', '2026-09-01T14:20:00Z')).toBe(0.33)
+  })
+  it('no devuelve horas negativas', () => {
+    expect(hoursBetween('2026-09-01T15:00:00Z', '2026-09-01T14:00:00Z')).toBe(0)
   })
 })
