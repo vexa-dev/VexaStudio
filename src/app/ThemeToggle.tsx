@@ -18,7 +18,7 @@ export function ThemeToggle() {
     <Button
       variant="ghost"
       size="sm"
-      className="size-9 px-0"
+      className="h-11 w-11 px-0"
       aria-label={`${info[theme].label}. Cambiar a ${info[next].label.toLowerCase()}`}
       title={info[theme].label}
       onClick={() => setTheme(next)}

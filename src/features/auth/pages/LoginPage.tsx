@@ -54,7 +54,7 @@ export default function LoginPage() {
                     type="button"
                     disabled={pendingId !== null}
                     onClick={() => choose(profile.id)}
-                    className="flex w-full items-center gap-3 rounded-xl border border-border bg-surface p-4 text-left transition hover:border-primary disabled:opacity-60"
+                    className="flex w-full items-center gap-3 rounded-xl border border-border bg-surface p-4 text-left transition motion-reduce:transition-none hover:border-primary disabled:opacity-60"
                   >
                     <Avatar name={profile.name} size="lg" />
                     <span className="flex min-w-0 flex-1 flex-col">

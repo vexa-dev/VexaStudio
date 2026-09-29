@@ -14,7 +14,7 @@ export function EmptyState({ icon: Icon, title, description, action }: EmptyStat
       <span className="flex size-12 items-center justify-center rounded-full bg-primary-soft text-primary-text">
         <Icon className="size-6" aria-hidden="true" />
       </span>
-      <h3 className="text-base font-semibold">{title}</h3>
+      <h2 className="text-base font-semibold">{title}</h2>
       {description ? <p className="max-w-sm text-sm text-muted">{description}</p> : null}
       {action}
     </div>

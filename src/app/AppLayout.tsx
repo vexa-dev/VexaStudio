@@ -17,6 +17,12 @@ function Brand() {
 export function AppLayout() {
   return (
     <div className="min-h-screen lg:pl-60">
+      <a
+        href="#contenido"
+        className="sr-only rounded-lg bg-primary-solid px-4 py-2 text-sm font-medium text-primary-fg focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-50"
+      >
+        Saltar al contenido
+      </a>
       <aside className="fixed inset-y-0 left-0 hidden w-60 flex-col gap-6 border-r border-border bg-surface p-4 lg:flex">
         <div className="px-2 pt-2">
           <Brand />
@@ -51,7 +57,7 @@ export function AppLayout() {
         </div>
       </header>
 
-      <main className="mx-auto w-full max-w-5xl px-4 pb-24 pt-6 lg:pb-10">
+      <main id="contenido" tabIndex={-1} className="mx-auto w-full max-w-5xl px-4 pb-24 pt-6 outline-none lg:pb-10">
         <Outlet />
       </main>
 
@@ -68,8 +74,10 @@ export function AppLayout() {
               end={to === '/'}
               className={({ isActive }) =>
                 cn(
-                  'flex flex-col items-center gap-0.5 py-2 text-[11px] font-medium',
-                  isActive ? 'text-primary-text' : 'text-muted',
+                  'relative flex flex-col items-center gap-0.5 py-2 text-xs font-medium',
+                  isActive
+                    ? 'font-semibold text-primary-text before:absolute before:inset-x-5 before:top-0 before:h-0.5 before:rounded-full before:bg-primary-solid'
+                    : 'text-muted',
                 )
               }
             >
