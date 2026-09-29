@@ -9,12 +9,13 @@ import { Skeleton } from '@/components/ui/Skeleton'
 import { formatIsoDate } from '@/lib/dates'
 import { formatHours } from '@/lib/format'
 import { projectStatusLabel, projectTypeLabel, taskStatusLabel } from '@/lib/labels'
+import { useFirstPlay } from '@/lib/useFirstPlay'
 import { stagger } from '@/lib/utils'
 import { useProjectSummaries, type ProjectSummary } from '../hooks/useProjectSummaries'
 
 const STATUS_ORDER = ['todo', 'in_progress', 'review', 'done'] as const
 
-function ProjectCard({ summary }: { summary: ProjectSummary }) {
+function ProjectCard({ summary, animate }: { summary: ProjectSummary; animate: boolean }) {
   const { project, sprint, tasksByStatus, taskCount, monthHours } = summary
   const done = tasksByStatus.done
   return (
@@ -37,7 +38,7 @@ function ProjectCard({ summary }: { summary: ProjectSummary }) {
               Sprint activo · {formatIsoDate(sprint.startDate)} al {formatIsoDate(sprint.endDate)}
             </p>
           </div>
-          <Meter value={done} max={Math.max(taskCount, 1)} label={`${done} de ${taskCount} tareas hechas`} className="h-2" />
+          <Meter value={done} max={Math.max(taskCount, 1)} label={`${done} de ${taskCount} tareas hechas`} className="h-2" animate={animate} />
           <ul className="grid grid-cols-2 gap-x-3 gap-y-1 text-xs text-muted">
             {STATUS_ORDER.map((status) => (
               <li key={status} className="flex justify-between gap-2">
@@ -62,6 +63,7 @@ function ProjectCard({ summary }: { summary: ProjectSummary }) {
 
 export default function ProjectsPage() {
   const { data: summaries, isLoading, isError, refetch } = useProjectSummaries()
+  const animate = useFirstPlay('projects')
 
   return (
     <>
@@ -78,7 +80,7 @@ export default function ProjectsPage() {
         <ul className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {summaries.map((summary, index) => (
             <li key={summary.project.id} className="enter" style={stagger(index + 1)}>
-              <ProjectCard summary={summary} />
+              <ProjectCard summary={summary} animate={animate} />
             </li>
           ))}
         </ul>
