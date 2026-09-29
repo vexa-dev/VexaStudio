@@ -45,6 +45,7 @@ src/
                             daily, comments, announcements, meetings, notifications
                             (cada uno: components/, hooks/, pages/)
   components/ui/            componentes reutilizables sin lógica de negocio
+                            (Button, Card, Field, Badge, Avatar, Meter, SegmentedBar, CountUp…)
   domain/
     types.ts                tipos del dominio (reflejan el modelo de datos del PRD)
     rules.ts                funciones puras: puntos, participación, cumplimiento,
@@ -54,9 +55,11 @@ src/
     index.ts                elige la implementación según VITE_DATA_SOURCE
     mock/                   implementación simulada + seed.ts
     supabase/               (vacío hasta la etapa 2)
-  lib/                      dates.ts (helpers America/Lima), format.ts (montos), labels.ts, utils.ts
+  lib/                      dates.ts (helpers America/Lima), format.ts (montos y cifras), labels.ts,
+                            utils.ts, useFirstPlay.ts y useReducedMotion.ts (política de movimiento)
 public/                     vexa-mark.svg (logo y favicon) e íconos PWA
 vercel.json                 rewrite de la SPA y caché de /assets
+PRODUCT.md, DESIGN.md       contexto de producto y sistema visual (los usa Impeccable)
 ```
 
 ## Capa de datos
@@ -64,6 +67,7 @@ vercel.json                 rewrite de la SPA y caché de /assets
 - Cada módulo tiene una interfaz en `services/types.ts` con métodos asíncronos (devuelven `Promise`), como si hablaran con una API real.
 - `services/mock/` implementa esas interfaces con datos en memoria, persistidos en `localStorage` para que sobrevivan al recargar, y con un pequeño retraso artificial (150–300 ms) para probar estados de carga.
 - `services/index.ts` exporta la implementación según `VITE_DATA_SOURCE` (`mock` por defecto; `supabase` en la etapa 2).
+- Estado del mock: implementados Auth, Settings, Members, Projects, Dashboard (resumen mensual y puntos, con `domain/rules.ts`) y las lecturas de Sprints, Tasks y Time. Las escrituras y el resto de servicios fallan con un mensaje claro (`pending`/`notImplemented` en `mock/utils.ts`) hasta su bloque F2–F4.
 - Los hooks de `features/*/hooks` usan TanStack Query sobre los servicios. Los componentes solo usan hooks.
 - Los cálculos de equity y cumplimiento viven en `domain/rules.ts`. El mock los usa para generar el resumen; en la etapa 2 el cálculo pasa a vistas SQL y el frontend solo lo lee, con el mismo tipo de resultado.
 - Los permisos (quién puede editar qué) se aplican en el servicio mock igual que lo hará RLS después; la UI además oculta lo que no corresponde.
@@ -101,7 +105,21 @@ vercel.json                 rewrite de la SPA y caché de /assets
 - Textos de la UI en español (Perú). Montos en soles con formato `S/ 1,234.50`; fechas `dd/mm/yyyy`.
 - Modo claro y oscuro. Estados de carga, vacío y error en toda pantalla con datos.
 - Accesible: labels en formularios, foco visible, contraste suficiente.
-- Identidad visual tomada de vexa.space: verde de marca `#548d7b`, fondo oscuro `#0a0a0a`, superficie `#1a1a1a`; fuentes Inter (texto) y Plus Jakarta Sans (títulos). El modo claro es una derivación con variantes que cumplen contraste AA. Usa los tokens (`bg-primary-solid`, `text-primary-text`, `bg-surface`, `text-muted`…), no colores fijos.
+- Identidad visual tomada de vexa.space: verde de marca `#548d7b`, fondo oscuro `#0a0a0a`, superficie `#1a1a1a`; fuentes Inter (texto) y Plus Jakarta Sans (títulos), autoalojadas con `@fontsource-variable` para que la PWA funcione sin conexión. El modo claro es una derivación con variantes que cumplen contraste AA. Usa los tokens (`bg-primary-solid`, `text-primary-text`, `bg-surface`, `text-muted`, `shadow-card`…), no colores fijos. El detalle del sistema está en `DESIGN.md`; el contexto de producto, en `PRODUCT.md`.
+- Cifras de datos (horas, puntos, %, montos) con la clase `.num` (tabulares, sin saltos al animar). El estado nunca depende solo del color: siempre va acompañado de texto.
+- Componentes de datos ya disponibles en `components/ui/`: `Meter` (progreso con marca de umbral), `SegmentedBar` (reparto entre personas), `CountUp` (cifra que cuenta), `Card` (tonos `default`, `raised`, `accent`). Reutilízalos antes de crear otros.
+- Movimiento: solo `transform`, `opacity` y `clip-path`; curva `--ease-out`; entradas escalonadas de 60 ms con `.enter` y `stagger(i)`. Las animaciones de datos (barras, contadores) se reproducen solo la primera vez por sesión (`useFirstPlay`). Nada de animación en acciones frecuentes o de teclado. Con `prefers-reduced-motion` se conserva el cambio de estado (opacidad) y se quita el desplazamiento.
+- Nativo en móvil: objetivos táctiles de 44 px, `dvh`, áreas seguras, `touch-action: manipulation`, sin resaltado de toque; los estilos `hover` solo con puntero fino.
+- Tras cualquier cambio de UI, el hook de Impeccable revisa el archivo; el detector completo se corre con `.claude/skills/impeccable/scripts/impeccable detect src` y debe devolver `[]`.
+
+## Skills del proyecto
+
+Las skills viven en `.claude/skills` (registro en `skills-lock.json`). Úsalas así:
+
+- **Diseño y UI**: `impeccable` es el eje (`shape` para planear, `critique`/`audit` para evaluar, `polish` para cerrar, `document` para actualizar `DESIGN.md`). Complementan `emil-design-eng` (detalles y estados), `animate`, `animation-vocabulary` y `review-animations` (movimiento), `mobile-native` (sensación de app instalada), `apple-design` (resortes y gestos, para el temporizador y las hojas de F2) y `accessibility`.
+- **Código**: `react-best-practices`, `composition-patterns`, `tailwind-css-patterns`, `react-hook-form`, `zod`, `vitest`, `vite`, `oxlint`, `typescript-advanced-types`. `ask-sonner` para avisos tipo toast y `pick-ui-library` solo si hace falta una librería nueva (justificarla antes).
+- **No usar**: `industrial-brutalist-ui`, `minimalist-ui`, `gpt-taste`, `stitch-design-taste`, `design-taste-frontend`, `high-end-visual-design`, `redesign-existing-projects` y `brandkit` (chocan con la identidad fija de VEXA); `imagegen-*` e `image-to-code` (no hay generación de imágenes); `animate-expo`, `write-swift`, `nodejs-*` y `seo` (no aplican a este proyecto).
+- La identidad de VEXA es una decisión de marca: el trabajo visual **extiende** el sistema existente, no lo reemplaza.
 
 ## Convenciones
 

@@ -64,3 +64,27 @@ src/
 ```
 
 Las pantallas nunca importan datos simulados directamente: pasan por `src/services`. Más detalle de convenciones en [`CLAUDE.md`](CLAUDE.md).
+
+## Documentos del proyecto
+
+| Documento | Para qué sirve |
+| --- | --- |
+| [`docs/PRD.md`](docs/PRD.md) | Fuente de verdad del alcance y las reglas. |
+| [`docs/acuerdo-socios.md`](docs/acuerdo-socios.md) | Acuerdo de socios del que salen las reglas de negocio. |
+| [`CLAUDE.md`](CLAUDE.md) | Convenciones de código, capa de datos y cómo trabajar en el repo. |
+| [`PRODUCT.md`](PRODUCT.md) | Contexto de producto: usuarios, propósito, restricciones y principios. |
+| [`DESIGN.md`](DESIGN.md) | Sistema visual: colores, tipografía, componentes y movimiento. |
+
+## Avance del frontend
+
+- F1 Base: hecho (rutas, layout responsive, tema claro y oscuro, servicios simulados, login con los 4 socios, PWA).
+- Sistema visual y pantalla de Inicio (reparto de participación y cumplimiento del mes): hecho.
+- F2 Trabajo (kanban, temporizador y horas), F3 Control y F4 Equipo: pendientes.
+
+## Herramientas de diseño
+
+El repositorio incluye skills de diseño y código en `.claude/skills` (registro en `skills-lock.json`). El detector de Impeccable revisa la interfaz:
+
+```bash
+.claude/skills/impeccable/scripts/impeccable detect src   # debe devolver []
+```
