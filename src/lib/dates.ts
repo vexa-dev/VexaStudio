@@ -6,6 +6,7 @@ import {
   startOfMonth,
   startOfWeek,
 } from 'date-fns'
+import { es } from 'date-fns/locale'
 
 /** Zona horaria del negocio (UTC-5, sin horario de verano). */
 export const LIMA_TZ = 'America/Lima'
@@ -49,4 +50,16 @@ export function weekRange(value: Date | string): { start: Date; end: Date } {
     start: new Date(startOfWeek(value, WEEK_OPTIONS).getTime()),
     end: new Date(endOfWeek(value, WEEK_OPTIONS).getTime()),
   }
+}
+
+/** Etiqueta de un mes `YYYY-MM`: `Septiembre 2026`. */
+export function formatMonthLabel(month: string): string {
+  const label = format(new Date(`${month}-15T12:00:00Z`), 'LLLL yyyy', { ...inLima, locale: es })
+  return label.charAt(0).toUpperCase() + label.slice(1)
+}
+
+/** `dd/mm/yyyy` de una fecha sin hora (`YYYY-MM-DD`). No pasa por zonas horarias: ya es fecha de Lima. */
+export function formatIsoDate(date: string): string {
+  const [year, month, day] = date.split('-')
+  return `${day}/${month}/${year}`
 }

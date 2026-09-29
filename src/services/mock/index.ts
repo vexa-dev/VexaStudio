@@ -3,7 +3,6 @@ import type {
   AuthService,
   CommentService,
   DailyService,
-  DashboardService,
   ExpenseService,
   MeetingService,
   MemberService,
@@ -11,11 +10,10 @@ import type {
   ProjectService,
   Services,
   SettingsService,
-  SprintService,
-  TaskService,
-  TimeService,
 } from '../types'
 import { getDb, getSessionUserId, setSessionUserId } from './db'
+import { dashboard } from './dashboard'
+import { sprints, tasks, time } from './reads'
 import { delay, notImplemented } from './utils'
 
 const auth: AuthService = {
@@ -70,11 +68,11 @@ export function createMockServices(): Services {
     settings,
     members,
     projects,
-    sprints: notImplemented<SprintService>('SprintService'),
-    tasks: notImplemented<TaskService>('TaskService'),
-    time: notImplemented<TimeService>('TimeService'),
+    sprints,
+    tasks,
+    time,
     expenses: notImplemented<ExpenseService>('ExpenseService'),
-    dashboard: notImplemented<DashboardService>('DashboardService'),
+    dashboard,
     daily: notImplemented<DailyService>('DailyService'),
     comments: notImplemented<CommentService>('CommentService'),
     announcements: notImplemented<AnnouncementService>('AnnouncementService'),

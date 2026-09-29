@@ -18,3 +18,8 @@ export function notImplemented<T extends object>(name: string): T {
     },
   })
 }
+
+/** Método de escritura aún sin implementar en el mock (llega en su bloque). */
+export function pending(name: string): () => Promise<never> {
+  return () => Promise.reject(new Error(`${name} aún no está implementado en el mock`))
+}

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { formatDate, formatDateTime, monthKey, monthRange, todayLima, weekRange } from './dates'
+import { formatDate, formatDateTime, formatIsoDate, formatMonthLabel, monthKey, monthRange, todayLima, weekRange } from './dates'
 import { formatMoney, formatPen } from './format'
 
 describe('fechas en Lima', () => {
@@ -39,5 +39,19 @@ describe('montos', () => {
   })
   it('formatea dólares', () => {
     expect(formatMoney(13, 'USD')).toBe('US$ 13.00')
+  })
+})
+
+describe('etiqueta de mes', () => {
+  it('escribe el mes en español con mayúscula inicial', () => {
+    expect(formatMonthLabel('2026-09')).toBe('Septiembre 2026')
+    expect(formatMonthLabel('2027-02')).toBe('Febrero 2027')
+  })
+})
+
+describe('fechas sin hora', () => {
+  it('formatea YYYY-MM-DD sin desplazarla por zona horaria', () => {
+    expect(formatIsoDate('2026-09-01')).toBe('01/09/2026')
+    expect(formatIsoDate('2027-02-23')).toBe('23/02/2027')
   })
 })
