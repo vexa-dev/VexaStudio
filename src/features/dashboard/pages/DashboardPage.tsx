@@ -1,5 +1,6 @@
-import { CalendarOff } from 'lucide-react'
+import { CalendarOff, ChevronRight } from 'lucide-react'
 import { useState } from 'react'
+import { Link } from 'react-router-dom'
 import { Avatar } from '@/components/ui/Avatar'
 import { Card } from '@/components/ui/Card'
 import { CountUp } from '@/components/ui/CountUp'
@@ -17,6 +18,7 @@ import { areaLabel } from '@/lib/labels'
 import { useFirstPlay } from '@/lib/useFirstPlay'
 import { stagger } from '@/lib/utils'
 import { useMonthlySummary, usePoints } from '../hooks/useDashboard'
+import { usePendingActions } from '../hooks/usePendingActions'
 import { useSettings } from '@/features/settings/hooks/useSettings'
 
 /** Escala del medidor: deja espacio después del mínimo para que las horas extra también se vean. */
@@ -29,6 +31,7 @@ export default function DashboardPage() {
   const monthly = useMonthlySummary(month)
   const points = usePoints()
   const settings = useSettings()
+  const pendingActions = usePendingActions(user?.id)
   // Barras y contadores se animan la primera vez en la sesión; en las visitas siguientes aparecen ya listos.
   const animate = useFirstPlay('dashboard')
 
@@ -107,12 +110,51 @@ export default function DashboardPage() {
       value: pointsOf(m.id)?.totalPoints ?? 0,
       highlight: m.id === user.id,
     }))
+  const pendingRows = [
+    ...(pendingActions.data && pendingActions.data.expensesToVote > 0
+      ? [
+          {
+            to: '/gastos',
+            label:
+              pendingActions.data.expensesToVote === 1
+                ? 'Tienes 1 gasto por votar'
+                : `Tienes ${pendingActions.data.expensesToVote} gastos por votar`,
+          },
+        ]
+      : []),
+    ...(pendingActions.data?.hoursToValidate ?? []).map((item) => ({
+      to: `/proyectos/${item.projectId}/cierre`,
+      label: `Hay ${item.count} registros de horas por validar en ${item.projectName}`,
+    })),
+  ]
   const shareSummary = `Reparto de participación: ${segments.map((s) => `${s.label} ${s.caption}`).join(', ')}`
 
   return (
     <>
       {header}
       <div className="grid gap-4 lg:grid-cols-[1.5fr_1fr]">
+        {pendingRows.length > 0 ? (
+          <section aria-labelledby="pendientes" className="enter lg:col-span-2" style={stagger(0)}>
+            <Card tone="accent" className="p-0 sm:p-0">
+              <h2 id="pendientes" className="px-4 pb-1 pt-3.5 text-base font-semibold">
+                Para ti ahora
+              </h2>
+              <ul>
+                {pendingRows.map((row) => (
+                  <li key={row.to}>
+                    <Link
+                      to={row.to}
+                      className="flex min-h-12 items-center justify-between gap-3 px-4 py-2 text-sm font-medium hover:bg-primary-soft"
+                    >
+                      <span>{row.label}</span>
+                      <ChevronRight className="size-4 shrink-0 text-primary-text" aria-hidden="true" />
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </Card>
+          </section>
+        ) : null}
         <section aria-labelledby="reparto" className="enter" style={stagger(1)}>
           <Card tone="raised" className="flex h-full flex-col gap-5">
             <h2 id="reparto" className="text-base font-semibold">
