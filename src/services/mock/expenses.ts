@@ -120,8 +120,12 @@ export const comments: CommentService = {
       createdAt: new Date().toISOString(),
     }
     getDb().comments.push(comment)
+    // Para llevar al mencionado al tablero de la tarea, el aviso guarda su proyecto.
+    const projectId = entity === 'task' ? (getDb().tasks.find((t) => t.id === entityId)?.projectId ?? '') : ''
     for (const id of comment.mentions) {
-      if (id !== user.id) notify(id, 'mention', { by: user.id, entity, entityId, excerpt: comment.text.slice(0, 80) })
+      if (id !== user.id) {
+        notify(id, 'mention', { by: user.id, entity, entityId, projectId, excerpt: comment.text.slice(0, 80) })
+      }
     }
     save()
     return delay(comment)

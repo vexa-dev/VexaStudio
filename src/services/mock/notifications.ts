@@ -51,7 +51,7 @@ export function syncReminders(user: Profile, now: Date): void {
     notify(
       user.id,
       'renewal',
-      { recurringId: item.id, days: String(days), threshold: String(threshold) },
+      { recurringId: item.id, concept: item.concept, days: String(days), threshold: String(threshold) },
       `rem-renewal-${item.id}-${item.nextDate}-${threshold}-${user.id}`,
     )
   }

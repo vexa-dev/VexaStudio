@@ -146,7 +146,7 @@ export function buildSeed(now: Date): MockDb {
     ],
     absences: [],
     notifications: [
-      { id: 'n-1', userId: USER.rober, type: 'mention', payload: { by: USER.diego, entity: 'task', entityId: 't-5', excerpt: '@Rober ¿el mínimo se calcula por mes calendario de Lima?' }, read: false, createdAt: ago(1) },
+      { id: 'n-1', userId: USER.rober, type: 'mention', payload: { by: USER.diego, entity: 'task', entityId: 't-5', projectId: 'p-vexa', excerpt: '@Rober ¿el mínimo se calcula por mes calendario de Lima?' }, read: false, createdAt: ago(1) },
       { id: 'n-2', userId: USER.jose, type: 'expense_vote', payload: { expenseId: 'e-2' }, read: false, createdAt: ago(2) },
       { id: 'n-3', userId: USER.diego, type: 'daily_pending', payload: { date: dateOffset(0) }, read: false, createdAt: ago(0) },
       { id: 'n-4', userId: USER.jose, type: 'hours_missing', payload: {}, read: true, createdAt: ago(3) },
