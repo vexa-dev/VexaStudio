@@ -75,3 +75,13 @@ export function daysUntil(date: string, now: Date = new Date()): number {
   const day = (iso: string) => Date.parse(`${iso}T00:00:00Z`)
   return Math.round((day(date) - day(todayLima(now))) / (24 * 60 * 60 * 1000))
 }
+
+/** Día de la semana en Lima: 0 = domingo … 6 = sábado. */
+export function limaWeekday(now: Date = new Date()): number {
+  return Number(format(now, 'i', inLima)) % 7
+}
+
+/** Hora del día en Lima, en formato 24 horas (por ejemplo, 21:00). */
+export function limaTime(now: Date = new Date()): string {
+  return format(now, 'HH:mm', inLima)
+}

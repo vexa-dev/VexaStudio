@@ -1,4 +1,4 @@
-import type { AuditAction, Id, Profile } from '@/domain/types'
+import type { AuditAction, Id, NotificationType, Profile } from '@/domain/types'
 import { getDb, getSessionUserId } from './db'
 
 /** Quién actúa y cómo se deja constancia: helpers compartidos por los servicios del mock. */
@@ -44,4 +44,21 @@ export function audit(table: string, recordId: Id, action: AuditAction, before: 
 /** Socios que votan gastos: activos y con rol de admin o socio. */
 export function votingPartners(): Profile[] {
   return getDb().profiles.filter((p) => p.active && p.role !== 'collaborator')
+}
+
+/**
+ * Deja un aviso in-app para una persona. Con un id fijo es idempotente (los recordatorios usan ids fijos para
+ * no repetirse). En la etapa 2 esto lo hacen triggers y pg_cron, y el push llega por Web Push.
+ */
+export function notify(userId: Id, type: NotificationType, payload: Record<string, string>, id?: string) {
+  const db = getDb()
+  if (id && db.notifications.some((n) => n.id === id)) return
+  db.notifications.push({
+    id: id ?? newId('n'),
+    userId,
+    type,
+    payload,
+    read: false,
+    createdAt: new Date().toISOString(),
+  })
 }

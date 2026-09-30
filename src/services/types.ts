@@ -192,6 +192,8 @@ export interface MeetingService {
   confirm(meetingId: Id, slotId: Id, meetLink: string): Promise<MeetingDetail>
   /** Solo el product owner. */
   markAttendance(meetingId: Id, attendeeIds: Id[]): Promise<MeetingDetail>
+  /** Reuniones ya realizadas, la más reciente primero (para ver la asistencia). */
+  listPast(): Promise<Meeting[]>
 }
 
 export interface NotificationService {

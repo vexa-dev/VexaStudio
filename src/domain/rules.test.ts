@@ -7,6 +7,7 @@ import {
   expenseNeedsApproval,
   expensePoints,
   hoursBetween,
+  missedMeetingsInARow,
   monthlyMinimum,
   resolveExpenseStatus,
 } from './rules'
@@ -146,5 +147,21 @@ describe('hoursBetween', () => {
   })
   it('no devuelve horas negativas', () => {
     expect(hoursBetween('2026-09-01T15:00:00Z', '2026-09-01T14:00:00Z')).toBe(0)
+  })
+})
+
+describe('missedMeetingsInARow', () => {
+  const held = (week: string, attendeeIds: string[]) => ({ status: 'held' as const, week, attendeeIds })
+  it('cuenta las ausencias seguidas desde la reunión más reciente', () => {
+    const meetings = [held('2026-09-07', ['a', 'b']), held('2026-09-14', ['a']), held('2026-09-21', ['a'])]
+    expect(missedMeetingsInARow(meetings, 'b')).toBe(2)
+  })
+  it('una asistencia corta la racha', () => {
+    const meetings = [held('2026-09-07', ['a']), held('2026-09-14', ['a', 'b']), held('2026-09-21', ['a'])]
+    expect(missedMeetingsInARow(meetings, 'b')).toBe(1)
+  })
+  it('ignora las reuniones que no se realizaron', () => {
+    const meetings = [held('2026-09-14', ['a']), { status: 'polling' as const, week: '2026-09-21', attendeeIds: [] }]
+    expect(missedMeetingsInARow(meetings, 'b')).toBe(1)
   })
 })

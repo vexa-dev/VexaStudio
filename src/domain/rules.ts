@@ -3,6 +3,7 @@ import type {
   ExpenseStatus,
   ExpenseVote,
   MemberPoints,
+  Meeting,
   Settings,
   TimeEntry,
 } from './types'
@@ -118,4 +119,21 @@ function round2(n: number): number {
 export function hoursBetween(startedAt: string, endedAt: string): number {
   const ms = new Date(endedAt).getTime() - new Date(startedAt).getTime()
   return round2(Math.max(ms, 0) / (60 * 60 * 1000))
+}
+
+/**
+ * Reuniones seguidas a las que faltó una persona, contando desde la más reciente hacia atrás y solo
+ * entre las reuniones ya realizadas. Dos seguidas cuentan como incumplimiento (ver PRD).
+ */
+export function missedMeetingsInARow(
+  meetings: Pick<Meeting, 'status' | 'week' | 'attendeeIds'>[],
+  userId: string,
+): number {
+  const held = meetings.filter((m) => m.status === 'held').sort((a, b) => b.week.localeCompare(a.week))
+  let missed = 0
+  for (const meeting of held) {
+    if (meeting.attendeeIds.includes(userId)) break
+    missed += 1
+  }
+  return missed
 }
