@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { formatDate, formatDateTime, formatIsoDate, formatMonthLabel, monthKey, monthRange, todayLima, weekRange } from './dates'
+import { formatDate, formatDateTime, formatIsoDate, daysUntil, formatMonthLabel, monthKey, monthRange, todayLima, weekRange } from './dates'
 import { formatClock, formatMoney, formatPen } from './format'
 
 describe('fechas en Lima', () => {
@@ -62,5 +62,15 @@ describe('reloj del temporizador', () => {
     expect(formatClock(65_000)).toBe('0:01:05')
     expect(formatClock(3_725_000)).toBe('1:02:05')
     expect(formatClock(-500)).toBe('0:00:00')
+  })
+})
+
+describe('días hasta una fecha', () => {
+  it('cuenta días de calendario desde hoy en Lima', () => {
+    // 2027-01-24 03:00 UTC = 2027-01-23 22:00 en Lima
+    const now = new Date('2027-01-24T03:00:00Z')
+    expect(daysUntil('2027-02-23', now)).toBe(31)
+    expect(daysUntil('2027-01-23', now)).toBe(0)
+    expect(daysUntil('2027-01-20', now)).toBe(-3)
   })
 })
