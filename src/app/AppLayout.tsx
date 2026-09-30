@@ -1,6 +1,10 @@
+import { Suspense } from 'react'
 import { NavLink, Outlet } from 'react-router-dom'
 import { Avatar } from '@/components/ui/Avatar'
+import { Skeleton } from '@/components/ui/Skeleton'
 import { useAuth } from '@/features/auth/hooks/useAuth'
+import { TimerBar, TimerChip } from '@/features/time/components/TimerBar'
+import { useRunningEntry } from '@/features/time/hooks/useTime'
 import { areaLabel, roleLabel } from '@/lib/labels'
 import { cn } from '@/lib/utils'
 import { navItems } from './nav'
@@ -19,6 +23,7 @@ function Brand() {
 /** Sidebar en escritorio (lg) y barra inferior en móvil. */
 export function AppLayout() {
   const { user } = useAuth()
+  const hasTimer = Boolean(useRunningEntry().data)
   return (
     <div className="min-h-dvh lg:pl-60">
       <a
@@ -72,14 +77,22 @@ export function AppLayout() {
           <Brand />
         </span>
         <div className="ml-auto flex items-center gap-1">
+          <TimerChip />
           <ThemeToggle />
           <UserMenu />
         </div>
       </header>
 
-      <main id="contenido" tabIndex={-1} className="mx-auto w-full max-w-6xl px-4 pb-28 pt-6 outline-none lg:px-8 lg:pb-12 lg:pt-8">
-        <Outlet />
+      <main id="contenido" tabIndex={-1} className={cn(
+          'mx-auto w-full max-w-6xl px-4 pt-6 outline-none lg:px-8 lg:pb-12 lg:pt-8',
+          hasTimer ? 'pb-44' : 'pb-28',
+        )}>
+        <Suspense fallback={<Skeleton className="h-64" />}>
+          <Outlet />
+        </Suspense>
       </main>
+
+      <TimerBar />
 
       <nav
         aria-label="Principal móvil"

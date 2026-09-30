@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { formatDate, formatDateTime, formatIsoDate, formatMonthLabel, monthKey, monthRange, todayLima, weekRange } from './dates'
-import { formatMoney, formatPen } from './format'
+import { formatClock, formatMoney, formatPen } from './format'
 
 describe('fechas en Lima', () => {
   it('formatea dd/mm/yyyy en hora de Lima', () => {
@@ -53,5 +53,14 @@ describe('fechas sin hora', () => {
   it('formatea YYYY-MM-DD sin desplazarla por zona horaria', () => {
     expect(formatIsoDate('2026-09-01')).toBe('01/09/2026')
     expect(formatIsoDate('2027-02-23')).toBe('23/02/2027')
+  })
+})
+
+describe('reloj del temporizador', () => {
+  it('formatea la duración como h:mm:ss', () => {
+    expect(formatClock(0)).toBe('0:00:00')
+    expect(formatClock(65_000)).toBe('0:01:05')
+    expect(formatClock(3_725_000)).toBe('1:02:05')
+    expect(formatClock(-500)).toBe('0:00:00')
   })
 })

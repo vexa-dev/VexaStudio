@@ -31,3 +31,12 @@ const integerFormat = new Intl.NumberFormat('en-US', { maximumFractionDigits: 0 
 export function formatInt(value: number): string {
   return integerFormat.format(Math.round(value))
 }
+
+/** Duración en reloj: `1:05:09` (horas sin ceros a la izquierda). */
+export function formatClock(ms: number): string {
+  const total = Math.max(Math.floor(ms / 1000), 0)
+  const hours = Math.floor(total / 3600)
+  const minutes = String(Math.floor((total % 3600) / 60)).padStart(2, '0')
+  const seconds = String(total % 60).padStart(2, '0')
+  return `${hours}:${minutes}:${seconds}`
+}
