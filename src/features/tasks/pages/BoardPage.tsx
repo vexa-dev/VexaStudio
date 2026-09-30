@@ -1,4 +1,4 @@
-import { ArrowLeft, CalendarPlus, Plus } from 'lucide-react'
+import { ArrowLeft, CalendarPlus, Flag, Plus } from 'lucide-react'
 import { useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { Button } from '@/components/ui/Button'
@@ -124,10 +124,18 @@ export default function BoardPage() {
         title={project.data.name}
         description={`${activeSprint.goal} · ${formatIsoDate(activeSprint.startDate)} al ${formatIsoDate(activeSprint.endDate)}`}
         actions={
-          <Button onClick={() => openTask()}>
-            <Plus className="size-4" aria-hidden="true" />
-            Nueva tarea
-          </Button>
+          <div className="flex flex-wrap gap-2">
+            <Link to={`/proyectos/${projectId}/cierre`}>
+              <Button variant="secondary">
+                <Flag className="size-4" aria-hidden="true" />
+                Cierre de sprint
+              </Button>
+            </Link>
+            <Button onClick={() => openTask()}>
+              <Plus className="size-4" aria-hidden="true" />
+              Nueva tarea
+            </Button>
+          </div>
         }
       />
 

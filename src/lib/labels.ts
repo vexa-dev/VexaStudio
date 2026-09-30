@@ -1,4 +1,4 @@
-import type { Area, ProjectStatus, ProjectType, Role, TaskStatus } from '@/domain/types'
+import type { Area, ExpenseCategory, ExpenseStatus, ProjectStatus, ProjectType, Role, TaskStatus } from '@/domain/types'
 
 export const roleLabel: Record<Role, string> = {
   admin: 'Admin',
@@ -30,4 +30,19 @@ export const taskStatusLabel: Record<TaskStatus, string> = {
   in_progress: 'En progreso',
   review: 'En revisión',
   done: 'Hecho',
+}
+
+export const expenseCategoryLabel: Record<ExpenseCategory, string> = {
+  infrastructure: 'Infraestructura',
+  software: 'Software',
+  marketing: 'Marketing',
+  legal: 'Legal',
+  other: 'Otro',
+}
+
+export const expenseStatusLabel: Record<ExpenseStatus, string> = {
+  pending: 'Pendiente de votos',
+  approved: 'Aprobado',
+  rejected: 'Rechazado',
+  voided: 'Anulado',
 }

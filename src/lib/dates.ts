@@ -69,3 +69,9 @@ export function formatDayHeading(value: Date | string): string {
   const label = format(value, 'EEEE dd/MM', { ...inLima, locale: es })
   return label.charAt(0).toUpperCase() + label.slice(1)
 }
+
+/** Días de calendario entre hoy (Lima) y una fecha `YYYY-MM-DD`. Negativo si ya pasó. */
+export function daysUntil(date: string, now: Date = new Date()): number {
+  const day = (iso: string) => Date.parse(`${iso}T00:00:00Z`)
+  return Math.round((day(date) - day(todayLima(now))) / (24 * 60 * 60 * 1000))
+}

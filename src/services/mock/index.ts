@@ -1,9 +1,7 @@
 import type {
   AnnouncementService,
   AuthService,
-  CommentService,
   DailyService,
-  ExpenseService,
   MeetingService,
   MemberService,
   NotificationService,
@@ -13,6 +11,7 @@ import type {
 } from '../types'
 import { getDb, getSessionUserId, setSessionUserId } from './db'
 import { dashboard } from './dashboard'
+import { comments, expenses } from './expenses'
 import { sprints, tasks, time } from './work'
 import { delay, notImplemented } from './utils'
 
@@ -71,10 +70,10 @@ export function createMockServices(): Services {
     sprints,
     tasks,
     time,
-    expenses: notImplemented<ExpenseService>('ExpenseService'),
+    expenses,
     dashboard,
     daily: notImplemented<DailyService>('DailyService'),
-    comments: notImplemented<CommentService>('CommentService'),
+    comments,
     announcements: notImplemented<AnnouncementService>('AnnouncementService'),
     meetings: notImplemented<MeetingService>('MeetingService'),
     notifications: notImplemented<NotificationService>('NotificationService'),

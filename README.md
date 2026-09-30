@@ -80,7 +80,8 @@ Las pantallas nunca importan datos simulados directamente: pasan por `src/servic
 - F1 Base: hecho (rutas, layout responsive, tema claro y oscuro, servicios simulados, login con los 4 socios, PWA).
 - Sistema visual y pantalla de Inicio (reparto de participación y cumplimiento del mes): hecho.
 - F2 Trabajo: hecho (sprints, tablero kanban con arrastre, temporizador global, registro manual, edición y anulación de horas, Mis tareas).
-- F3 Control (gastos, votación, dashboard completo, cierre de sprint) y F4 Equipo (daily, comentarios, anuncios, reunión, notificaciones): pendientes.
+- F3 Control: hecho (gastos con comprobante y votación de 3 votos, gastos recurrentes, validación de horas entre socios, cierre de sprint y sección "Para ti ahora" en Inicio).
+- F4 Equipo (daily, comentarios con @menciones, anuncios, reunión semanal, notificaciones y PWA): pendiente.
 
 ## Herramientas de diseño
 

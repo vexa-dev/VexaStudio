@@ -224,7 +224,7 @@ Cuatro variantes; altura 44 px en ambos tamaños (`md` con más relleno horizont
 Radio 12 px, borde de 1 px, `p-4`/`sm:p-5`. Tonos: `default` (superficie), `raised` (con sombra card) y `accent` (borde `primary/30` sobre `primary-soft`).
 
 ### Badge
-Píldora `text-xs font-medium`. `primary` usa `primary-soft` con `primary-text`; `neutral`, `success`, `warning` y `danger` van sobre `surface-2` y solo cambian el color del texto. El estado se lee por la palabra.
+Píldora `text-xs font-medium`. `primary` usa `primary-soft` con `primary-text`; `neutral`, `success`, `warning` y `danger` van sobre `surface-2` y solo cambian el color del texto. El estado se lee por la palabra (en gastos: pendiente `warning`, aprobado `success`, rechazado `danger`, anulado `neutral`).
 
 ### Inputs / Fields
 `Field`, `SelectField` y `TextareaField` comparten cáscara: label visible `text-sm font-medium`, control de `min-h-11`, borde `border`, fondo `surface`, radio 8 px. La textarea añade `min-h-24`. Error: borde `danger`, `aria-invalid` y mensaje `text-danger` enlazado con `aria-describedby`; la ayuda (`muted`) se muestra solo si no hay error. Foco por el anillo global de 2 px. Los formularios usan react-hook-form con zod y validan al enviar (`noValidate`).
@@ -236,7 +236,30 @@ Barra inferior móvil (5 columnas, `text-xs`, ícono 20 px): el activo va en `pr
 Menú de 18 rem, `pop-in` de 160 ms desde arriba a la derecha, `shadow-pop`. El foco entra al primer ítem, flechas/Inicio/Fin navegan, Esc cierra y devuelve el foco, Tab cierra. Contiene el cambio rápido de socio (modo de pruebas).
 
 ### Sheet (hoja modal)
-`<dialog>` nativo con `showModal()`: atrapa el foco, cierra con Esc o al tocar el fondo y devuelve el foco. En móvil se ancla abajo, a todo el ancho, con esquinas superiores de 16 px y alto máximo de 92 dvh; desde `sm` se centra con `max-w-lg` y 16 px en todas las esquinas. Cabecera con título `text-lg font-semibold`, descripción `muted` y botón "Cerrar" de 44 px, separada del cuerpo por un borde; el cuerpo desplaza y respeta el área segura inferior. Fondo `black/50`, `shadow-pop`. Entra con `sheet-up` (260 ms, sube 24 px, `--ease-drawer`) en móvil y `sheet-in` (200 ms, escala 0.97, `--ease-out`) desde `sm`; con movimiento reducido solo hace fundido.
+`<dialog>` nativo con `showModal()`: atrapa el foco, cierra con Esc o al tocar el fondo y devuelve el foco. En móvil se ancla abajo, a todo el ancho, con esquinas superiores de 16 px y alto máximo de 92 dvh; desde `sm` se centra con `max-w-lg` y 16 px en todas las esquinas. Cabecera con título `text-lg font-semibold`, descripción `muted` y botón "Cerrar" de 44 px, separada del cuerpo por un borde; el cuerpo desplaza y respeta el área segura inferior. Fondo `black/50`, `shadow-pop`. Entra con `sheet-up` (260 ms, sube 24 px, `--ease-drawer`) en móvil y `sheet-in` (200 ms, escala 0.97, `--ease-out`) desde `sm`; con movimiento reducido solo hace fundido. Las variantes con formulario o confirmación (`ReasonSheet`, comprobante, cierre de sprint) reutilizan esta misma hoja.
+
+### ReasonSheet (hoja con motivo obligatorio)
+Una `Sheet` con un solo campo: `TextareaField` "Motivo" (o la etiqueta que se le pase, p. ej. "Qué no cuadra"), descripción `muted` encima y dos botones abajo, "Cancelar" (secundario) y el de confirmar. El motivo es obligatorio (react-hook-form + zod, mínimo 3 caracteres, mensaje "Escribe el motivo (al menos 3 caracteres)", validado al enviar). Con la variante `danger` el botón de confirmar se pinta con `Button` `danger`; sin ella usa `primary`. En móvil los botones se apilan con el de confirmar al pie (`flex-col-reverse`); desde `sm` van en fila a la derecha. Se usa para anular horas y gastos ("Anular gasto", danger) y para objetar un registro de horas ("Enviar objeción", primario, porque no destruye nada).
+
+### Chips de filtro
+Píldoras de `min-h-11` con `px-4`, `text-sm font-medium` y cifra en `.num`, expuestas como botones con `aria-pressed`. Activa: borde `primary`, fondo `primary-soft`, texto `primary-text`. Inactiva: borde `border`, fondo `surface`, texto `muted`. Ejemplo: "Todos" y "Por votar · n". El conteo va dentro de la etiqueta.
+
+### Gastos (ExpensesPage y ExpenseCard)
+Encabezado con "Registrar gasto" (primario, ícono `Plus`). Dos secciones con título `text-sm font-semibold muted`: "Gastos recurrentes" (rejilla `sm:grid-cols-2` de `Card` por defecto, ícono `CalendarClock` en `primary-text`, monto en `.num font-bold`, "Renueva el dd/mm/yyyy · cada año/mes") y "Gastos" con los chips de filtro y una rejilla `md:grid-cols-2` de `ExpenseCard`. El `Badge` de renovación cambia de tono según los días que faltan: 7 o menos `warning`, 30 o menos `primary`, más `neutral`; el texto lo dice siempre ("Renueva en N días", "Renueva hoy", "Vencido"). Un gasto previo a la firma añade el badge "Previo a la firma: no suma puntos".
+
+La `ExpenseCard` es una `Card` `raised`: concepto (`text-base font-semibold`, tachado y `muted` si está anulado), línea de apoyo con quién pagó, fecha y categoría, y el monto en `.num text-lg font-bold`. Debajo, `Badge` de estado (pendiente `warning`, aprobado `success`, rechazado `danger`, anulado `neutral`), más "Previo a la firma" y "Reembolsado" en neutro. Si está aprobado, una línea `muted` dice en palabras cuántos puntos da ("Suma N puntos a Nombre.") o por qué no ("No suma puntos (previo a la firma / fue reembolsado / solo cuentan los gastos en soles)"). Si está pendiente, un bloque `surface-2` con la frase "n de 3 votos a favor" (y "· n en contra" si hay), un `Meter` fino (`h-2`) con esa escala y dos botones de 44 px en dos columnas, "A favor" y "En contra", con `aria-pressed`; el voto propio pinta su botón (A favor en `primary`, En contra en `danger`), siempre con la palabra y el ícono de pulgar. Al pie, "Ver comprobante" (abre el comprobante en una `Sheet`) y "Anular" (abre el `ReasonSheet`, solo el dueño y mientras no esté anulado ni reembolsado), ambos fantasma `sm`.
+
+### ExpenseFormSheet
+`Sheet` "Registrar gasto" con monto y moneda en una rejilla (`1fr` y `7rem`), concepto, categoría, comprobante y la casilla "Es previo a la firma del acuerdo (no suma puntos)" de `min-h-11` con casilla de 20 px. Al escribir un monto que necesita votos aparece un aviso `role="status"` sobre `primary-soft` con `primary-text` ("Supera S/ 50.00: quedará pendiente hasta tener 3 votos a favor", o el equivalente para dólares). El comprobante es una zona de borde discontinuo de `min-h-11` ("Tomar o elegir una foto"; la imagen se comprime con `lib/image.ts`), que tras elegir la foto muestra una vista previa de 64 px con "Foto lista para adjuntar" y un botón para quitarla; su error va en `text-danger`.
+
+### Cierre de sprint (SprintClosePage)
+Ruta `/proyectos/:projectId/cierre`, con enlace "Tablero" de 44 px arriba; se llega desde el botón secundario "Cierre de sprint" (ícono `Flag`) del encabezado del tablero. Tres bloques con título `text-sm font-semibold muted`, en orden:
+- **Comprometido y entregado:** una `Card` sin relleno con una fila por socio (avatar, nombre, "n de m tareas" en `.num`), un `Meter` fino de horas entregadas frente a estimadas y una línea `text-xs muted` con estimadas, registradas y validadas.
+- **Horas por validar:** una `Card` sin relleno por socio (nunca el propio) con cabecera "Validar las N" (secundario `sm`) y filas con casilla de 20 px dentro de una etiqueta de `min-h-11`, tarea, fecha y horas en `.num`, más "Objetar" (fantasma `sm`, abre el `ReasonSheet`). Con casillas marcadas aparece "Validar N seleccionadas" (primario `sm`) junto al título. Sin pendientes, un `EmptyState`.
+- **Cerrar el sprint:** `Card` de tono `accent` que dice en palabras cuántos registros quedan sin validar y que sin validar no suman puntos. Solo el admin ve el botón "Cerrar sprint"; los demás leen que el cierre lo hace el product owner. El botón abre una `Sheet` de confirmación que explica que las horas validadas se bloquean y que el proyecto queda sin sprint activo; ahí "Cerrar sprint" es primario, no `danger`.
+
+### Para ti ahora (Inicio)
+`Card` de tono `accent` sin relleno, a todo el ancho de la rejilla de Inicio (`lg:col-span-2`) y primera en aparecer; solo existe si hay pendientes. Título `text-base font-semibold` y una lista de filas-enlace de `min-h-12` con la frase completa ("Tienes 2 gastos por votar", "Hay N registros de horas por validar en Proyecto") y un chevron en `primary-text`; el hover (`primary-soft`) es el de la fila. Las filas llevan a `/gastos` y a la página de cierre del proyecto.
 
 ### Toaster
 Sonner con los tokens del proyecto (`surface`, `fg`, `border`, `shadow-pop`, fuente sans; la acción usa `primary-solid`). Aparece arriba al centro con desplazamiento de 72 px para no chocar con la `TimerBar` ni la barra inferior.
@@ -285,6 +308,11 @@ Avatar circular de iniciales en Plus Jakarta (`primary-soft` / `primary-text`; 3
 - **Do** animar solo la primera vez por sesión (`useFirstPlay`), con `ease-out` y solo `opacity`, `transform` o `clip-path`.
 - **Do** hacer los formularios con react-hook-form y zod, con `Field`/`SelectField`/`TextareaField` (label visible, ayuda y error enlazados) dentro de una `Sheet`.
 - **Do** ofrecer "anular con motivo" en lugar de borrar: la acción destructiva usa `Button` `danger`, explica que el registro queda en el historial y pide el motivo.
+- **Do** pedir siempre un motivo en las acciones destructivas o de rechazo (anular horas o gastos, objetar un registro) con el `ReasonSheet`; el motivo queda visible en el historial ("Motivo: …").
+- **Do** mostrar un rechazo o un estado de pocas horas con texto además del color: "En contra", "Rechazado", "faltan 6 h"; el color de peligro nunca es la única señal.
+- **Do** decir con palabras los puntos de un gasto ("Suma N puntos a Nombre." o el motivo por el que no suma) y los votos ("n de 3 votos a favor"), en vez de solo íconos o colores.
+- **Do** mantener el orden del equipo en el reparto (no el de tu fila) y llevar tu propia fila primero en las listas del equipo, para que cada persona conserve su lugar.
+- **Do** mostrar el trabajo pendiente en Inicio como filas tocables de `min-h-12` dentro de "Para ti ahora", con la frase completa y un chevron, no como insignias numéricas en la navegación.
 - **Do** dejar la `TimerBar` móvil encima de la navegación inferior y añadir relleno inferior extra a la página (`pb-44`) mientras corra un temporizador.
 - **Do** dar a cada acción de arrastre una alternativa sin arrastre: el selector "Mover a" en móvil y el teclado en escritorio.
 - **Do** dar el mismo ancho proporcional a cada segmento y nombrarlo debajo.
@@ -296,6 +324,9 @@ Avatar circular de iniciales en Plus Jakarta (`primary-soft` / `primary-text`; 3
 - **Don't** añadir sombras a tarjetas en modo oscuro.
 - **Don't** repetir la animación de datos en cada visita a una pantalla de uso diario.
 - **Don't** borrar registros ni ofrecer una acción de eliminar; se anulan con motivo.
+- **Don't** usar `danger` como relleno de una acción de cierre o de validación: cerrar el sprint y validar horas son primarios; `danger` queda para anular y para el voto "En contra" ya elegido.
+- **Don't** ofrecer una acción destructiva sin pedir motivo, ni mostrar el botón de cerrar sprint a quien no es admin.
+- **Don't** indicar pendientes con puntos o números sueltos en la navegación; van en "Para ti ahora".
 - **Don't** mostrar avisos abajo en móvil: el `Toaster` va arriba para no tapar la `TimerBar`.
 - **Don't** dejar una cifra sin `.num` en una lista o columna.
 

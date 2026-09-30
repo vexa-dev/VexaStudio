@@ -9,8 +9,3 @@ export const entrySchema = z.object({
     .max(24, 'Máximo 24 horas por registro'),
 })
 export type EntryFormValues = z.infer<typeof entrySchema>
-
-export const voidSchema = z.object({
-  reason: z.string().trim().min(3, 'Escribe el motivo de la anulación'),
-})
-export type VoidFormValues = z.infer<typeof voidSchema>
