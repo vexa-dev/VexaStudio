@@ -1,9 +1,10 @@
 import { canEditEntry, hoursBetween } from '@/domain/rules'
-import type { AuditAction, Id, Profile, Sprint, Task, TimeEntry } from '@/domain/types'
+import type { Id, Sprint, Task, TimeEntry } from '@/domain/types'
 import { todayLima } from '@/lib/dates'
-import type { SprintService, TaskService, TimeService } from '../types'
+import type { SprintMemberReview, SprintService, TaskService, TimeService } from '../types'
+import { audit, currentAdmin, currentPartner, currentUser, newId } from './context'
 import { getDb, getSessionUserId, save } from './db'
-import { delay, pending } from './utils'
+import { delay } from './utils'
 
 /**
  * Sprints, tareas y horas. Los permisos se aplican aquí igual que lo hará RLS en la etapa 2:
@@ -11,37 +12,6 @@ import { delay, pending } from './utils'
  */
 
 const HOUR_MS = 60 * 60 * 1000
-
-function currentUser(): Profile {
-  const id = getSessionUserId()
-  const user = getDb().profiles.find((p) => p.id === id && p.active)
-  if (!user) throw new Error('Inicia sesión para continuar')
-  return user
-}
-
-/** Crear tareas y sprints es de admin y socios; los colaboradores solo registran sus horas. */
-function currentPartner(): Profile {
-  const user = currentUser()
-  if (user.role === 'collaborator') throw new Error('Tu rol no permite esta acción')
-  return user
-}
-
-function newId(prefix: string): Id {
-  return `${prefix}-${Date.now().toString(36)}${Math.random().toString(36).slice(2, 6)}`
-}
-
-function audit(table: string, recordId: Id, action: AuditAction, before: unknown, after: unknown, userId: Id) {
-  getDb().auditLog.push({
-    id: newId('au'),
-    table,
-    recordId,
-    action,
-    before: before === null ? null : structuredClone(before),
-    after: after === null ? null : structuredClone(after),
-    userId,
-    createdAt: new Date().toISOString(),
-  })
-}
 
 function findTask(id: Id): Task {
   const task = getDb().tasks.find((t) => t.id === id)
@@ -88,7 +58,43 @@ export const sprints: SprintService = {
     save()
     return delay(sprint)
   },
-  close: pending('SprintService.close'),
+  async getReview(sprintId) {
+    const db = getDb()
+    const sprint = db.sprints.find((s) => s.id === sprintId)
+    if (!sprint) throw new Error('El sprint no existe')
+    const sprintTasks = db.tasks.filter((t) => t.sprintId === sprintId)
+    const taskIds = new Set(sprintTasks.map((t) => t.id))
+    const entries = db.timeEntries.filter((e) => taskIds.has(e.taskId) && !e.voidedAt && e.endedAt !== null)
+    const members: SprintMemberReview[] = db.profiles
+      .filter((p) => p.active && p.role !== 'collaborator')
+      .map((p) => {
+        const mine = sprintTasks.filter((t) => t.assigneeId === p.id)
+        const done = mine.filter((t) => t.status === 'done')
+        const own = entries.filter((e) => e.userId === p.id)
+        const sum = (list: { estimateHours: number | null }[]) => list.reduce((n, t) => n + (t.estimateHours ?? 0), 0)
+        return {
+          userId: p.id,
+          tasksAssigned: mine.length,
+          tasksDone: done.length,
+          estimateHours: sum(mine),
+          doneEstimateHours: sum(done),
+          loggedHours: own.reduce((n, e) => n + e.hours, 0),
+          validatedHours: own.filter((e) => e.validated).reduce((n, e) => n + e.hours, 0),
+        }
+      })
+    return delay({ sprint, members, entries })
+  },
+  async close(sprintId) {
+    const user = currentAdmin()
+    const sprint = getDb().sprints.find((s) => s.id === sprintId)
+    if (!sprint) throw new Error('El sprint no existe')
+    if (sprint.status !== 'active') throw new Error('Solo se puede cerrar un sprint activo')
+    const before = { ...sprint }
+    sprint.status = 'closed'
+    audit('sprints', sprint.id, 'update', before, sprint, user.id)
+    save()
+    return delay(sprint)
+  },
 }
 
 export const tasks: TaskService = {
@@ -262,5 +268,26 @@ export const time: TimeService = {
     save()
     return delay(entry)
   },
-  validate: pending('TimeService.validate'),
+  async validate(entryIds) {
+    const user = currentPartner()
+    const db = getDb()
+    const entries = entryIds.map((id) => {
+      const entry = db.timeEntries.find((e) => e.id === id)
+      if (!entry) throw new Error('El registro no existe')
+      if (entry.userId === user.id) throw new Error('No puedes validar tus propias horas')
+      if (entry.voidedAt) throw new Error('No se puede validar un registro anulado')
+      if (entry.endedAt === null) throw new Error('El temporizador de ese registro sigue abierto')
+      if (entry.validated) throw new Error('Ese registro ya está validado')
+      return entry
+    })
+    const now = new Date().toISOString()
+    for (const entry of entries) {
+      const before = { ...entry }
+      entry.validated = true
+      entry.validatedAt = now
+      audit('time_entries', entry.id, 'update', before, entry, user.id)
+    }
+    save()
+    return delay(entries)
+  },
 }

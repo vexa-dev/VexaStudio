@@ -56,8 +56,32 @@ export interface SprintService {
   listByProject(projectId: Id): Promise<Sprint[]>
   getActive(projectId: Id): Promise<Sprint | null>
   create(input: Omit<Sprint, 'id' | 'status'>): Promise<Sprint>
-  /** Cierra el sprint: valida en bloque las horas y las bloquea. */
-  close(sprintId: Id, validatedEntryIds: Id[]): Promise<Sprint>
+  /** Revisión del sprint: lo comprometido frente a lo entregado y las horas por validar. */
+  getReview(sprintId: Id): Promise<SprintReview>
+  /** Solo el product owner cierra el sprint. Las horas validadas ya quedaron bloqueadas al validarse. */
+  close(sprintId: Id): Promise<Sprint>
+}
+
+/** Comprometido vs entregado de un socio en un sprint (base del cierre). */
+export interface SprintMemberReview {
+  userId: Id
+  tasksAssigned: number
+  tasksDone: number
+  /** Horas estimadas de las tareas asignadas (lo comprometido). */
+  estimateHours: number
+  /** Horas estimadas de las tareas hechas (lo entregado). */
+  doneEstimateHours: number
+  /** Horas registradas en tareas del sprint, sin anuladas. */
+  loggedHours: number
+  /** De esas, las que otro socio ya validó. */
+  validatedHours: number
+}
+
+export interface SprintReview {
+  sprint: Sprint
+  members: SprintMemberReview[]
+  /** Registros cerrados y no anulados de tareas del sprint, para validarlos. */
+  entries: TimeEntry[]
 }
 
 export interface TaskFilter {
