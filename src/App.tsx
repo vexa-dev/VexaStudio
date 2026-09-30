@@ -1,23 +1,35 @@
+import { lazy, Suspense } from 'react'
 import { Navigate, Route, Routes } from 'react-router-dom'
 import { AppLayout } from '@/app/AppLayout'
 import { AuthGuard } from '@/features/auth/components/AuthGuard'
-import LoginPage from '@/features/auth/pages/LoginPage'
-import ProfilePage from '@/features/auth/pages/ProfilePage'
-import DashboardPage from '@/features/dashboard/pages/DashboardPage'
-import ExpensesPage from '@/features/expenses/pages/ExpensesPage'
-import ProjectsPage from '@/features/projects/pages/ProjectsPage'
-import TasksPage from '@/features/tasks/pages/TasksPage'
-import TeamPage from '@/features/team/pages/TeamPage'
-import TimePage from '@/features/time/pages/TimePage'
+
+// Cada pantalla se carga al entrar en ella: el arranque no descarga el tablero ni el arrastre.
+const LoginPage = lazy(() => import('@/features/auth/pages/LoginPage'))
+const ProfilePage = lazy(() => import('@/features/auth/pages/ProfilePage'))
+const DashboardPage = lazy(() => import('@/features/dashboard/pages/DashboardPage'))
+const ExpensesPage = lazy(() => import('@/features/expenses/pages/ExpensesPage'))
+const ProjectsPage = lazy(() => import('@/features/projects/pages/ProjectsPage'))
+const BoardPage = lazy(() => import('@/features/tasks/pages/BoardPage'))
+const TasksPage = lazy(() => import('@/features/tasks/pages/TasksPage'))
+const TeamPage = lazy(() => import('@/features/team/pages/TeamPage'))
+const TimePage = lazy(() => import('@/features/time/pages/TimePage'))
 
 export default function App() {
   return (
     <Routes>
-      <Route path="/login" element={<LoginPage />} />
+      <Route
+        path="/login"
+        element={
+          <Suspense fallback={null}>
+            <LoginPage />
+          </Suspense>
+        }
+      />
       <Route element={<AuthGuard />}>
         <Route element={<AppLayout />}>
           <Route index element={<DashboardPage />} />
           <Route path="proyectos" element={<ProjectsPage />} />
+          <Route path="proyectos/:projectId" element={<BoardPage />} />
           <Route path="tareas" element={<TasksPage />} />
           <Route path="horas" element={<TimePage />} />
           <Route path="gastos" element={<ExpensesPage />} />
