@@ -53,6 +53,7 @@
 :root {
   --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
   --ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);
+  --ease-drawer: cubic-bezier(0.32, 0.72, 0, 1);
 }
 
 @theme inline {
@@ -170,6 +171,36 @@
   }
 }
 
+/* Hoja modal: sube desde abajo en el celular y aparece en su sitio en escritorio. */
+@keyframes sheet-up {
+  from {
+    opacity: 0;
+    transform: translateY(24px);
+  }
+}
+@keyframes sheet-in {
+  from {
+    opacity: 0;
+    transform: scale(0.97);
+  }
+}
+@keyframes backdrop-in {
+  from {
+    opacity: 0;
+  }
+}
+.sheet[open] {
+  animation: sheet-up 260ms var(--ease-drawer) both;
+}
+.sheet[open]::backdrop {
+  animation: backdrop-in 200ms ease both;
+}
+@media (min-width: 40rem) {
+  .sheet[open] {
+    animation: sheet-in 200ms var(--ease-out) both;
+  }
+}
+
 .enter {
   animation: enter 360ms var(--ease-out) both;
   animation-delay: calc(var(--i, 0) * 60ms);
@@ -182,7 +213,8 @@
 /* Movimiento reducido: se conserva el cambio de estado (opacidad), se quita el desplazamiento. */
 @media (prefers-reduced-motion: reduce) {
   .enter,
-  .pop-in {
+  .pop-in,
+  .sheet[open] {
     animation: fade-in 200ms ease both;
     animation-delay: 0ms;
   }

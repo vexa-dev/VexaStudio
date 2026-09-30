@@ -4,6 +4,7 @@ import { createRoot } from 'react-dom/client'
 import { BrowserRouter } from 'react-router-dom'
 import { registerSW } from 'virtual:pwa-register'
 import { ThemeProvider } from '@/app/ThemeProvider'
+import { Toaster } from '@/components/ui/Toaster'
 import { AuthProvider } from '@/features/auth/AuthProvider'
 import '@fontsource-variable/inter'
 import '@fontsource-variable/plus-jakarta-sans'
@@ -23,6 +24,7 @@ createRoot(document.getElementById('root')!).render(
         <BrowserRouter>
           <AuthProvider>
             <App />
+            <Toaster />
           </AuthProvider>
         </BrowserRouter>
       </ThemeProvider>
