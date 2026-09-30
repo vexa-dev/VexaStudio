@@ -10,6 +10,7 @@ const DashboardPage = lazy(() => import('@/features/dashboard/pages/DashboardPag
 const ExpensesPage = lazy(() => import('@/features/expenses/pages/ExpensesPage'))
 const ProjectsPage = lazy(() => import('@/features/projects/pages/ProjectsPage'))
 const BoardPage = lazy(() => import('@/features/tasks/pages/BoardPage'))
+const SprintClosePage = lazy(() => import('@/features/sprints/pages/SprintClosePage'))
 const TasksPage = lazy(() => import('@/features/tasks/pages/TasksPage'))
 const TeamPage = lazy(() => import('@/features/team/pages/TeamPage'))
 const TimePage = lazy(() => import('@/features/time/pages/TimePage'))
@@ -30,6 +31,7 @@ export default function App() {
           <Route index element={<DashboardPage />} />
           <Route path="proyectos" element={<ProjectsPage />} />
           <Route path="proyectos/:projectId" element={<BoardPage />} />
+          <Route path="proyectos/:projectId/cierre" element={<SprintClosePage />} />
           <Route path="tareas" element={<TasksPage />} />
           <Route path="horas" element={<TimePage />} />
           <Route path="gastos" element={<ExpensesPage />} />
