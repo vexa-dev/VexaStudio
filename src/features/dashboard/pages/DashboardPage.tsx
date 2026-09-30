@@ -17,7 +17,7 @@ import { areaLabel } from '@/lib/labels'
 import { useFirstPlay } from '@/lib/useFirstPlay'
 import { stagger } from '@/lib/utils'
 import { useMonthlySummary, usePoints } from '../hooks/useDashboard'
-import { useSettings } from '../hooks/useSettings'
+import { useSettings } from '@/features/settings/hooks/useSettings'
 
 /** Escala del medidor: deja espacio después del mínimo para que las horas extra también se vean. */
 const meterMax = (hours: number, minimum: number) => Math.max(minimum * 1.25, hours, 1)

@@ -101,17 +101,23 @@ export function save(): void {
   if (cache) persist(cache)
 }
 
+/** Sesión en memoria (espejo de localStorage): permite probar sin navegador y evita lecturas repetidas. */
+let session: Id | null | undefined
+
 /** Borra los datos y la sesión simulados y vuelve al seed. */
 export function resetMock(): void {
   cache = null
+  session = undefined
   writeStorage(DB_KEY, null)
   writeStorage(SESSION_KEY, null)
 }
 
 export function getSessionUserId(): Id | null {
-  return readStorage(SESSION_KEY)
+  session ??= readStorage(SESSION_KEY)
+  return session
 }
 
 export function setSessionUserId(userId: Id | null): void {
+  session = userId
   writeStorage(SESSION_KEY, userId)
 }

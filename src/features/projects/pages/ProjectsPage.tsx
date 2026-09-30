@@ -1,4 +1,5 @@
-import { FolderKanban } from 'lucide-react'
+import { ArrowRight, FolderKanban } from 'lucide-react'
+import { Link } from 'react-router-dom'
 import { Badge } from '@/components/ui/Badge'
 import { Card } from '@/components/ui/Card'
 import { EmptyState } from '@/components/ui/EmptyState'
@@ -57,6 +58,13 @@ function ProjectCard({ summary, animate }: { summary: ProjectSummary; animate: b
       <p className="mt-auto border-t border-border pt-3 text-sm text-muted">
         Horas del equipo este mes: <span className="num font-semibold text-fg">{formatHours(monthHours)}</span>
       </p>
+      <Link
+        to={`/proyectos/${project.id}`}
+        className="flex min-h-11 items-center justify-between rounded-lg bg-primary-soft px-3.5 text-sm font-semibold text-primary-text"
+      >
+        {sprint ? 'Abrir tablero' : 'Ver proyecto'}
+        <ArrowRight className="size-4" aria-hidden="true" />
+      </Link>
     </Card>
   )
 }

@@ -63,3 +63,9 @@ export function formatIsoDate(date: string): string {
   const [year, month, day] = date.split('-')
   return `${day}/${month}/${year}`
 }
+
+/** Encabezado de un día: `Lunes 28/09`, en hora de Lima. */
+export function formatDayHeading(value: Date | string): string {
+  const label = format(value, 'EEEE dd/MM', { ...inLima, locale: es })
+  return label.charAt(0).toUpperCase() + label.slice(1)
+}
