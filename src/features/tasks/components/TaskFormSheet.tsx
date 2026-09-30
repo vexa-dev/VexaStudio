@@ -5,6 +5,7 @@ import { Field, SelectField } from '@/components/ui/Field'
 import { Sheet } from '@/components/ui/Sheet'
 import type { Task } from '@/domain/types'
 import { useAuth } from '@/features/auth/hooks/useAuth'
+import { CommentThread } from '@/features/comments/components/CommentThread'
 import { useMembers } from '@/features/team/hooks/useMembers'
 import { useCreateTask, useUpdateTask } from '../hooks/useTasks'
 import { taskFormSchema, type TaskFormValues } from '../schemas'
@@ -94,6 +95,12 @@ export function TaskFormSheet({ open, onClose, projectId, sprintId, task }: Task
   return (
     <Sheet open={open} onClose={onClose} title={task ? 'Editar tarea' : 'Nueva tarea'}>
       <TaskForm projectId={projectId} sprintId={sprintId} task={task} onClose={onClose} />
+      {task ? (
+        <div className="mt-6 border-t border-border pt-5">
+          <h3 className="mb-3 text-base font-semibold">Comentarios</h3>
+          <CommentThread entity="task" entityId={task.id} />
+        </div>
+      ) : null}
     </Sheet>
   )
 }

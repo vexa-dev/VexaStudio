@@ -1,10 +1,11 @@
-import { Check, FolderKanban, LogOut, UserRound } from 'lucide-react'
+import { Check, Download, FolderKanban, LogOut, UserRound } from 'lucide-react'
 import { useCallback, useEffect, useRef, useState, type KeyboardEvent } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { Avatar } from '@/components/ui/Avatar'
 import { Badge } from '@/components/ui/Badge'
 import { useAuth } from '@/features/auth/hooks/useAuth'
 import { useLoginProfiles } from '@/features/auth/hooks/useLoginProfiles'
+import { useInstallPrompt } from '@/lib/install'
 import { areaLabel } from '@/lib/labels'
 
 const itemClass = 'flex min-h-11 w-full items-center gap-3 rounded-lg px-3 py-2 text-left text-sm hover:bg-surface-2'
@@ -22,6 +23,7 @@ export function UserMenu() {
   const triggerRef = useRef<HTMLButtonElement>(null)
   const menuRef = useRef<HTMLDivElement>(null)
   const navigate = useNavigate()
+  const { canInstall, install } = useInstallPrompt()
 
   /** Cierra el menú; con `restoreFocus` el foco vuelve al botón (teclado), no al hacer clic fuera. */
   const close = useCallback((restoreFocus: boolean) => {
@@ -95,6 +97,19 @@ export function UserMenu() {
           >
             <FolderKanban className="size-4" aria-hidden="true" /> Proyectos
           </Link>
+          {canInstall ? (
+            <button
+              type="button"
+              role="menuitem"
+              className={itemClass}
+              onClick={async () => {
+                close(false)
+                await install()
+              }}
+            >
+              <Download className="size-4" aria-hidden="true" /> Instalar la app
+            </button>
+          ) : null}
           <button
             type="button"
             role="menuitem"

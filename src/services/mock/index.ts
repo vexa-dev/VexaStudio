@@ -1,10 +1,6 @@
 import type {
-  AnnouncementService,
   AuthService,
-  DailyService,
-  MeetingService,
   MemberService,
-  NotificationService,
   ProjectService,
   Services,
   SettingsService,
@@ -12,8 +8,10 @@ import type {
 import { getDb, getSessionUserId, setSessionUserId } from './db'
 import { dashboard } from './dashboard'
 import { comments, expenses } from './expenses'
+import { notifications } from './notifications'
+import { announcements, daily, meetings } from './team'
 import { sprints, tasks, time } from './work'
-import { delay, notImplemented } from './utils'
+import { delay } from './utils'
 
 const auth: AuthService = {
   async listLoginProfiles() {
@@ -72,11 +70,11 @@ export function createMockServices(): Services {
     time,
     expenses,
     dashboard,
-    daily: notImplemented<DailyService>('DailyService'),
+    daily,
     comments,
-    announcements: notImplemented<AnnouncementService>('AnnouncementService'),
-    meetings: notImplemented<MeetingService>('MeetingService'),
-    notifications: notImplemented<NotificationService>('NotificationService'),
+    announcements,
+    meetings,
+    notifications,
   }
 }
 

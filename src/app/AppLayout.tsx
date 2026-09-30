@@ -3,6 +3,7 @@ import { NavLink, Outlet } from 'react-router-dom'
 import { Avatar } from '@/components/ui/Avatar'
 import { Skeleton } from '@/components/ui/Skeleton'
 import { useAuth } from '@/features/auth/hooks/useAuth'
+import { NotificationBell } from '@/features/notifications/components/NotificationBell'
 import { TimerBar, TimerChip } from '@/features/time/components/TimerBar'
 import { useRunningEntry } from '@/features/time/hooks/useTime'
 import { areaLabel, roleLabel } from '@/lib/labels'
@@ -78,6 +79,7 @@ export function AppLayout() {
         </span>
         <div className="ml-auto flex items-center gap-1">
           <TimerChip />
+          <NotificationBell />
           <ThemeToggle />
           <UserMenu />
         </div>

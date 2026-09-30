@@ -187,7 +187,7 @@ Paleta neutra fría con un verde de marca apagado; los estados usan tonos distin
 
 ## Layout
 
-Móvil primero, con un ancho mínimo de 320 px. El contenido va en `main` con `max-w-6xl`, padding de 16 px (`lg:px-8`) y `pb-28` en móvil para librar la barra inferior. Desde `lg` aparece un sidebar fijo de 15 rem (`w-60`) y el contenido se desplaza con `lg:pl-60`. La cabecera sticky mide 3.5 rem más el área segura superior; la barra inferior suma `env(safe-area-inset-bottom)`. Alturas de pantalla con `min-h-dvh`. El viewport usa `viewport-fit=cover` e `interactive-widget=resizes-content`; `theme-color` es #0a0a0a.
+Móvil primero, con un ancho mínimo de 320 px. El contenido va en `main` con `max-w-6xl`, padding de 16 px (`lg:px-8`) y `pb-28` en móvil para librar la barra inferior. Desde `lg` aparece un sidebar fijo de 15 rem (`w-60`) y el contenido se desplaza con `lg:pl-60`. La cabecera sticky mide 3.5 rem más el área segura superior; la barra inferior suma `env(safe-area-inset-bottom)`. Alturas de pantalla con `min-h-dvh`. El viewport usa `viewport-fit=cover` e `interactive-widget=resizes-content`; `theme-color` es #0a0a0a. Para la app instalada, `index.html` añade `apple-touch-icon`, `mobile-web-app-capable`, `apple-mobile-web-app-capable` y `apple-mobile-web-app-title` ("VEXA").
 
 Las pantallas se cargan por ruta con `lazy` y `Suspense`; mientras llega el código se muestra un `Skeleton` de 16 rem dentro del layout. Cuando hay un temporizador abierto, `main` sube su relleno inferior de `pb-28` a `pb-44` para que la `TimerBar` no tape contenido.
 
@@ -230,10 +230,10 @@ Píldora `text-xs font-medium`. `primary` usa `primary-soft` con `primary-text`;
 `Field`, `SelectField` y `TextareaField` comparten cáscara: label visible `text-sm font-medium`, control de `min-h-11`, borde `border`, fondo `surface`, radio 8 px. La textarea añade `min-h-24`. Error: borde `danger`, `aria-invalid` y mensaje `text-danger` enlazado con `aria-describedby`; la ayuda (`muted`) se muestra solo si no hay error. Foco por el anillo global de 2 px. Los formularios usan react-hook-form con zod y validan al enviar (`noValidate`).
 
 ### Navigation
-Barra inferior móvil (5 columnas, `text-xs`, ícono 20 px): el activo va en `primary-text` con una marca de 2 px en `primary-solid` sobre el borde superior. Sidebar en `lg`: ítems de `rounded-lg`, activo con `primary-soft` y `primary-text`, inactivo `muted`. Enlace "Saltar al contenido" al inicio. Cabecera con marca (móvil), `ThemeToggle` y `UserMenu`.
+Barra inferior móvil (5 columnas, `text-xs`, ícono 20 px): el activo va en `primary-text` con una marca de 2 px en `primary-solid` sobre el borde superior. Sidebar en `lg`: ítems de `rounded-lg`, activo con `primary-soft` y `primary-text`, inactivo `muted`. Enlace "Saltar al contenido" al inicio. Cabecera con marca (móvil), `NotificationBell`, `ThemeToggle` y `UserMenu`.
 
 ### UserMenu
-Menú de 18 rem, `pop-in` de 160 ms desde arriba a la derecha, `shadow-pop`. El foco entra al primer ítem, flechas/Inicio/Fin navegan, Esc cierra y devuelve el foco, Tab cierra. Contiene el cambio rápido de socio (modo de pruebas).
+Menú de 18 rem, `pop-in` de 160 ms desde arriba a la derecha, `shadow-pop`. El foco entra al primer ítem, flechas/Inicio/Fin navegan, Esc cierra y devuelve el foco, Tab cierra. Contiene el cambio rápido de socio (modo de pruebas) y, solo cuando el navegador ofrece la instalación, el ítem "Instalar la app" (ícono `Download`, `lib/install.ts`); en iOS, que no lanza ese evento, el ítem no aparece.
 
 ### Sheet (hoja modal)
 `<dialog>` nativo con `showModal()`: atrapa el foco, cierra con Esc o al tocar el fondo y devuelve el foco. En móvil se ancla abajo, a todo el ancho, con esquinas superiores de 16 px y alto máximo de 92 dvh; desde `sm` se centra con `max-w-lg` y 16 px en todas las esquinas. Cabecera con título `text-lg font-semibold`, descripción `muted` y botón "Cerrar" de 44 px, separada del cuerpo por un borde; el cuerpo desplaza y respeta el área segura inferior. Fondo `black/50`, `shadow-pop`. Entra con `sheet-up` (260 ms, sube 24 px, `--ease-drawer`) en móvil y `sheet-in` (200 ms, escala 0.97, `--ease-out`) desde `sm`; con movimiento reducido solo hace fundido. Las variantes con formulario o confirmación (`ReasonSheet`, comprobante, cierre de sprint) reutilizan esta misma hoja.
@@ -260,6 +260,23 @@ Ruta `/proyectos/:projectId/cierre`, con enlace "Tablero" de 44 px arriba; se ll
 
 ### Para ti ahora (Inicio)
 `Card` de tono `accent` sin relleno, a todo el ancho de la rejilla de Inicio (`lg:col-span-2`) y primera en aparecer; solo existe si hay pendientes. Título `text-base font-semibold` y una lista de filas-enlace de `min-h-12` con la frase completa ("Tienes 2 gastos por votar", "Hay N registros de horas por validar en Proyecto") y un chevron en `primary-text`; el hover (`primary-soft`) es el de la fila. Las filas llevan a `/gastos` y a la página de cierre del proyecto.
+
+### NotificationBell y NotificationList
+Campana en la cabecera: botón fantasma de 44 px (`h-11 w-11`) con ícono `Bell` de 20 px. Con avisos sin leer suma una insignia numérica en `primary-solid` con `primary-fg`, `.num`, `text-xs font-bold` (muestra "9+" a partir de 10) y el `aria-label` dice la cuenta ("Notificaciones, 3 sin leer"); la insignia es decorativa. Al tocarla abre una `Sheet` "Notificaciones" con los 8 más recientes, "Ver todas" (enlace `primary-text` de 44 px a `/notificaciones`) y, si hay pendientes, "Marcar todas como leídas" (secundario `sm`). Sin avisos dice "No tienes avisos por ahora."
+
+La `NotificationList` es una lista con `divide-border`; cada aviso es un botón de ancho completo (`min-h-14`, hover `surface-2`) que lo marca como leído y lleva a la pantalla que lo resuelve. Sin leer: punto de 10 px en `primary`, título `font-semibold` y prefijo `sr-only` "No leída: "; leído: punto transparente y título en `muted`. Debajo, detalle `muted` (2 líneas) y fecha en `.num text-xs`. La página `/notificaciones` (`NotificationsPage`) pone la misma lista en una `Card`, con "Marcar todas como leídas" en el encabezado y `EmptyState` "Todo al día". `notificationText.ts` traduce cada tipo (mención, voto de gasto, resultado de gasto, daily pendiente, horas faltantes, renovación, reunión) a un título en español llano, un detalle opcional y su destino (`/equipo?tab=daily`, `/equipo?tab=reunion`, `/gastos`, `/horas`, la tarea o el proyecto).
+
+### MentionTextarea, MentionText y CommentThread
+`MentionTextarea` comparte la cáscara de `TextareaField` (label visible, `min-h-24`, radio 8 px, error `danger`, ayuda "Escribe @ para mencionar a alguien del equipo.") pero con semántica de combobox. Al escribir `@` ofrece debajo píldoras `@Nombre` de `min-h-11` (`rounded-full`, `text-sm font-medium`); la activa va con borde `primary`, fondo `primary-soft` y texto `primary-text`, las demás con `border` y `surface`. Flechas recorren, Enter o Tab eligen, Esc cierra; con toque se elige la píldora sin quitar el foco de la textarea. `MentionText` resalta solo las menciones que corresponden a un socio real, con `font-semibold text-primary-text`; el resto queda como texto.
+
+`CommentThread` es una lista de comentarios (avatar `sm`, nombre de pila en `font-semibold`, fecha en `.num text-xs muted`, texto `text-sm` con saltos de línea) seguida de un compositor con `MentionTextarea` "Comentar" y botón "Comentar" a la derecha. Vive dentro de la `Sheet` de edición de tarea. Estado vacío en una línea: "Aún no hay comentarios."
+
+### Equipo (TeamPage)
+Ruta `/equipo` con `PageHeader` y un `tablist` de tres pestañas (Daily, Anuncios, Reunión) en una pista `surface-2` de `rounded-xl` con `p-1` y `grid-cols-3` (`sm:max-w-md`). Cada pestaña mide `min-h-11`; la activa va en `surface` con `shadow-card` y `font-semibold`, las demás en `muted`. Flechas izquierda y derecha cambian de pestaña. La pestaña vive en la URL (`?tab=daily|anuncios|reunion`) para que los avisos lleven directo a ella. El panel es un `tabpanel` enlazado a la pestaña.
+
+- **Daily:** `Card` `raised` "Tu daily de hoy" con tres campos ("¿Qué hiciste?", "¿Qué harás?" y "¿Qué te bloquea?", este último con `MentionTextarea`), un botón secundario `sm` "Autocompletar con mis tareas" bajo el primero y "Enviar daily" / "Actualizar daily" a la derecha. Si falta alguien, una línea `muted` dice "Aún sin daily hoy: Rober, Diego y José." Debajo, "Últimos daily del equipo" agrupado por día: encabezado `text-sm font-semibold` y una `Card` sin relleno con una fila por socio (nombre `font-semibold` y una lista de definición `dt`/`dd` en rejilla de 4.5 rem: Hizo, Hará, Bloqueos; los bloqueos pasan por `MentionText`).
+- **Anuncios:** `Card` `raised` con el compositor "Nuevo anuncio" y "Publicar"; debajo, una `Card` por anuncio con autor y fecha (`.num`) en `text-xs muted`. El anuncio fijado lleva un `Badge` `primary` con ícono `Pin` y la palabra "Fijado". Solo el admin ve el botón fantasma `sm` "Fijar arriba" / "Quitar fijado".
+- **Reunión:** sin convocatoria, un `EmptyState` (el admin ve "Convocar reunión"; los demás leen que el product owner propondrá horarios). En votación, una `Card` por horario con el horario en `.num text-base font-semibold`, el `Badge` `primary` "Más disponibilidad" (y borde `primary`) en el que más socios pueden, una frase con la cuenta y los nombres ("2 de 4 pueden: Rober, Diego. No pueden: José."), y dos botones de 44 px en dos columnas, "Puedo" y "No puedo", con `aria-pressed` (el elegido pasa a primario, siempre con la palabra). Sobre las tarjetas, una línea `muted` con quién no ha respondido. El admin ve el botón fantasma `sm` "Confirmar este horario", que abre una `Sheet` "Confirmar horario" con el enlace de Meet (`Field` `type="url"`) y "Confirmar reunión". Confirmada, una `Card` de tono `accent` con `Badge` "Confirmada" (o "Realizada", `success`), el horario en `.num text-lg font-bold`, el enlace "Abrir Meet" (`rounded-lg`, `primary-solid`, `min-h-11`, íconos `Video` y `ExternalLink`) y, para el admin, "Marcar asistencia" (secundario), que abre una `Sheet` "Asistencia" con casillas de 20 px en filas de `min-h-11`. Cierra con "Reuniones anteriores" (`Card` sin relleno, una fila por semana con "Asistieron: … Faltaron: …") y, si alguien faltó a las últimas 2, una nota factual `text-sm muted` ("Rober faltó a las últimas 2 reuniones. Según el acuerdo, dos ausencias seguidas cuentan como incumplimiento."), sin `danger` ni ícono.
 
 ### Toaster
 Sonner con los tokens del proyecto (`surface`, `fg`, `border`, `shadow-pop`, fuente sans; la acción usa `primary-solid`). Aparece arriba al centro con desplazamiento de 72 px para no chocar con la `TimerBar` ni la barra inferior.
@@ -316,6 +333,9 @@ Avatar circular de iniciales en Plus Jakarta (`primary-soft` / `primary-text`; 3
 - **Do** dejar la `TimerBar` móvil encima de la navegación inferior y añadir relleno inferior extra a la página (`pb-44`) mientras corra un temporizador.
 - **Do** dar a cada acción de arrastre una alternativa sin arrastre: el selector "Mover a" en móvil y el teclado en escritorio.
 - **Do** dar el mismo ancho proporcional a cada segmento y nombrarlo debajo.
+- **Do** redactar notificaciones y recordatorios con palabras llanas ("Hay un gasto que necesita tu voto", "Tu daily de hoy está pendiente") y llevarlos a la pantalla que los resuelve (`/gastos`, `/equipo?tab=daily`, `/equipo?tab=reunion`, `/horas`).
+- **Do** confirmar cada mención con una píldora `@Nombre` visible y resaltar las válidas con `font-semibold text-primary-text`.
+- **Do** guardar la pestaña activa de Equipo en la URL (`?tab=`) y marcar el voto de la reunión con `aria-pressed` y la palabra ("Puedo", "No puedo").
 
 ### Don't:
 - **Don't** usar `primary` (#548d7b) para texto ni para fondo de texto blanco en modo claro; usa `primary-text` o `primary-solid`.
@@ -329,4 +349,7 @@ Avatar circular de iniciales en Plus Jakarta (`primary-soft` / `primary-text`; 3
 - **Don't** indicar pendientes con puntos o números sueltos en la navegación; van en "Para ti ahora".
 - **Don't** mostrar avisos abajo en móvil: el `Toaster` va arriba para no tapar la `TimerBar`.
 - **Don't** dejar una cifra sin `.num` en una lista o columna.
+- **Don't** marcar un aviso sin leer solo con color o punto: lleva título en `font-semibold` y prefijo `sr-only` "No leída".
+- **Don't** pintar en `danger` la ausencia a reuniones: la nota es factual, en `muted`, con nombres y la regla del acuerdo.
+- **Don't** ocultar una mención ni insertarla sin que se vea la píldora `@Nombre` elegida.
 

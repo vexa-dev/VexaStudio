@@ -1,7 +1,8 @@
+import { extractMentions } from '@/domain/mentions'
 import { resolveExpenseStatus } from '@/domain/rules'
 import type { Comment, Expense } from '@/domain/types'
 import type { CommentService, ExpenseService } from '../types'
-import { audit, currentPartner, currentUser, newId, votingPartners } from './context'
+import { audit, currentPartner, currentUser, newId, notify, votingPartners } from './context'
 import { getDb, save } from './db'
 import { delay } from './utils'
 
@@ -44,6 +45,12 @@ export const expenses: ExpenseService = {
     expense.status = resolveExpenseStatus(expense, [], db.settings, votingPartners().length)
     db.expenses.push(expense)
     audit('expenses', expense.id, 'create', null, expense, user.id)
+    // Si necesita votos, se avisa a los demás socios.
+    if (expense.status === 'pending') {
+      for (const partner of votingPartners()) {
+        if (partner.id !== user.id) notify(partner.id, 'expense_vote', { expenseId: expense.id })
+      }
+    }
     save()
     return delay(expense)
   },
@@ -63,6 +70,10 @@ export const expenses: ExpenseService = {
     const votes = db.expenseVotes.filter((v) => v.expenseId === expenseId)
     expense.status = resolveExpenseStatus(expense, votes, db.settings, votingPartners().length)
     audit('expenses', expense.id, 'update', before, { ...expense, vote: { userId: user.id, inFavor } }, user.id)
+    // Al resolverse la votación, quien pagó recibe el resultado.
+    if (expense.status !== 'pending' && expense.paidBy !== user.id) {
+      notify(expense.paidBy, 'expense_result', { expenseId: expense.id, status: expense.status })
+    }
     save()
     return delay(expense)
   },
@@ -86,7 +97,7 @@ export const expenses: ExpenseService = {
   },
 }
 
-/** Comentarios sobre tareas, gastos y horas. Las @menciones y sus avisos llegan en F4. */
+/** Comentarios sobre tareas, gastos y horas. Las @menciones avisan a la persona mencionada. */
 export const comments: CommentService = {
   async list(entity, entityId) {
     currentUser()
@@ -105,10 +116,17 @@ export const comments: CommentService = {
       entityId,
       userId: user.id,
       text: text.trim(),
-      mentions: [],
+      mentions: extractMentions(text, votingPartners()),
       createdAt: new Date().toISOString(),
     }
     getDb().comments.push(comment)
+    // Para llevar al mencionado al tablero de la tarea, el aviso guarda su proyecto.
+    const projectId = entity === 'task' ? (getDb().tasks.find((t) => t.id === entityId)?.projectId ?? '') : ''
+    for (const id of comment.mentions) {
+      if (id !== user.id) {
+        notify(id, 'mention', { by: user.id, entity, entityId, projectId, excerpt: comment.text.slice(0, 80) })
+      }
+    }
     save()
     return delay(comment)
   },

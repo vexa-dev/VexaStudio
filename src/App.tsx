@@ -5,6 +5,7 @@ import { AuthGuard } from '@/features/auth/components/AuthGuard'
 
 // Cada pantalla se carga al entrar en ella: el arranque no descarga el tablero ni el arrastre.
 const LoginPage = lazy(() => import('@/features/auth/pages/LoginPage'))
+const NotificationsPage = lazy(() => import('@/features/notifications/pages/NotificationsPage'))
 const ProfilePage = lazy(() => import('@/features/auth/pages/ProfilePage'))
 const DashboardPage = lazy(() => import('@/features/dashboard/pages/DashboardPage'))
 const ExpensesPage = lazy(() => import('@/features/expenses/pages/ExpensesPage'))
@@ -36,6 +37,7 @@ export default function App() {
           <Route path="horas" element={<TimePage />} />
           <Route path="gastos" element={<ExpensesPage />} />
           <Route path="equipo" element={<TeamPage />} />
+          <Route path="notificaciones" element={<NotificationsPage />} />
           <Route path="perfil" element={<ProfilePage />} />
         </Route>
       </Route>

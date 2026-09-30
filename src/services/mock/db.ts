@@ -44,7 +44,7 @@ export interface MockDb {
 }
 
 /** Sube la versión cuando cambie la forma de `MockDb`: descarta lo guardado y vuelve a sembrar. */
-const SCHEMA_VERSION = 1
+const SCHEMA_VERSION = 2
 const DB_KEY = 'vexa-studio.mock.db'
 const SESSION_KEY = 'vexa-studio.mock.session'
 
