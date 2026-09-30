@@ -85,3 +85,8 @@ export function limaWeekday(now: Date = new Date()): number {
 export function limaTime(now: Date = new Date()): string {
   return format(now, 'HH:mm', inLima)
 }
+
+/** Horario de una reunión: `Miércoles 30/09 · 20:00`, en hora de Lima. */
+export function formatSlot(value: string): string {
+  return `${formatDayHeading(value)} · ${limaTime(new Date(value))}`
+}
