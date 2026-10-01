@@ -1,51 +1,53 @@
-@import 'tailwindcss';
+@import "tailwindcss";
 
 /* El modo oscuro se activa con la clase `dark` en <html> (ver ThemeProvider). */
 @custom-variant dark (&:where(.dark, .dark *));
 
 /*
- * Paleta tomada de vexa.space: verde de marca #548d7b, fondo #0a0a0a y superficie #1a1a1a.
+ * Paleta tomada de vexa.space: verde de marca #9be7f2, fondo #0c1017 y superficie #141b26.
  * El modo claro es una derivación. Botones y texto de acento usan variantes que cumplen contraste AA (4.5:1).
  */
 :root {
-  --bg: #f8fafc;
-  --surface: #ffffff;
-  --surface-2: #f1f5f9;
-  --fg: #0f172a;
-  --muted: #475569;
+  --bg: #edf1f5;
+  --surface: #f9fbfd;
+  --surface-2: #e5edf4;
+  --fg: #1b2a3b;
+  --muted: #526174;
   --border: #d3dbe6;
   --segment: #cbd5e1;
-  --primary: #548d7b;
-  --primary-solid: #3f6f5f;
+  --primary: #9be7f2;
+  --primary-solid: #176278;
   --primary-fg: #ffffff;
-  --primary-text: #3f6f5f;
-  --primary-soft: rgb(84 141 123 / 0.12);
+  --primary-text: #176278;
+  --primary-soft: rgb(23 98 120 / 0.12);
   --danger: #b91c1c;
   --warning: #92400e;
   --success: #166534;
   --sh-card: 0 1px 2px rgb(15 23 42 / 0.06), 0 1px 1px rgb(15 23 42 / 0.04);
-  --sh-pop: 0 12px 28px -10px rgb(15 23 42 / 0.28), 0 2px 6px rgb(15 23 42 / 0.08);
+  --sh-pop:
+    0 12px 28px -10px rgb(15 23 42 / 0.28), 0 2px 6px rgb(15 23 42 / 0.08);
   color-scheme: light;
 }
 
 .dark {
-  --bg: #0a0a0a;
-  --surface: #1a1a1a;
-  --surface-2: #232323;
-  --fg: #f1f5f9;
-  --muted: #94a3b8;
+  --bg: #0c1017;
+  --surface: #141b26;
+  --surface-2: #1d2838;
+  --fg: #e8edf4;
+  --muted: #9aa9bc;
   --border: rgb(255 255 255 / 0.1);
   --segment: rgb(255 255 255 / 0.16);
-  --primary: #548d7b;
-  --primary-solid: #548d7b;
-  --primary-fg: #0a0a0a;
-  --primary-text: #7fb5a2;
-  --primary-soft: rgb(84 141 123 / 0.2);
+  --primary: #9be7f2;
+  --primary-solid: #9be7f2;
+  --primary-fg: #0c1017;
+  --primary-text: #9be7f2;
+  --primary-soft: rgb(155 231 242 / 0.15);
   --danger: #f87171;
   --warning: #fbbf24;
   --success: #4ade80;
   --sh-card: 0 0 0 0 transparent;
-  --sh-pop: 0 16px 36px -12px rgb(0 0 0 / 0.7), 0 0 0 1px rgb(255 255 255 / 0.06);
+  --sh-pop:
+    0 16px 36px -12px rgb(0 0 0 / 0.7), 0 0 0 1px rgb(255 255 255 / 0.06);
   color-scheme: dark;
 }
 
@@ -57,9 +59,8 @@
 }
 
 @theme inline {
-  --font-sans: 'Inter Variable', 'Inter', ui-sans-serif, system-ui, sans-serif;
-  --font-display: 'Plus Jakarta Sans Variable', 'Plus Jakarta Sans', 'Inter Variable', ui-sans-serif, system-ui,
-    sans-serif;
+  --font-sans: "IBM Plex Sans", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Sora Variable", sans-serif;
   --color-bg: var(--bg);
   --color-surface: var(--surface);
   --color-surface-2: var(--surface-2);
@@ -115,25 +116,26 @@
   }
   button,
   a,
-  [role='button'] {
+  [role="button"] {
     touch-action: manipulation;
   }
   /* El texto de los controles no se selecciona al mantener pulsado; el contenido sí. */
   button,
-  [role='button'] {
+  [role="button"] {
     user-select: none;
     -webkit-user-select: none;
     -webkit-touch-callout: none;
   }
   /* Respuesta inmediata al pulsar (100–160 ms, ease-out). */
   button:not(:disabled),
-  a[role='button'] {
-    transition-property: transform, background-color, border-color, color, opacity;
+  a[role="button"] {
+    transition-property:
+      transform, background-color, border-color, color, opacity;
     transition-duration: 140ms;
     transition-timing-function: var(--ease-out);
   }
   button:not(:disabled):active,
-  a[role='button']:active {
+  a[role="button"]:active {
     transform: scale(0.97);
   }
   :focus-visible {
@@ -147,7 +149,7 @@
   .num {
     font-family: var(--font-sans);
     font-variant-numeric: tabular-nums;
-    font-feature-settings: 'tnum', 'cv11';
+    font-feature-settings: "tnum", "cv11";
     letter-spacing: -0.02em;
   }
 }
@@ -219,7 +221,163 @@
     animation-delay: 0ms;
   }
   button:not(:disabled):active,
-  a[role='button']:active {
+  a[role="button"]:active {
     transform: none;
+  }
+}
+
+/* Alias compartidos con la demo aislada; la clase dark cambia ambos vocabularios. */
+:root {
+  --text: var(--fg);
+  --accent: var(--primary-solid);
+  --accent-ink: var(--primary-fg);
+  --raised: var(--surface-2);
+  --line: var(--border);
+  --hover: #dfeaf0;
+  --input: #fff;
+  --glass: rgba(249, 252, 255, 0.76);
+  --shadow: 0 18px 55px -20px rgba(37, 69, 95, 0.22);
+}
+.dark {
+  --hover: #203041;
+  --input: #111924;
+  --glass: rgba(22, 31, 44, 0.72);
+  --shadow: 0 18px 55px -20px rgba(0, 0, 0, 0.62);
+}
+.integrated-shell {
+  padding-left: 270px;
+}
+.integrated-sidebar {
+  inset: 20px auto 20px 20px;
+  width: 220px;
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  background: var(--glass);
+  backdrop-filter: blur(22px) saturate(125%);
+  box-shadow:
+    var(--shadow),
+    inset 0 1px 0 rgba(255, 255, 255, 0.06);
+}
+.integrated-topbar {
+  margin: 0 30px;
+  background: var(--glass);
+  backdrop-filter: blur(22px);
+}
+.workspace-observatory {
+  position: relative;
+  display: flex;
+  align-items: center;
+  min-height: 290px;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 32px;
+  margin-bottom: 28px;
+  background:
+    radial-gradient(
+      ellipse at 76% 52%,
+      rgba(73, 137, 170, 0.25),
+      transparent 50%
+    ),
+    linear-gradient(110deg, var(--surface-2), var(--surface));
+  box-shadow: var(--shadow);
+}
+.workspace-observatory h2 {
+  margin: 0 0 14px;
+  font-size: clamp(28px, 3.3vw, 46px);
+  font-weight: 500;
+  line-height: 1.2;
+  letter-spacing: -0.03em;
+}
+.workspace-observatory h2 span {
+  color: var(--primary-text);
+}
+.workspace-observatory p {
+  color: var(--muted);
+  margin-bottom: 24px;
+}
+.workspace-observatory > div:first-child {
+  position: relative;
+  z-index: 1;
+  width: 62%;
+}
+.workspace-core {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 40%;
+  height: 270px;
+}
+.workspace-core .core-canvas,
+.workspace-core .static-core {
+  width: 100%;
+  height: 100%;
+}
+.observatory-action {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 16px;
+  border-radius: 9px;
+  background: var(--primary-solid);
+  color: var(--primary-fg);
+  font-size: 13px;
+  font-weight: 500;
+}
+.observatory-effects {
+  position: absolute;
+  z-index: 2;
+  right: 18px;
+  bottom: 12px;
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  font-size: 12px;
+  color: var(--muted);
+  min-height: 36px;
+}
+@media (max-width: 1023px) {
+  .integrated-shell {
+    padding-left: 0;
+  }
+  .integrated-topbar {
+    margin: 0;
+  }
+  .integrated-mobile-nav {
+    inset: auto 12px 12px;
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    background: var(--glass);
+    backdrop-filter: blur(22px);
+    box-shadow: var(--shadow);
+  }
+}
+@media (max-width: 640px) {
+  .workspace-observatory {
+    min-height: 365px;
+    align-items: flex-start;
+    padding: 24px;
+  }
+  .workspace-observatory > div:first-child {
+    width: 100%;
+  }
+  .workspace-observatory h2 {
+    font-size: 30px;
+  }
+  .workspace-core {
+    top: 145px;
+    width: 180px;
+    height: 175px;
+  }
+  .workspace-observatory p {
+    max-width: 23ch;
+  }
+  .observatory-action {
+    margin-top: 64px;
+    font-size: 12px;
+    padding: 12px;
+  }
+  .observatory-effects {
+    bottom: 7px;
   }
 }

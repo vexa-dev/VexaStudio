@@ -1,301 +1,264 @@
 ---
-name: Vexa Studio
-description: Plataforma interna de 4 socios, pensada para el celular, con verde de marca sobre neutros sobrios y cifras que se leen de un vistazo.
+name: VEXA Studio
+description: Observatorio de cristal ahumado y luz hielo para el trabajo del estudio.
 colors:
-  primary: "#548d7b"
-  primary-solid-light: "#3f6f5f"
-  primary-text-light: "#3f6f5f"
-  primary-text-dark: "#7fb5a2"
-  primary-fg-light: "#ffffff"
-  primary-fg-dark: "#0a0a0a"
-  bg-light: "#f8fafc"
-  surface-light: "#ffffff"
-  surface-2-light: "#f1f5f9"
-  fg-light: "#0f172a"
-  muted-light: "#475569"
-  border-light: "#d3dbe6"
-  segment-light: "#cbd5e1"
-  danger-light: "#b91c1c"
-  warning-light: "#92400e"
-  success-light: "#166534"
-  bg-dark: "#0a0a0a"
-  surface-dark: "#1a1a1a"
-  surface-2-dark: "#232323"
-  fg-dark: "#f1f5f9"
-  muted-dark: "#94a3b8"
-  danger-dark: "#f87171"
-  warning-dark: "#fbbf24"
-  success-dark: "#4ade80"
+  bg-dark: "#0c1017"
+  text-dark: "#e8edf4"
+  muted-dark: "#9aa9bc"
+  surface-dark: "#141b26"
+  raised-dark: "#1d2838"
+  glass-dark: "rgba(22, 31, 44, 0.72)"
+  line-dark: "rgba(172, 200, 232, 0.12)"
+  accent-dark: "#9be7f2"
+  accent-ink-dark: "#10242e"
+  hover-dark: "#203041"
+  input-dark: "#111924"
+  bg-light: "#edf1f5"
+  text-light: "#1b2a3b"
+  muted-light: "#526174"
+  surface-light: "#f9fbfd"
+  raised-light: "#e5edf4"
+  glass-light: "rgba(249, 252, 255, 0.76)"
+  line-light: "rgba(31, 65, 95, 0.14)"
+  accent-light: "#176278"
+  accent-ink-light: "#fff"
+  hover-light: "#dfeaf0"
+  input-light: "#fff"
+  done-dark: "#9fd2b9"
+  done-light: "#276447"
+  error-dark: "#efaaaa"
+  error-light: "#a32929"
 typography:
   display:
-    fontFamily: "Plus Jakarta Sans Variable, Plus Jakarta Sans, Inter Variable, ui-sans-serif, system-ui, sans-serif"
-    fontSize: "1.5rem"
-    fontWeight: 700
-    lineHeight: 1.25
-  headline:
-    fontFamily: "Plus Jakarta Sans Variable, Plus Jakarta Sans, Inter Variable, ui-sans-serif, system-ui, sans-serif"
-    fontSize: "1.875rem"
-    fontWeight: 700
-    lineHeight: 1.25
-  title:
-    fontFamily: "Plus Jakarta Sans Variable, Plus Jakarta Sans, Inter Variable, ui-sans-serif, system-ui, sans-serif"
-    fontSize: "1rem"
-    fontWeight: 600
-  body:
-    fontFamily: "Inter Variable, Inter, ui-sans-serif, system-ui, sans-serif"
-    fontSize: "0.875rem"
-    fontWeight: 400
-    lineHeight: 1.43
-  label:
-    fontFamily: "Inter Variable, Inter, ui-sans-serif, system-ui, sans-serif"
-    fontSize: "0.75rem"
+    fontFamily: "Sora Variable, sans-serif"
+    fontSize: "clamp(28px, 3.3vw, 46px)"
     fontWeight: 500
-  figure:
-    fontFamily: "Inter Variable, Inter, ui-sans-serif, system-ui, sans-serif"
-    fontSize: "0.875rem"
-    fontWeight: 600
+    lineHeight: 1.2
+    letterSpacing: "-0.03em"
+  headline:
+    fontFamily: "Sora Variable, sans-serif"
+    fontSize: "clamp(24px, 2.5vw, 35px)"
+    fontWeight: 500
+    letterSpacing: "-0.03em"
+  title:
+    fontFamily: "Sora Variable, sans-serif"
+    fontSize: "16px"
+    fontWeight: 500
+    letterSpacing: "-0.03em"
+  body:
+    fontFamily: "IBM Plex Sans, sans-serif"
+    fontSize: "13px"
+    fontWeight: 400
+    lineHeight: 1.7
+  label:
+    fontFamily: "IBM Plex Sans, sans-serif"
+    fontSize: "12px"
+    fontWeight: 500
+  numeric:
+    fontFamily: "Sora Variable, sans-serif"
+    fontSize: "clamp(26px, 3vw, 42px)"
+    fontWeight: 400
     letterSpacing: "-0.02em"
-    fontFeature: "'tnum', 'cv11'"
 rounded:
-  md: "6px"
-  lg: "8px"
-  xl: "12px"
-  2xl: "16px"
-  full: "9999px"
+  tag: "5px"
+  field: "8px"
+  button: "9px"
+  navigation: "10px"
+  surface: "14px"
+  hero: "16px"
+  shell: "18px"
 spacing:
-  sm: "8px"
-  md: "16px"
-  lg: "20px"
-  touch: "44px"
+  control-gap: "8px"
+  inline-gap: "10px"
+  control-inset: "12px"
+  row-gap: "15px"
+  grid-gap: "20px"
+  card-inset: "23px"
+  section-inset: "24px"
+  panel-inset: "30px"
 components:
   button-primary:
-    backgroundColor: "{colors.primary-solid-light}"
-    textColor: "{colors.primary-fg-light}"
-    rounded: "{rounded.lg}"
-    height: "44px"
-    padding: "0 16px"
+    backgroundColor: "{colors.accent-dark}"
+    textColor: "{colors.accent-ink-dark}"
+    typography: "{typography.label}"
+    rounded: "{rounded.button}"
+    padding: "12px 17px"
+  button-primary-light:
+    backgroundColor: "{colors.accent-light}"
+    textColor: "{colors.accent-ink-light}"
+    typography: "{typography.label}"
+    rounded: "{rounded.button}"
+    padding: "12px 17px"
   button-secondary:
-    backgroundColor: "{colors.surface-light}"
-    textColor: "{colors.fg-light}"
-    rounded: "{rounded.lg}"
-    height: "44px"
-    padding: "0 16px"
-  button-danger:
-    backgroundColor: "{colors.danger-light}"
-    textColor: "{colors.bg-light}"
-    rounded: "{rounded.lg}"
-    height: "44px"
-  card:
-    backgroundColor: "{colors.surface-light}"
-    rounded: "{rounded.xl}"
-    padding: "16px"
-  card-accent:
-    backgroundColor: "{colors.primary}"
-    rounded: "{rounded.xl}"
-    padding: "16px"
-  badge-primary:
-    textColor: "{colors.primary-text-light}"
-    rounded: "{rounded.full}"
-    padding: "2px 10px"
+    backgroundColor: "{colors.raised-dark}"
+    textColor: "{colors.text-dark}"
+    rounded: "{rounded.button}"
+    padding: "12px 17px"
+  button-secondary-light:
+    backgroundColor: "{colors.raised-light}"
+    textColor: "{colors.text-light}"
+    rounded: "{rounded.button}"
+    padding: "12px 17px"
+  icon-button:
+    backgroundColor: "transparent"
+    textColor: "{colors.muted-dark}"
+    rounded: "{rounded.field}"
+    size: "36px"
   field:
-    backgroundColor: "{colors.surface-light}"
-    textColor: "{colors.fg-light}"
-    rounded: "{rounded.lg}"
-    height: "44px"
-    padding: "0 12px"
-  sheet:
-    backgroundColor: "{colors.surface-light}"
-    textColor: "{colors.fg-light}"
-    rounded: "{rounded.2xl}"
-    padding: "20px"
-  timer-bar:
-    backgroundColor: "{colors.primary-solid-light}"
-    textColor: "{colors.primary-fg-light}"
-    rounded: "{rounded.2xl}"
-    padding: "10px 10px 10px 16px"
-  task-card:
-    backgroundColor: "{colors.surface-light}"
-    textColor: "{colors.fg-light}"
-    rounded: "{rounded.xl}"
+    backgroundColor: "{colors.input-dark}"
+    textColor: "{colors.text-dark}"
+    rounded: "{rounded.field}"
+    padding: "12px"
+  field-light:
+    backgroundColor: "{colors.input-light}"
+    textColor: "{colors.text-light}"
+    rounded: "{rounded.field}"
+    padding: "12px"
+  nav-link:
+    textColor: "{colors.muted-dark}"
+    rounded: "{rounded.navigation}"
     padding: "14px"
+  category-tag:
+    backgroundColor: "{colors.raised-dark}"
+    rounded: "{rounded.tag}"
+    padding: "5px 8px"
+  project-card:
+    backgroundColor: "{colors.surface-dark}"
+    textColor: "{colors.text-dark}"
+    rounded: "{rounded.surface}"
+    padding: "23px"
 ---
 
-# Design System: Vexa Studio
+# Design System: VEXA Studio
 
 ## Overview
 
-**Creative North Star: "El tablero de bolsillo"**
+**Creative North Star: "Observatorio"**
 
-Es una herramienta de operación para cuatro socios que la abren en segundos, en el celular, a menudo con poca luz o al aire libre. El sistema es sobrio: neutros fríos, un solo verde de marca (el de vexa.space) y cifras grandes y ordenadas que responden dos preguntas sin hacer cuentas: cuánto llevo del mes y cuánto del reparto me toca. La marca fue fijada por el product owner (verde `#548d7b`, fondo oscuro `#0a0a0a`, superficie `#1a1a1a`, Inter y Plus Jakarta Sans); el modo claro es una derivación que conserva la misma familia y cumple contraste AA.
+Observatorio es un estudio con perspectiva: grafito profundo, luz hielo y cristal ahumado enmarcan una V reconocible. La alternativa clara transforma el mismo vocabulario en superficies minerales, con tinta azul y acento petróleo.
 
-La densidad es media y el movimiento es corto: las entradas de datos se revelan una sola vez por sesión y las acciones frecuentes responden en 140 ms. El color comunica marca y "esto es tuyo", nunca reprobación: el estado siempre se dice también con texto.
+Tras integrar `main`, el sistema se aplica a la aplicación de socios conservando sus componentes funcionales. `src/index.css` traduce sus tokens semánticos (`fg`, `primary-solid`, `primary-text`, `surface-2`) a Observatorio; la demo de `/observatorio/` usa los alias documentados aquí en `src/observatorio.css`, aislados mediante `@scope`. La aplicación principal conserva sus tamaños de controles, tablas y hojas; la escala que sigue describe los patrones de la demo. Ambos comparten Sora, IBM Plex Sans, tema y núcleo 3D.
+
+El vidrio pertenece a la navegación, al panorama y al temporizador flotante. Listas, tablas y formularios mantienen superficies sólidas para leer y trabajar con estabilidad. Sora aporta carácter a títulos y números; IBM Plex Sans sostiene la interfaz compacta. El movimiento queda cerca del elemento que cambia y respeta la preferencia del sistema y el control manual.
 
 **Key Characteristics:**
-- Un solo acento (verde), con cuatro roles separados para cumplir AA en cada tema.
-- Capas tonales: fondo, superficie, superficie-2; sombra solo en claro.
-- Cifras siempre tabulares (`.num`), en frases legibles ("Tienes el 31 % del reparto").
-- Móvil primero: objetivos de 44 px, barra inferior, áreas seguras, `dvh`.
-- Movimiento con propósito: `ease-out` fuerte, `clip-path` y opacidad; nada en acciones de teclado o de uso repetido.
+- Cristal ahumado con reflejos suaves, no bordes pesados.
+- Superficies sólidas para el trabajo diario.
+- Luz hielo y su traducción mineral clara.
+- V geométrica, tipografía local y cifras tabulares.
+- Movimiento local breve con alternativa estática.
 
 ## Colors
 
-Paleta neutra fría con un verde de marca apagado; los estados usan tonos distintos por tema para mantener contraste.
+La paleta combina grafito, hielo y minerales azules; los tokens terminados en dark y light registran los dos temas reales. Las variables CSS sin sufijo son el enlace vivo entre tema y componente.
 
 ### Primary
-- **Verde Vexa** (`primary`, #548d7b): el verde de marca tal cual. Rellenos decorativos y de datos (relleno del `Meter`, segmento propio de `SegmentedBar`, anillo de foco, `accent-color`, cursor de inputs). No sirve como fondo de texto ni como texto en claro: no alcanza 4.5:1.
-- **Verde sólido** (`primary-solid`): fondo de botón primario y del indicador activo. En claro es #3f6f5f (`primary-solid-light`, con `primary-fg` blanco); en oscuro vuelve a #548d7b con `primary-fg` #0a0a0a. Existe porque el verde de marca con texto blanco no llega a AA en claro.
-- **Verde de texto** (`primary-text`): texto y iconos de acento sobre `bg`/`surface`/`primary-soft`. En claro #3f6f5f; en oscuro se aclara a #7fb5a2 (`primary-text-dark`) porque el verde de marca sobre #1a1a1a queda corto.
-- **Verde suave** (`primary-soft`): tinte translúcido de #548d7b (12 % en claro, 20 % en oscuro). Fondo de avatares, badge primario, ítem de navegación activo, `Card` de tono accent y selección de texto. No tiene token hex propio en el frontmatter porque es alfa.
+
+- **Luz hielo / petróleo mineral:** accent-dark y accent-light marcan acciones principales, navegación activa, foco, progreso y la V de la marca. accent-ink conserva una tinta legible sobre cada acento.
 
 ### Neutral
-- **Fondo** (`bg`): #f8fafc claro, #0a0a0a oscuro. Página y cabecera translúcida (`bg/90` con blur).
-- **Superficie** (`surface`): #ffffff / #1a1a1a. Tarjetas, sidebar, barra inferior, menús, inputs.
-- **Superficie 2** (`surface-2`): #f1f5f9 / #232323. Hover, pista del `Meter`, fondo de badges de estado, skeletons.
-- **Texto** (`fg`): #0f172a / #f1f5f9. **Texto atenuado** (`muted`): #475569 / #94a3b8, para apoyo y etiquetas.
-- **Borde** (`border`): #d3dbe6 claro; blanco al 10 % en oscuro. **Segmento** (`segment`): #cbd5e1 claro; blanco al 16 % en oscuro. Es el neutro de los segmentos ajenos y del anillo del `Meter`.
 
-### Estados
-- **Peligro** (`danger`): #b91c1c / #f87171. Errores de formulario, botón destructivo y badge de peligro.
-- **Advertencia** (`warning`): #92400e / #fbbf24. **Éxito** (`success`): #166534 / #4ade80. Solo como color de texto sobre `surface-2` dentro de `Badge`, siempre acompañado de una palabra.
+- **Grafito / mineral:** bg es el fondo; surface sostiene áreas de trabajo; raised sostiene controles secundarios y etiquetas.
+- **Cristal ahumado / cristal claro:** glass aporta transparencia solo en las superficies expresivas.
+- **Tinta / bruma:** text sostiene información principal y muted información secundaria. line dibuja separaciones suaves; hover comunica respuesta; input conserva un fondo sólido.
+- **Estados:** done usa verde contextual y error rojo contextual en ambos temas. No son acentos de marca adicionales.
 
 ### Named Rules
-**The Four Greens Rule.** `primary` rellena, `primary-solid` sostiene texto de botón, `primary-text` escribe y `primary-soft` tiñe. No se usa uno en el rol del otro.
 
-**The Own-Segment Rule.** Lo tuyo va en verde (segmento "Tú", cifra del reparto); lo de los demás va en `segment` neutro. El verde señala pertenencia, no aprobación.
-
-**The Tokens Only Rule.** Ningún componente usa hex, `rgb()` ni utilidades de paleta de Tailwind; solo los tokens de `src/index.css`.
+**The Theme Pair Rule.** Cada superficie funcional usa las variables semánticas del tema; el tema claro cambia también tinta, acento, campos, bordes y estados.
 
 ## Typography
 
-**Display Font:** Plus Jakarta Sans Variable (con Inter Variable y sans del sistema como respaldo). Aplicada por regla base a `h1`, `h2`, `h3`, y por clase `font-display` a marca, avatares y frases de cifra.
-**Body Font:** Inter Variable (con `ui-sans-serif, system-ui`). Ambas fuentes se sirven autoalojadas con `@fontsource-variable`.
+**Display Font:** Sora Variable (sans-serif).
+**Body Font:** IBM Plex Sans (sans-serif), pesos locales 400, 500 y 600.
 
-**Character:** Plus Jakarta aporta calidez en títulos; Inter mantiene neutras la interfaz y las cifras.
+**Character:** Títulos geométricos de peso moderado junto a una voz de lectura compacta y estable. Los títulos equilibran sus líneas y usan tracking negativo.
 
 ### Hierarchy
-- **Headline** (700, `text-3xl` 1.875rem, leading tight): título de la pantalla de ingreso.
-- **Display** (700, `text-2xl` 1.5rem, sube a `sm:text-3xl` en la frase del reparto): título de página (`PageHeader`) y la frase con `CountUp`.
-- **Title** (600, `text-base` 1rem, `text-lg` en tarjetas de proyecto): títulos de sección dentro de tarjetas y estados vacíos.
-- **Body** (400/500, `text-sm` 0.875rem): texto corrido, filas, botones, campos. Los inputs fuerzan 16 px para evitar el zoom de iOS.
-- **Label** (500, `text-xs` 0.75rem): apoyo, encabezados de tabla, badges y etiquetas de la barra inferior. Sin mayúsculas ni tracking especial.
-- **Figure** (`.num`: 600, tabulares, `letter-spacing: -0.02em`): toda cifra de dato (horas, puntos, porcentajes), del tamaño de su contexto (`text-xs` a `text-lg`).
+
+- **Display:** título expresivo del panorama, token display; en móvil pasa a (31px).
+- **Headline:** título de página, token headline; en móvil pasa a (25px).
+- **Title:** títulos de sección, token title; tarjetas de proyecto usan (19px), paneles (20px).
+- **Body:** texto explicativo, token body. El panorama usa (12px, 1.75) y (11px) en móvil. El estado vacío limita el texto a (42ch).
+- **Label:** controles principales y etiquetas de campos, token label. La navegación usa (13px); etiquetas de categoría y estados usan (10px). No convertir estos metadatos en encabezados decorativos.
+- **Numeric:** reloj principal, token numeric; las métricas emplean Sora de peso (450) y cifras tabulares.
 
 ### Named Rules
-**The Tabular Figures Rule.** Toda cifra que se compara o se anima lleva `.num` (`tnum`, `cv11`, Inter). Así las columnas se alinean y el `CountUp` no sacude el texto.
 
-**The Sentence Number Rule.** La cifra principal vive dentro de una frase ("Llevas 32 h de las 48 h mínimas"), no como estadística suelta.
+**The Working Type Rule.** Sora se reserva a títulos, marca y cifras principales; IBM Plex Sans sostiene controles, filas y explicaciones.
 
 ## Layout
 
-Móvil primero, con un ancho mínimo de 320 px. El contenido va en `main` con `max-w-6xl`, padding de 16 px (`lg:px-8`) y `pb-28` en móvil para librar la barra inferior. Desde `lg` aparece un sidebar fijo de 15 rem (`w-60`) y el contenido se desplaza con `lg:pl-60`. La cabecera sticky mide 3.5 rem más el área segura superior; la barra inferior suma `env(safe-area-inset-bottom)`. Alturas de pantalla con `min-h-dvh`. El viewport usa `viewport-fit=cover` e `interactive-widget=resizes-content`; `theme-color` es #0a0a0a.
+La navegación de escritorio flota a (20px) del borde, mide (220px) de ancho y deja el contenido con márgenes izquierdo (270px) y derecho (30px). El área de trabajo y la barra superior tienen máximo (1450px); la barra mide (85px) y el contenido comienza con (35px) de aire. La cuadrícula de proyectos usa tres columnas con separación (20px); el resumen combina columnas (1.5fr / 1fr) con separación (25px). No existe una escala universal de espaciado: los tokens registran pasos recurrentes observados.
 
-Las pantallas se cargan por ruta con `lazy` y `Suspense`; mientras llega el código se muestra un `Skeleton` de 16 rem dentro del layout. Cuando hay un temporizador abierto, `main` sube su relleno inferior de `pb-28` a `pb-44` para que la `TimerBar` no tape contenido.
-
-La navegación tiene 6 destinos; la barra inferior muestra 5 (`grid-cols-5`, todos menos Proyectos, que se alcanza por el menú de usuario) y el sidebar muestra los 6. Las rejillas de contenido son de una columna en móvil y pasan a `sm:grid-cols-2`, `lg:grid-cols-3` (proyectos) o `lg:grid-cols-[1.5fr_1fr]` (Inicio). Ritmo: `gap-4` entre tarjetas, `gap-5` dentro de la tarjeta principal, `p-4` que sube a `sm:p-5`. Tu propia fila va primero en las listas del equipo.
-
-Objetivos táctiles de 44 px (`h-11`, `size-11`, `min-h-11`). Los botones `sm` también miden 44 px (`h-11`) y solo se distinguen por el relleno horizontal. Las excepciones son mayores, nunca menores: el botón de detener de la `TimerBar` (48 px) y las pestañas del tablero móvil (`min-h-12`).
-
-El tablero de tareas usa una rejilla horizontal en escritorio (`auto-cols-[minmax(16rem,1fr)]`, una columna por estado, con desplazamiento lateral si no caben) y, por debajo de `lg` (64 rem), una sola columna a la vez.
+A (1150px) la navegación mide (190px) y los proyectos pasan a dos columnas. A (850px) se reduce a un raíl de iconos de (76px) y el resumen pasa a una columna. A (640px) la navegación se fija abajo: altura (64px), inset (12px), cuatro destinos; contenido con margen (20px) y espacio inferior (90px). Proyectos pasa a una columna. El panorama móvil conserva acción y V mediante una composición propia, no una simple reducción. Las tablas mantienen ancho mínimo (610px), desplazamiento horizontal y aviso; el temporizador flotante se sitúa a (90px) del fondo. A partir de (1600px) aumentan los márgenes y la altura del panorama.
 
 ## Elevation & Depth
 
-Híbrido tonal. La profundidad viene de capas (`bg`, `surface`, `surface-2`) y bordes de 1 px. En claro, la tarjeta de tono `raised` añade una sombra mínima; en oscuro esa sombra es nula y el borde blanco translúcido hace el trabajo.
+El sistema combina capas tonales sólidas con profundidad óptica en el vidrio. El cristal usa desenfoque (22px), saturación (125%) y reflejos interiores de un píxel. Las sombras son difusas y siguen el objeto; el claro reduce su densidad. El fondo añade dos halos radiales tenues.
 
 ### Shadow Vocabulary
-- **Card** (`--shadow-card`: `0 1px 2px rgb(15 23 42 / 0.06), 0 1px 1px rgb(15 23 42 / 0.04)`; nula en oscuro): `Card tone="raised"`, `TaskCard` y la pestaña activa del tablero móvil.
-- **Pop** (`--shadow-pop`: claro `0 12px 28px -10px rgb(15 23 42 / 0.28), 0 2px 6px rgb(15 23 42 / 0.08)`; oscuro `0 16px 36px -12px rgb(0 0 0 / 0.7), 0 0 0 1px rgb(255 255 255 / 0.06)`): menús flotantes (`UserMenu`), `Sheet`, `TimerBar`, avisos del `Toaster` y la `TaskCard` mientras se arrastra.
+
+- **Vidrio oscuro:** (0 18px 55px -20px rgba(0, 0, 0, 0.62)).
+- **Vidrio claro:** (0 18px 55px -20px rgba(37, 69, 95, 0.22)).
+- **Panel lateral:** (-15px 0 60px -20px rgba(0, 0, 0, 0.4)).
+- **Acción primaria:** halo (0 5px 15px -8px rgba(95, 222, 244, 0.35)) y reflejo interior (inset 0 1px 0 rgba(255, 255, 255, 0.4)).
+- **Tarjeta activa por hover:** (inset 0 1px 0 rgba(185, 227, 244, 0.35), 0 12px 28px -16px rgba(0, 0, 0, 0.5)).
 
 ### Named Rules
-**The Flat In Dark Rule.** En oscuro las tarjetas no llevan sombra; se separan por tono y borde.
+
+**The Material Boundary Rule.** Usa vidrio en la navegación, el panorama y el temporizador flotante; conserva superficies sólidas para listas, tablas y campos.
 
 ## Shapes
 
-Esquinas suaves y consistentes: 6 px en segmentos de barra (`rounded-md`), 8 px en botones y campos (`rounded-lg`), 12 px en tarjetas, menús, columnas del tablero y estados vacíos (`rounded-xl`), 16 px en la `Sheet` y la `TimerBar` (`rounded-2xl`; la `Sheet` solo redondea arriba en móvil), y forma de píldora (`rounded-full`) en badges, avatares, medidor y anillos. Bordes de 1 px en `border`; el estado vacío usa borde discontinuo. Los rellenos de barra se recortan con `clip-path` redondeado.
+Esquinas suavizadas y diferenciadas por escala: campo, botón, navegación, superficie, panorama y shell usan los tokens de rounded. No hay un radio único aplicado a todo. Avatares de equipo e indicadores son circulares; la V se mantiene angulosa. Separadores funcionales de (1px), pistas de progreso de (4px) y órbitas elípticas finas conectan el lenguaje con el observatorio.
 
 ## Components
 
 ### Buttons
-Cuatro variantes; altura 44 px en ambos tamaños (`md` con más relleno horizontal que `sm`), radio 8 px, `text-sm font-medium`, ícono y texto con `gap-2`.
-- **Primary:** `primary-solid` con `primary-fg`; hover baja la opacidad a 0.9.
-- **Secondary:** `surface` con borde; hover `surface-2`. **Ghost:** texto `muted`, hover `surface-2`. **Danger:** `danger` con texto `bg`.
-- **Comportamiento:** transición de 140 ms con `ease-out`; al pulsar `scale(0.97)`; deshabilitado a 50 % de opacidad. Con movimiento reducido no hay escala.
+
+Acciones compactas, tranquilas y claras. Primaria en accent con accent-ink; secundaria en raised con text. Radio button, padding (12px 17px), gap (9px), altura mínima (42px). Hover primario mezcla el acento con blanco (15%); secundario usa hover. Los botones de icono tienen radio field y mínimo (36px). Deshabilitados reducen opacidad a (0.45). Foco visible global: contorno de acento (2px), separación (4px).
+
+### Chips
+
+La categoría es una etiqueta sólida en raised: radio tag, padding (5px 8px), tipo (10px). Los estados se expresan con punto circular (5px) y texto: muted pendiente, accent activo, done completado. No son botones de filtro.
 
 ### Cards / Containers
-Radio 12 px, borde de 1 px, `p-4`/`sm:p-5`. Tonos: `default` (superficie), `raised` (con sombra card) y `accent` (borde `primary/30` sobre `primary-soft`).
 
-### Badge
-Píldora `text-xs font-medium`. `primary` usa `primary-soft` con `primary-text`; `neutral`, `success`, `warning` y `danger` van sobre `surface-2` y solo cambian el color del texto. El estado se lee por la palabra.
+Superficie sólida con radio surface. Tarjetas de proyecto usan padding (23px) y reflejo interior fino; hover cambia a hover y añade la sombra de tarjeta. Las listas sostienen filas separadas por line; las tablas mantienen textos y números legibles dentro de una región horizontal desplazable.
 
 ### Inputs / Fields
-`Field`, `SelectField` y `TextareaField` comparten cáscara: label visible `text-sm font-medium`, control de `min-h-11`, borde `border`, fondo `surface`, radio 8 px. La textarea añade `min-h-24`. Error: borde `danger`, `aria-invalid` y mensaje `text-danger` enlazado con `aria-describedby`; la ayuda (`muted`) se muestra solo si no hay error. Foco por el anillo global de 2 px. Los formularios usan react-hook-form con zod y validan al enviar (`noValidate`).
+
+Fondo input, texto text, borde line de (1px), radio field y padding (12px); tamaño (13px). Etiqueta visible asociada por id, error enlazado mediante aria-describedby y anuncio de alerta. Error de campo cambia el borde a (#db9292); el mensaje usa los tokens error por tema. Foco visible comparte el contorno global. Selectores usan altura mínima (40px).
 
 ### Navigation
-Barra inferior móvil (5 columnas, `text-xs`, ícono 20 px): el activo va en `primary-text` con una marca de 2 px en `primary-solid` sobre el borde superior. Sidebar en `lg`: ítems de `rounded-lg`, activo con `primary-soft` y `primary-text`, inactivo `muted`. Enlace "Saltar al contenido" al inicio. Cabecera con marca (móvil), `ThemeToggle` y `UserMenu`.
 
-### UserMenu
-Menú de 18 rem, `pop-in` de 160 ms desde arriba a la derecha, `shadow-pop`. El foco entra al primer ítem, flechas/Inicio/Fin navegan, Esc cierra y devuelve el foco, Tab cierra. Contiene el cambio rápido de socio (modo de pruebas).
+Flotante y translúcida. Destinos con icono SVG y texto; activo usa accent, una base de gradiente hielo tenue y señal vertical. Hover usa hover y text; el indicador compartido cambia en (0.25s) cuando hay movimiento. El raíl intermedio conserva nombres accesibles; el dock móvil devuelve etiquetas visibles.
 
-### Sheet (hoja modal)
-`<dialog>` nativo con `showModal()`: atrapa el foco, cierra con Esc o al tocar el fondo y devuelve el foco. En móvil se ancla abajo, a todo el ancho, con esquinas superiores de 16 px y alto máximo de 92 dvh; desde `sm` se centra con `max-w-lg` y 16 px en todas las esquinas. Cabecera con título `text-lg font-semibold`, descripción `muted` y botón "Cerrar" de 44 px, separada del cuerpo por un borde; el cuerpo desplaza y respeta el área segura inferior. Fondo `black/50`, `shadow-pop`. Entra con `sheet-up` (260 ms, sube 24 px, `--ease-drawer`) en móvil y `sheet-in` (200 ms, escala 0.97, `--ease-out`) desde `sm`; con movimiento reducido solo hace fundido.
+### Panel lateral
 
-### Toaster
-Sonner con los tokens del proyecto (`surface`, `fg`, `border`, `shadow-pop`, fuente sans; la acción usa `primary-solid`). Aparece arriba al centro con desplazamiento de 72 px para no chocar con la `TimerBar` ni la barra inferior.
+Dialog nativo sólido de ancho (min(540px, 100vw)) y altura (100dvh), borde izquierdo tenue y sombra difusa. Cabecera (27px 30px), cuerpo (30px); móvil usa (23px). Fondo modal (rgba(4, 10, 18, 0.55)) con blur (4px). Apertura local desde (30px) a la derecha durante (0.3s), easing (cubic-bezier(0.16, 1, 0.3, 1)); Escape cierra y devuelve foco.
 
-### TimerBar y TimerChip (firma: temporizador)
-En móvil, la `TimerBar` aparece solo con un temporizador abierto: barra fija con `primary-solid` y `primary-fg`, `rounded-2xl`, `shadow-pop`, a 4.25 rem sobre el borde inferior más el área segura, es decir, justo encima de la navegación. Muestra el tiempo transcurrido en `.num` `text-2xl font-bold` (`role="timer"`), el título de la tarea truncado y un botón "Detener" de 48 px con relleno `primary-fg` y texto `primary-solid`. En `lg` desaparece y el `TimerChip` ocupa la cabecera: píldora con borde, tiempo, tarea truncada y botón "Detener" `sm`. Ambos entran con `.enter`; el estado se dice con la palabra "Detener" y el ícono de cuadrado.
+### Cristal V y movimiento
 
-### TaskCard
-Tarjeta de 12 px con borde, `p-3.5` y `shadow-card`; con el temporizador de esa tarea corriendo el borde pasa a `primary`. Título como botón de 44 px que abre el detalle; debajo, avatar pequeño con nombre de pila o "Sin responsable", estimación en `.num` y enlace en `primary-text`. Al pie, un selector "Mover a" de 44 px (etiqueta solo para lectores) y, si la tarea es tuya, "Iniciar" (secundario) o "Detener" (primario) de 44 px. En escritorio suma un asa de arrastre de 44 px de alto con ícono de agarre.
+V extruida real, profundidad (0.4), bisel (0.11), seis segmentos. Material físico hielo (#9dd5e8), transmisión (0.94), rugosidad (0.06), grosor (1.2), índice óptico (1.5) y clearcoat (1). Reflejos de entorno y luces frías sostienen su lectura. Oscilación suave y respuesta al puntero solo mientras el núcleo es visible. Entrada (0.8s) con el easing del panel. SVG estático conserva silueta y facetas si no hay efectos o falla WebGL.
 
-### KanbanBoard
-Cuatro estados fijos (por hacer, en curso, en revisión, hecho).
-- **Escritorio (`lg`):** una columna por estado sobre `surface-2/50` con borde, título `text-sm font-semibold` y conteo `.num`; al pasar una tarjeta por encima la columna toma borde `primary` y fondo `primary-soft`. Las columnas vacías dicen "Suelta aquí una tarea". Arrastre con @dnd-kit: el puntero arranca tras 6 px y solo el asa arrastra; con teclado, Espacio toma la tarjeta, las flechas izquierda y derecha saltan de columna y Espacio suelta; Esc cancela. Los anuncios para lectores están en español ("Tomaste «…»", "Soltaste «…» en …"). La tarjeta original baja a 40 % de opacidad mientras se arrastra.
-- **Móvil:** sin arrastre. Un `tablist` de cuatro pestañas de `min-h-12` sobre `surface-2` con nombre del estado y conteo `.num`; la activa va en `surface` con `shadow-card`, las demás en `muted`. Muestra una columna a la vez (en curso si tiene tareas) y las flechas cambian de pestaña. El cambio de estado se hace con el selector "Mover a" de cada tarjeta. El estado vacío usa borde discontinuo.
-
-### Registro de horas (TimePage)
-Navegador de semana con dos botones secundarios de 44 px y el rango en `.num` ("Esta semana · dd/mm/yyyy al dd/mm/yyyy"; no se puede avanzar más allá de la semana actual). Una `Card` con el total en `.num text-2xl font-bold` dentro de la frase "de N comprometidas" y un `Meter` con el compromiso semanal como umbral. Debajo, una tarjeta sin relleno por día (encabezado `text-sm font-semibold muted`, filas separadas por `divide-border`); cada fila muestra tarea, proyecto, badges y horas en `.num`. Badges: "En curso" (`primary`), "Validada" (`success`), "Pagada" (`neutral`) y "Anulada" (`danger`, con la tarea tachada y "Motivo: …" debajo). Editar (lápiz) y anular (círculo tachado) son botones fantasma de 44 px con `aria-label`, visibles solo mientras el registro es editable.
-
-### Meter (medidor con mínimo)
-Pista de `surface-2` con anillo `segment`, relleno `primary` revelado con `clip-path` en 500 ms, y una marca vertical de 3 px en `fg` en el umbral. Usa `role="meter"` con `aria-valuetext`. La escala deja 25 % de holgura sobre el mínimo. El relleno no cambia de color al no cumplir; el estado va en texto ("faltan 6 h").
-
-### SegmentedBar (firma: reparto de participación)
-Barra de 20 px con segmentos proporcionales separados por 4 px (mínimo 2.75 rem y 2 % del total). El segmento propio va en `primary`; los demás en `segment`. Debajo, cada segmento se nombra con nombre corto y porcentaje `.num`. Se revela de izquierda a derecha con `clip-path`.
-
-### CountUp
-Cifra que cuenta hasta su valor en 500 ms con curva exponencial de salida; expone el valor final a lectores de pantalla desde el inicio. Con movimiento reducido muestra el valor final.
-
-### Avatar, Skeleton, Spinner, EmptyState, ErrorState, PageHeader
-Avatar circular de iniciales en Plus Jakarta (`primary-soft` / `primary-text`; 32, 40 o 56 px). Skeleton de `surface-2` con pulso. `EmptyState`: borde discontinuo, ícono en círculo `primary-soft`, título, descripción y acción. `PageHeader`: `h1` `text-2xl font-bold` con descripción `muted` y acciones a la derecha.
-
-### Motion
-- **Curva:** `--ease-out: cubic-bezier(0.23, 1, 0.32, 1)`; `--ease-in-out: cubic-bezier(0.77, 0, 0.175, 1)`.
-- **`.enter`:** 360 ms, sube 10 px y aparece; retardo `--i × 60 ms` (`stagger(n)`). **`.pop-in`:** 160 ms, escala de 0.96.
-- **Datos:** `Meter` y `SegmentedBar` se revelan con `clip-path` en 500 ms; `useFirstPlay` los anima solo la primera vez por sesión.
-- **Hoja:** `--ease-drawer: cubic-bezier(0.32, 0.72, 0, 1)` para la subida de la `Sheet` en móvil; `backdrop-in` de 200 ms para el fondo.
-- **Movimiento reducido:** se conserva la opacidad (200 ms) y se elimina el desplazamiento, la escala y los recorridos.
+Las páginas hacen una transición local de (0.2s), con desplazamiento de entrada (8px) y salida (-4px); progreso usa (0.3s), controles (0.15s). Preferencia manual apaga entradas y progreso; prefers-reduced-motion elimina animaciones y reduce transiciones a (0.01ms).
 
 ## Do's and Don'ts
 
 ### Do:
-- **Do** usar tokens (`bg-primary-solid`, `text-primary-text`, `bg-surface`, `text-muted`), nunca colores fijos.
-- **Do** acompañar todo estado con texto ("cumple el mínimo", "faltan 6 h"); el color solo refuerza.
-- **Do** mostrar a quien está por debajo del mínimo mensual con el mismo tono neutro y verde que a los demás, con la cifra que falta; el sistema no castiga con rojo.
-- **Do** poner `.num` en toda cifra de dato y escribirla dentro de una frase.
-- **Do** mantener objetivos táctiles de 44 px, respetar áreas seguras y usar `dvh`.
-- **Do** animar solo la primera vez por sesión (`useFirstPlay`), con `ease-out` y solo `opacity`, `transform` o `clip-path`.
-- **Do** hacer los formularios con react-hook-form y zod, con `Field`/`SelectField`/`TextareaField` (label visible, ayuda y error enlazados) dentro de una `Sheet`.
-- **Do** ofrecer "anular con motivo" en lugar de borrar: la acción destructiva usa `Button` `danger`, explica que el registro queda en el historial y pide el motivo.
-- **Do** dejar la `TimerBar` móvil encima de la navegación inferior y añadir relleno inferior extra a la página (`pb-44`) mientras corra un temporizador.
-- **Do** dar a cada acción de arrastre una alternativa sin arrastre: el selector "Mover a" en móvil y el teclado en escritorio.
-- **Do** dar el mismo ancho proporcional a cada segmento y nombrarlo debajo.
+
+- **Do** usar las variables semánticas del tema para superficies, texto, bordes y controles.
+- **Do** conservar sólidos los campos y las áreas de lectura prolongada.
+- **Do** mantener foco visible y etiquetas asociadas a cada campo.
+- **Do** usar cifras tabulares en tiempo, importes y métricas.
+- **Do** respetar movimiento reducido y mantener disponible la V estática.
+- **Do** reservar espacio final suficiente bajo la navegación móvil fija.
 
 ### Don't:
-- **Don't** usar `primary` (#548d7b) para texto ni para fondo de texto blanco en modo claro; usa `primary-text` o `primary-solid`.
-- **Don't** usar rojo, ámbar o verde de estado como único indicador ni para señalar a una persona por su cumplimiento.
-- **Don't** animar acciones frecuentes o de teclado (abrir con teclado, cambio de tema, temporizador, arrastre con teclado), ni animar `width`, `height` o `top`.
-- **Don't** añadir sombras a tarjetas en modo oscuro.
-- **Don't** repetir la animación de datos en cada visita a una pantalla de uso diario.
-- **Don't** borrar registros ni ofrecer una acción de eliminar; se anulan con motivo.
-- **Don't** mostrar avisos abajo en móvil: el `Toaster` va arriba para no tapar la `TimerBar`.
-- **Don't** dejar una cifra sin `.num` en una lista o columna.
 
+- **Don't** extender el vidrio a todas las filas o campos de trabajo.
+- **Don't** sustituir la V reconocible por una ilustración genérica.
+- **Don't** presentar los ejemplos locales como actividad real del equipo.
+- **Don't** hacer que los efectos 3D bloqueen las acciones de la interfaz.

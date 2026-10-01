@@ -25,8 +25,30 @@ dist-ssr
 *.sln
 *.sw?
 
-# Impeccable (estado local de la herramienta de diseño)
-.impeccable/
+# Local agent packages; share project configuration separately
+.agents/skills/
+.claude/skills/
+.claude/settings.local.json
+.codex/skills/
+.codex/*.local.*
+.impeccable/config.local.json
+.impeccable/hook.cache.json
+.impeccable/critique/
+.impeccable/live/
+.impeccable/mocks/
+.impeccable/screenshots/
+.impeccable/review/
+.impeccable/*.log
 
-# Binario de Impeccable: el lanzador lo descarga en la primera ejecución
-.claude/skills/impeccable/scripts/bin/
+# Generated checks, downloads and temporary artifacts
+.cache/
+.vite/
+coverage/
+test-results/
+playwright-report/
+*.tsbuildinfo
+*.tmp
+*.bak
+*.exe
+*.dll
+*.pdb

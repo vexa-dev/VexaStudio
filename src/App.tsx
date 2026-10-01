@@ -1,22 +1,57 @@
-import { lazy, Suspense } from 'react'
-import { Navigate, Route, Routes } from 'react-router-dom'
-import { AppLayout } from '@/app/AppLayout'
-import { AuthGuard } from '@/features/auth/components/AuthGuard'
+import { lazy, Suspense, useEffect } from "react";
+import { Link, Route, Routes, useLocation } from "react-router-dom";
+import { AppLayout } from "@/app/AppLayout";
+import { AuthGuard } from "@/features/auth/components/AuthGuard";
+import { navItems } from "@/app/nav";
 
 // Cada pantalla se carga al entrar en ella: el arranque no descarga el tablero ni el arrastre.
-const LoginPage = lazy(() => import('@/features/auth/pages/LoginPage'))
-const ProfilePage = lazy(() => import('@/features/auth/pages/ProfilePage'))
-const DashboardPage = lazy(() => import('@/features/dashboard/pages/DashboardPage'))
-const ExpensesPage = lazy(() => import('@/features/expenses/pages/ExpensesPage'))
-const ProjectsPage = lazy(() => import('@/features/projects/pages/ProjectsPage'))
-const BoardPage = lazy(() => import('@/features/tasks/pages/BoardPage'))
-const TasksPage = lazy(() => import('@/features/tasks/pages/TasksPage'))
-const TeamPage = lazy(() => import('@/features/team/pages/TeamPage'))
-const TimePage = lazy(() => import('@/features/time/pages/TimePage'))
+const LoginPage = lazy(() => import("@/features/auth/pages/LoginPage"));
+const ProfilePage = lazy(() => import("@/features/auth/pages/ProfilePage"));
+const DashboardPage = lazy(
+  () => import("@/features/dashboard/pages/DashboardPage"),
+);
+const ExpensesPage = lazy(
+  () => import("@/features/expenses/pages/ExpensesPage"),
+);
+const ProjectsPage = lazy(
+  () => import("@/features/projects/pages/ProjectsPage"),
+);
+const BoardPage = lazy(() => import("@/features/tasks/pages/BoardPage"));
+const TasksPage = lazy(() => import("@/features/tasks/pages/TasksPage"));
+const TeamPage = lazy(() => import("@/features/team/pages/TeamPage"));
+const TimePage = lazy(() => import("@/features/time/pages/TimePage"));
+const ObservatorioApp = lazy(() => import("./ObservatorioApp"));
 
 export default function App() {
+  const { pathname } = useLocation();
+  useEffect(() => {
+    if (pathname.startsWith("/observatorio")) return;
+    const title =
+      navItems.find((item) => item.to === pathname)?.label ||
+      (pathname.startsWith("/proyectos/")
+        ? "Tablero"
+        : pathname === "/login"
+          ? "Acceso"
+          : pathname === "/perfil"
+            ? "Perfil"
+            : "Página no encontrada");
+    document.title = `${title} · VEXA Studio`;
+    document.getElementById("contenido")?.focus({ preventScroll: true });
+  }, [pathname]);
   return (
     <Routes>
+      <Route
+        path="/observatorio/*"
+        element={
+          <Suspense
+            fallback={
+              <output aria-live="polite">Abriendo Observatorio…</output>
+            }
+          >
+            <ObservatorioApp />
+          </Suspense>
+        }
+      />
       <Route
         path="/login"
         element={
@@ -37,7 +72,20 @@ export default function App() {
           <Route path="perfil" element={<ProfilePage />} />
         </Route>
       </Route>
-      <Route path="*" element={<Navigate to="/" replace />} />
+      <Route
+        path="*"
+        element={
+          <main className="mx-auto max-w-xl px-6 py-20">
+            <h1 className="text-3xl">Fuera de órbita.</h1>
+            <p className="my-6 text-muted">
+              Esta página no forma parte del estudio.
+            </p>
+            <Link className="text-primary-text" to="/">
+              Volver al inicio
+            </Link>
+          </main>
+        }
+      />
     </Routes>
-  )
+  );
 }

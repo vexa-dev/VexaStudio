@@ -7,7 +7,7 @@ Plataforma interna de VEXA (4 socios): tablero de sprints y tareas, registro de 
 ## Etapa actual: solo frontend (datos simulados)
 
 - Se construye **todo el frontend primero**, con datos simulados. Supabase se integra después (etapa 2 del PRD).
-- **No** instalar `@supabase/supabase-js`, no crear migraciones SQL ni carpeta `supabase/` en esta etapa.
+- No crear migraciones SQL ni conectar datos remotos en esta etapa. `src/lib/supabase.ts` permanece como cliente opcional preparado y sin uso en los servicios mock.
 - Las pantallas **nunca** importan datos simulados directamente: siempre pasan por la capa de servicios (ver "Capa de datos"). Así, en la etapa 2 solo se agrega la implementación de Supabase sin tocar la UI.
 
 ## Stack
@@ -106,7 +106,7 @@ PRODUCT.md, DESIGN.md       contexto de producto y sistema visual (los usa Impec
 - Textos de la UI en español (Perú). Montos en soles con formato `S/ 1,234.50`; fechas `dd/mm/yyyy`.
 - Modo claro y oscuro. Estados de carga, vacío y error en toda pantalla con datos.
 - Accesible: labels en formularios, foco visible, contraste suficiente.
-- Identidad visual tomada de vexa.space: verde de marca `#548d7b`, fondo oscuro `#0a0a0a`, superficie `#1a1a1a`; fuentes Inter (texto) y Plus Jakarta Sans (títulos), autoalojadas con `@fontsource-variable` para que la PWA funcione sin conexión. El modo claro es una derivación con variantes que cumplen contraste AA. Usa los tokens (`bg-primary-solid`, `text-primary-text`, `bg-surface`, `text-muted`, `shadow-card`…), no colores fijos. El detalle del sistema está en `DESIGN.md`; el contexto de producto, en `PRODUCT.md`.
+- Identidad Observatorio aprobada: cristal ahumado, grafito `#0c1017`, luz hielo `#9be7f2`, Sora e IBM Plex Sans autoalojadas. Usa los tokens semánticos de `src/index.css`. La aplicación principal conserva sus servicios y reglas; la demo independiente vive en `/observatorio/` con CSS aislado. El detalle visual está en `DESIGN.md`; el contexto, en `PRODUCT.md`.
 - Cifras de datos (horas, puntos, %, montos) con la clase `.num` (tabulares, sin saltos al animar). El estado nunca depende solo del color: siempre va acompañado de texto.
 - Componentes de datos ya disponibles en `components/ui/`: `Meter` (progreso con marca de umbral), `SegmentedBar` (reparto entre personas), `CountUp` (cifra que cuenta), `Card` (tonos `default`, `raised`, `accent`). `Sheet` es la hoja modal para formularios y confirmaciones (abajo en el celular, centrada en escritorio) y `Toaster` (Sonner) muestra los avisos con `toast.success`/`toast.error`. Reutilízalos antes de crear otros.
 - Movimiento: solo `transform`, `opacity` y `clip-path`; curva `--ease-out`; entradas escalonadas de 60 ms con `.enter` y `stagger(i)`. Las animaciones de datos (barras, contadores) se reproducen solo la primera vez por sesión (`useFirstPlay`). Nada de animación en acciones frecuentes o de teclado. Con `prefers-reduced-motion` se conserva el cambio de estado (opacidad) y se quita el desplazamiento.

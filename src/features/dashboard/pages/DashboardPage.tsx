@@ -1,47 +1,52 @@
-import { CalendarOff } from 'lucide-react'
-import { useState } from 'react'
-import { Avatar } from '@/components/ui/Avatar'
-import { Card } from '@/components/ui/Card'
-import { CountUp } from '@/components/ui/CountUp'
-import { EmptyState } from '@/components/ui/EmptyState'
-import { ErrorState } from '@/components/ui/ErrorState'
-import { Meter } from '@/components/ui/Meter'
-import { PageHeader } from '@/components/ui/PageHeader'
-import { SegmentedBar } from '@/components/ui/SegmentedBar'
-import { Skeleton } from '@/components/ui/Skeleton'
-import { useAuth } from '@/features/auth/hooks/useAuth'
-import { useMembers } from '@/features/team/hooks/useMembers'
-import { formatMonthLabel, monthKey } from '@/lib/dates'
-import { formatHours, formatInt, formatPercent } from '@/lib/format'
-import { areaLabel } from '@/lib/labels'
-import { useFirstPlay } from '@/lib/useFirstPlay'
-import { stagger } from '@/lib/utils'
-import { useMonthlySummary, usePoints } from '../hooks/useDashboard'
-import { useSettings } from '@/features/settings/hooks/useSettings'
+import { CalendarOff } from "lucide-react";
+import { ObservatoryHero } from "@/components/ObservatoryHero";
+import { useState } from "react";
+import { Avatar } from "@/components/ui/Avatar";
+import { Card } from "@/components/ui/Card";
+import { CountUp } from "@/components/ui/CountUp";
+import { EmptyState } from "@/components/ui/EmptyState";
+import { ErrorState } from "@/components/ui/ErrorState";
+import { Meter } from "@/components/ui/Meter";
+import { PageHeader } from "@/components/ui/PageHeader";
+import { SegmentedBar } from "@/components/ui/SegmentedBar";
+import { Skeleton } from "@/components/ui/Skeleton";
+import { useAuth } from "@/features/auth/hooks/useAuth";
+import { useMembers } from "@/features/team/hooks/useMembers";
+import { formatMonthLabel, monthKey } from "@/lib/dates";
+import { formatHours, formatInt, formatPercent } from "@/lib/format";
+import { areaLabel } from "@/lib/labels";
+import { useFirstPlay } from "@/lib/useFirstPlay";
+import { stagger } from "@/lib/utils";
+import { useMonthlySummary, usePoints } from "../hooks/useDashboard";
+import { useSettings } from "@/features/settings/hooks/useSettings";
 
 /** Escala del medidor: deja espacio después del mínimo para que las horas extra también se vean. */
-const meterMax = (hours: number, minimum: number) => Math.max(minimum * 1.25, hours, 1)
+const meterMax = (hours: number, minimum: number) =>
+  Math.max(minimum * 1.25, hours, 1);
 
 export default function DashboardPage() {
-  const { user } = useAuth()
-  const [month] = useState(() => monthKey(new Date()))
-  const members = useMembers()
-  const monthly = useMonthlySummary(month)
-  const points = usePoints()
-  const settings = useSettings()
+  const { user } = useAuth();
+  const [month] = useState(() => monthKey(new Date()));
+  const members = useMembers();
+  const monthly = useMonthlySummary(month);
+  const points = usePoints();
+  const settings = useSettings();
   // Barras y contadores se animan la primera vez en la sesión; en las visitas siguientes aparecen ya listos.
-  const animate = useFirstPlay('dashboard')
+  const animate = useFirstPlay("dashboard");
 
-  const isLoading = members.isLoading || monthly.isLoading || points.isLoading
-  const isError = members.isError || monthly.isError || points.isError
-  const firstName = user?.name.split(' ')[0]
+  const isLoading = members.isLoading || monthly.isLoading || points.isLoading;
+  const isError = members.isError || monthly.isError || points.isError;
+  const firstName = user?.name.split(" ")[0];
 
   const header = (
-    <PageHeader
-      title={`Hola, ${firstName}`}
-      description={`${formatMonthLabel(month)}: así va el reparto del equipo y tu mes.`}
-    />
-  )
+    <>
+      <PageHeader
+        title={`Hola, ${firstName}`}
+        description={`${formatMonthLabel(month)}: así va el reparto del equipo y tu mes.`}
+      />
+      <ObservatoryHero />
+    </>
+  );
 
   if (isError) {
     return (
@@ -50,13 +55,13 @@ export default function DashboardPage() {
         <ErrorState
           message="No se pudo calcular el resumen del mes."
           onRetry={() => {
-            void members.refetch()
-            void monthly.refetch()
-            void points.refetch()
+            void members.refetch();
+            void monthly.refetch();
+            void points.refetch();
           }}
         />
       </>
-    )
+    );
   }
 
   if (isLoading || !members.data || !monthly.data || !points.data || !user) {
@@ -69,20 +74,20 @@ export default function DashboardPage() {
           <Skeleton className="h-72 lg:col-span-2" />
         </div>
       </>
-    )
+    );
   }
 
   // Tu fila primero: es la que más se consulta desde el celular.
   const partners = members.data
     .filter((m) => monthly.data.some((s) => s.userId === m.id))
-    .sort((a, b) => Number(b.id === user.id) - Number(a.id === user.id))
-  const totalHours = monthly.data.reduce((sum, s) => sum + s.hours, 0)
-  const summaryOf = (id: string) => monthly.data.find((s) => s.userId === id)
-  const pointsOf = (id: string) => points.data.find((p) => p.userId === id)
+    .sort((a, b) => Number(b.id === user.id) - Number(a.id === user.id));
+  const totalHours = monthly.data.reduce((sum, s) => sum + s.hours, 0);
+  const summaryOf = (id: string) => monthly.data.find((s) => s.userId === id);
+  const pointsOf = (id: string) => points.data.find((p) => p.userId === id);
 
-  const mine = summaryOf(user.id)
-  const myPoints = pointsOf(user.id)
-  const totalPoints = points.data.reduce((sum, p) => sum + p.totalPoints, 0)
+  const mine = summaryOf(user.id);
+  const myPoints = pointsOf(user.id);
+  const totalPoints = points.data.reduce((sum, p) => sum + p.totalPoints, 0);
 
   if (totalHours === 0 && totalPoints === 0) {
     return (
@@ -94,7 +99,7 @@ export default function DashboardPage() {
           description="Cuando el equipo registre horas verás aquí el reparto de participación y el cumplimiento de cada socio."
         />
       </>
-    )
+    );
   }
 
   // La barra mantiene el orden del equipo (no el de tu fila) para que cada persona conserve su lugar.
@@ -102,12 +107,12 @@ export default function DashboardPage() {
     .filter((m) => pointsOf(m.id))
     .map((m) => ({
       id: m.id,
-      label: m.id === user.id ? 'Tú' : m.name.split(' ')[0],
+      label: m.id === user.id ? "Tú" : m.name.split(" ")[0],
       caption: formatPercent(pointsOf(m.id)?.participation ?? 0),
       value: pointsOf(m.id)?.totalPoints ?? 0,
       highlight: m.id === user.id,
-    }))
-  const shareSummary = `Reparto de participación: ${segments.map((s) => `${s.label} ${s.caption}`).join(', ')}`
+    }));
+  const shareSummary = `Reparto de participación: ${segments.map((s) => `${s.label} ${s.caption}`).join(", ")}`;
 
   return (
     <>
@@ -121,34 +126,43 @@ export default function DashboardPage() {
             {myPoints ? (
               <div className="flex flex-col gap-1.5">
                 <p className="font-display text-2xl font-bold leading-tight sm:text-3xl">
-                  Tienes el{' '}
+                  Tienes el{" "}
                   <CountUp
                     value={myPoints.participation * 100}
                     format={(v) => `${Math.round(v)} %`}
                     className="num text-primary-text"
                     animate={animate}
-                  />{' '}
+                  />{" "}
                   del reparto
                 </p>
                 <p className="text-sm text-muted">
-                  <span className="num">{formatInt(myPoints.totalPoints)}</span> de{' '}
-                  <span className="num">{formatInt(totalPoints)}</span> puntos:{' '}
-                  <span className="num">{formatInt(myPoints.hourPoints)}</span> por horas y{' '}
-                  <span className="num">{formatInt(myPoints.moneyPoints)}</span> por gastos aprobados.
+                  <span className="num">{formatInt(myPoints.totalPoints)}</span>{" "}
+                  de <span className="num">{formatInt(totalPoints)}</span>{" "}
+                  puntos:{" "}
+                  <span className="num">{formatInt(myPoints.hourPoints)}</span>{" "}
+                  por horas y{" "}
+                  <span className="num">{formatInt(myPoints.moneyPoints)}</span>{" "}
+                  por gastos aprobados.
                 </p>
               </div>
             ) : null}
-            <SegmentedBar segments={segments} summary={shareSummary} animate={animate} />
+            <SegmentedBar
+              segments={segments}
+              summary={shareSummary}
+              animate={animate}
+            />
             {settings.data ? (
               <details className="text-sm text-muted">
                 <summary className="inline-flex min-h-11 cursor-pointer items-center font-medium text-primary-text">
                   ¿Cómo se calcula?
                 </summary>
                 <p className="pb-1">
-                  Cada hora validada y no pagada suma <span className="num">{settings.data.pointsPerHour}</span>{' '}
-                  puntos. Cada S/ 1 de gasto aprobado, no reembolsado y posterior a la firma suma{' '}
-                  <span className="num">{settings.data.pointsPerSol}</span>. Tu participación es tu parte de los
-                  puntos del equipo.
+                  Cada hora validada y no pagada suma{" "}
+                  <span className="num">{settings.data.pointsPerHour}</span>{" "}
+                  puntos. Cada S/ 1 de gasto aprobado, no reembolsado y
+                  posterior a la firma suma{" "}
+                  <span className="num">{settings.data.pointsPerSol}</span>. Tu
+                  participación es tu parte de los puntos del equipo.
                 </p>
               </details>
             ) : null}
@@ -156,15 +170,26 @@ export default function DashboardPage() {
         </section>
 
         {mine ? (
-          <section aria-labelledby="tu-mes" className="enter" style={stagger(2)}>
+          <section
+            aria-labelledby="tu-mes"
+            className="enter"
+            style={stagger(2)}
+          >
             <Card className="flex h-full flex-col gap-4">
               <h2 id="tu-mes" className="text-base font-semibold">
                 Tu mes
               </h2>
               <p className="text-sm">
-                Llevas <span className="num text-lg font-bold">{formatHours(mine.hours)}</span> de las{' '}
-                <span className="num font-semibold">{formatHours(mine.minimumHours)}</span> mínimas de{' '}
-                {formatMonthLabel(month).split(' ')[0].toLowerCase()}.
+                Llevas{" "}
+                <span className="num text-lg font-bold">
+                  {formatHours(mine.hours)}
+                </span>{" "}
+                de las{" "}
+                <span className="num font-semibold">
+                  {formatHours(mine.minimumHours)}
+                </span>{" "}
+                mínimas de {formatMonthLabel(month).split(" ")[0].toLowerCase()}
+                .
               </p>
               <div className="pb-1">
                 <Meter
@@ -179,15 +204,19 @@ export default function DashboardPage() {
                 {mine.meetsMinimum
                   ? mine.hours > mine.minimumHours
                     ? `Ya cumples el mínimo, con ${formatHours(mine.hours - mine.minimumHours)} de más.`
-                    : 'Justo en el mínimo del mes.'
-                  : `Te faltan ${formatHours(mine.minimumHours - mine.hours)} para el mínimo.`}{' '}
+                    : "Justo en el mínimo del mes."
+                  : `Te faltan ${formatHours(mine.minimumHours - mine.hours)} para el mínimo.`}{" "}
                 Tu compromiso es de {user.weeklyHours} h por semana.
               </p>
             </Card>
           </section>
         ) : null}
 
-        <section aria-labelledby="equipo" className="enter lg:col-span-2" style={stagger(3)}>
+        <section
+          aria-labelledby="equipo"
+          className="enter lg:col-span-2"
+          style={stagger(3)}
+        >
           <Card>
             <h2 id="equipo" className="mb-1 text-base font-semibold">
               El equipo este mes
@@ -203,9 +232,9 @@ export default function DashboardPage() {
             </div>
             <ul className="divide-y divide-border">
               {partners.map((member) => {
-                const s = summaryOf(member.id)
-                const p = pointsOf(member.id)
-                if (!s || !p) return null
+                const s = summaryOf(member.id);
+                const p = pointsOf(member.id);
+                if (!s || !p) return null;
                 return (
                   <li
                     key={member.id}
@@ -216,9 +245,13 @@ export default function DashboardPage() {
                       <div className="min-w-0">
                         <p className="truncate text-sm font-medium">
                           {member.name}
-                          {member.id === user.id ? <span className="text-muted"> (tú)</span> : null}
+                          {member.id === user.id ? (
+                            <span className="text-muted"> (tú)</span>
+                          ) : null}
                         </p>
-                        <p className="truncate text-xs text-muted">{areaLabel[member.area]}</p>
+                        <p className="truncate text-xs text-muted">
+                          {areaLabel[member.area]}
+                        </p>
                       </div>
                     </div>
                     <div>
@@ -232,12 +265,17 @@ export default function DashboardPage() {
                       />
                       <p className="num mt-1.5 text-xs text-muted">
                         {formatHours(s.hours)} de {formatHours(s.minimumHours)}
-                        {s.meetsMinimum ? ' · cumple el mínimo' : ` · faltan ${formatHours(s.minimumHours - s.hours)}`}
+                        {s.meetsMinimum
+                          ? " · cumple el mínimo"
+                          : ` · faltan ${formatHours(s.minimumHours - s.hours)}`}
                       </p>
                     </div>
                     <p className="num text-xs text-muted sm:hidden">
-                      {formatInt(p.totalPoints)} puntos ·{' '}
-                      <span className="font-semibold text-fg">{formatPercent(p.participation)}</span> del reparto
+                      {formatInt(p.totalPoints)} puntos ·{" "}
+                      <span className="font-semibold text-fg">
+                        {formatPercent(p.participation)}
+                      </span>{" "}
+                      del reparto
                     </p>
                     <p className="num hidden text-right text-sm font-semibold sm:block">
                       <span className="sr-only">Puntos: </span>
@@ -248,12 +286,12 @@ export default function DashboardPage() {
                       {formatPercent(p.participation)}
                     </p>
                   </li>
-                )
+                );
               })}
             </ul>
           </Card>
         </section>
       </div>
     </>
-  )
+  );
 }

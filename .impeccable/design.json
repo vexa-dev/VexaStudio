@@ -1,0 +1,571 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-09-30T18:29:24.497Z",
+  "title": "Design System: VEXA Studio",
+  "extensions": {
+    "colorMeta": {
+      "bg-dark": {
+        "role": "neutral",
+        "displayName": "bg dark",
+        "tonalRamp": [
+          "oklch(0.1500 0.0160 261.51)",
+          "oklch(0.2643 0.0160 261.51)",
+          "oklch(0.3786 0.0160 261.51)",
+          "oklch(0.4929 0.0160 261.51)",
+          "oklch(0.6071 0.0160 261.51)",
+          "oklch(0.7214 0.0160 261.51)",
+          "oklch(0.8357 0.0160 261.51)",
+          "oklch(0.9500 0.0160 261.51)"
+        ]
+      },
+      "text-dark": {
+        "role": "neutral",
+        "displayName": "text dark",
+        "tonalRamp": [
+          "oklch(0.1500 0.0109 256.70)",
+          "oklch(0.2643 0.0109 256.70)",
+          "oklch(0.3786 0.0109 256.70)",
+          "oklch(0.4929 0.0109 256.70)",
+          "oklch(0.6071 0.0109 256.70)",
+          "oklch(0.7214 0.0109 256.70)",
+          "oklch(0.8357 0.0109 256.70)",
+          "oklch(0.9500 0.0109 256.70)"
+        ]
+      },
+      "muted-dark": {
+        "role": "neutral",
+        "displayName": "muted dark",
+        "tonalRamp": [
+          "oklch(0.1500 0.0324 254.37)",
+          "oklch(0.2643 0.0324 254.37)",
+          "oklch(0.3786 0.0324 254.37)",
+          "oklch(0.4929 0.0324 254.37)",
+          "oklch(0.6071 0.0324 254.37)",
+          "oklch(0.7214 0.0324 254.37)",
+          "oklch(0.8357 0.0324 254.37)",
+          "oklch(0.9500 0.0324 254.37)"
+        ]
+      },
+      "surface-dark": {
+        "role": "neutral",
+        "displayName": "surface dark",
+        "tonalRamp": [
+          "oklch(0.1500 0.0241 259.29)",
+          "oklch(0.2643 0.0241 259.29)",
+          "oklch(0.3786 0.0241 259.29)",
+          "oklch(0.4929 0.0241 259.29)",
+          "oklch(0.6071 0.0241 259.29)",
+          "oklch(0.7214 0.0241 259.29)",
+          "oklch(0.8357 0.0241 259.29)",
+          "oklch(0.9500 0.0241 259.29)"
+        ]
+      },
+      "raised-dark": {
+        "role": "neutral",
+        "displayName": "raised dark",
+        "tonalRamp": [
+          "oklch(0.1500 0.0336 257.67)",
+          "oklch(0.2643 0.0336 257.67)",
+          "oklch(0.3786 0.0336 257.67)",
+          "oklch(0.4929 0.0336 257.67)",
+          "oklch(0.6071 0.0336 257.67)",
+          "oklch(0.7214 0.0336 257.67)",
+          "oklch(0.8357 0.0336 257.67)",
+          "oklch(0.9500 0.0336 257.67)"
+        ]
+      },
+      "glass-dark": {
+        "role": "neutral",
+        "displayName": "glass dark",
+        "tonalRamp": [
+          "oklch(0.1500 0.0284 257.53)",
+          "oklch(0.2643 0.0284 257.53)",
+          "oklch(0.3786 0.0284 257.53)",
+          "oklch(0.4929 0.0284 257.53)",
+          "oklch(0.6071 0.0284 257.53)",
+          "oklch(0.7214 0.0284 257.53)",
+          "oklch(0.8357 0.0284 257.53)",
+          "oklch(0.9500 0.0284 257.53)"
+        ]
+      },
+      "line-dark": {
+        "role": "neutral",
+        "displayName": "line dark",
+        "tonalRamp": [
+          "oklch(0.1500 0.0544 251.92)",
+          "oklch(0.2643 0.0544 251.92)",
+          "oklch(0.3786 0.0544 251.92)",
+          "oklch(0.4929 0.0544 251.92)",
+          "oklch(0.6071 0.0544 251.92)",
+          "oklch(0.7214 0.0544 251.92)",
+          "oklch(0.8357 0.0544 251.92)",
+          "oklch(0.9500 0.0544 251.92)"
+        ]
+      },
+      "accent-dark": {
+        "role": "primary",
+        "displayName": "accent dark",
+        "tonalRamp": [
+          "oklch(0.1500 0.0763 207.33)",
+          "oklch(0.2643 0.0763 207.33)",
+          "oklch(0.3786 0.0763 207.33)",
+          "oklch(0.4929 0.0763 207.33)",
+          "oklch(0.6071 0.0763 207.33)",
+          "oklch(0.7214 0.0763 207.33)",
+          "oklch(0.8357 0.0763 207.33)",
+          "oklch(0.9500 0.0763 207.33)"
+        ]
+      },
+      "accent-ink-dark": {
+        "role": "neutral",
+        "displayName": "accent ink dark",
+        "tonalRamp": [
+          "oklch(0.1500 0.0321 231.79)",
+          "oklch(0.2643 0.0321 231.79)",
+          "oklch(0.3786 0.0321 231.79)",
+          "oklch(0.4929 0.0321 231.79)",
+          "oklch(0.6071 0.0321 231.79)",
+          "oklch(0.7214 0.0321 231.79)",
+          "oklch(0.8357 0.0321 231.79)",
+          "oklch(0.9500 0.0321 231.79)"
+        ]
+      },
+      "hover-dark": {
+        "role": "neutral",
+        "displayName": "hover dark",
+        "tonalRamp": [
+          "oklch(0.1500 0.0376 250.62)",
+          "oklch(0.2643 0.0376 250.62)",
+          "oklch(0.3786 0.0376 250.62)",
+          "oklch(0.4929 0.0376 250.62)",
+          "oklch(0.6071 0.0376 250.62)",
+          "oklch(0.7214 0.0376 250.62)",
+          "oklch(0.8357 0.0376 250.62)",
+          "oklch(0.9500 0.0376 250.62)"
+        ]
+      },
+      "input-dark": {
+        "role": "neutral",
+        "displayName": "input dark",
+        "tonalRamp": [
+          "oklch(0.1500 0.0250 256.47)",
+          "oklch(0.2643 0.0250 256.47)",
+          "oklch(0.3786 0.0250 256.47)",
+          "oklch(0.4929 0.0250 256.47)",
+          "oklch(0.6071 0.0250 256.47)",
+          "oklch(0.7214 0.0250 256.47)",
+          "oklch(0.8357 0.0250 256.47)",
+          "oklch(0.9500 0.0250 256.47)"
+        ]
+      },
+      "bg-light": {
+        "role": "neutral",
+        "displayName": "bg light",
+        "tonalRamp": [
+          "oklch(0.1500 0.0069 247.90)",
+          "oklch(0.2643 0.0069 247.90)",
+          "oklch(0.3786 0.0069 247.90)",
+          "oklch(0.4929 0.0069 247.90)",
+          "oklch(0.6071 0.0069 247.90)",
+          "oklch(0.7214 0.0069 247.90)",
+          "oklch(0.8357 0.0069 247.90)",
+          "oklch(0.9500 0.0069 247.90)"
+        ]
+      },
+      "text-light": {
+        "role": "neutral",
+        "displayName": "text light",
+        "tonalRamp": [
+          "oklch(0.1500 0.0376 252.23)",
+          "oklch(0.2643 0.0376 252.23)",
+          "oklch(0.3786 0.0376 252.23)",
+          "oklch(0.4929 0.0376 252.23)",
+          "oklch(0.6071 0.0376 252.23)",
+          "oklch(0.7214 0.0376 252.23)",
+          "oklch(0.8357 0.0376 252.23)",
+          "oklch(0.9500 0.0376 252.23)"
+        ]
+      },
+      "muted-light": {
+        "role": "neutral",
+        "displayName": "muted light",
+        "tonalRamp": [
+          "oklch(0.1500 0.0358 254.48)",
+          "oklch(0.2643 0.0358 254.48)",
+          "oklch(0.3786 0.0358 254.48)",
+          "oklch(0.4929 0.0358 254.48)",
+          "oklch(0.6071 0.0358 254.48)",
+          "oklch(0.7214 0.0358 254.48)",
+          "oklch(0.8357 0.0358 254.48)",
+          "oklch(0.9500 0.0358 254.48)"
+        ]
+      },
+      "surface-light": {
+        "role": "neutral",
+        "displayName": "surface light",
+        "tonalRamp": [
+          "oklch(0.1500 0.0034 247.86)",
+          "oklch(0.2643 0.0034 247.86)",
+          "oklch(0.3786 0.0034 247.86)",
+          "oklch(0.4929 0.0034 247.86)",
+          "oklch(0.6071 0.0034 247.86)",
+          "oklch(0.7214 0.0034 247.86)",
+          "oklch(0.8357 0.0034 247.86)",
+          "oklch(0.9500 0.0034 247.86)"
+        ]
+      },
+      "raised-light": {
+        "role": "neutral",
+        "displayName": "raised light",
+        "tonalRamp": [
+          "oklch(0.1500 0.0128 244.26)",
+          "oklch(0.2643 0.0128 244.26)",
+          "oklch(0.3786 0.0128 244.26)",
+          "oklch(0.4929 0.0128 244.26)",
+          "oklch(0.6071 0.0128 244.26)",
+          "oklch(0.7214 0.0128 244.26)",
+          "oklch(0.8357 0.0128 244.26)",
+          "oklch(0.9500 0.0128 244.26)"
+        ]
+      },
+      "glass-light": {
+        "role": "neutral",
+        "displayName": "glass light",
+        "tonalRamp": [
+          "oklch(0.1500 0.0051 247.88)",
+          "oklch(0.2643 0.0051 247.88)",
+          "oklch(0.3786 0.0051 247.88)",
+          "oklch(0.4929 0.0051 247.88)",
+          "oklch(0.6071 0.0051 247.88)",
+          "oklch(0.7214 0.0051 247.88)",
+          "oklch(0.8357 0.0051 247.88)",
+          "oklch(0.9500 0.0051 247.88)"
+        ]
+      },
+      "line-light": {
+        "role": "neutral",
+        "displayName": "line light",
+        "tonalRamp": [
+          "oklch(0.1500 0.0656 247.33)",
+          "oklch(0.2643 0.0656 247.33)",
+          "oklch(0.3786 0.0656 247.33)",
+          "oklch(0.4929 0.0656 247.33)",
+          "oklch(0.6071 0.0656 247.33)",
+          "oklch(0.7214 0.0656 247.33)",
+          "oklch(0.8357 0.0656 247.33)",
+          "oklch(0.9500 0.0656 247.33)"
+        ]
+      },
+      "accent-light": {
+        "role": "primary",
+        "displayName": "accent light",
+        "tonalRamp": [
+          "oklch(0.1500 0.0777 222.47)",
+          "oklch(0.2643 0.0777 222.47)",
+          "oklch(0.3786 0.0777 222.47)",
+          "oklch(0.4929 0.0777 222.47)",
+          "oklch(0.6071 0.0777 222.47)",
+          "oklch(0.7214 0.0777 222.47)",
+          "oklch(0.8357 0.0777 222.47)",
+          "oklch(0.9500 0.0777 222.47)"
+        ]
+      },
+      "accent-ink-light": {
+        "role": "neutral",
+        "displayName": "accent ink light",
+        "tonalRamp": [
+          "oklch(0.1500 0.0000 89.88)",
+          "oklch(0.2643 0.0000 89.88)",
+          "oklch(0.3786 0.0000 89.88)",
+          "oklch(0.4929 0.0000 89.88)",
+          "oklch(0.6071 0.0000 89.88)",
+          "oklch(0.7214 0.0000 89.88)",
+          "oklch(0.8357 0.0000 89.88)",
+          "oklch(0.9500 0.0000 89.88)"
+        ]
+      },
+      "hover-light": {
+        "role": "neutral",
+        "displayName": "hover light",
+        "tonalRamp": [
+          "oklch(0.1500 0.0143 231.21)",
+          "oklch(0.2643 0.0143 231.21)",
+          "oklch(0.3786 0.0143 231.21)",
+          "oklch(0.4929 0.0143 231.21)",
+          "oklch(0.6071 0.0143 231.21)",
+          "oklch(0.7214 0.0143 231.21)",
+          "oklch(0.8357 0.0143 231.21)",
+          "oklch(0.9500 0.0143 231.21)"
+        ]
+      },
+      "input-light": {
+        "role": "neutral",
+        "displayName": "input light",
+        "tonalRamp": [
+          "oklch(0.1500 0.0000 89.88)",
+          "oklch(0.2643 0.0000 89.88)",
+          "oklch(0.3786 0.0000 89.88)",
+          "oklch(0.4929 0.0000 89.88)",
+          "oklch(0.6071 0.0000 89.88)",
+          "oklch(0.7214 0.0000 89.88)",
+          "oklch(0.8357 0.0000 89.88)",
+          "oklch(0.9500 0.0000 89.88)"
+        ]
+      },
+      "done-dark": {
+        "role": "neutral",
+        "displayName": "done dark",
+        "tonalRamp": [
+          "oklch(0.1500 0.0637 163.39)",
+          "oklch(0.2643 0.0637 163.39)",
+          "oklch(0.3786 0.0637 163.39)",
+          "oklch(0.4929 0.0637 163.39)",
+          "oklch(0.6071 0.0637 163.39)",
+          "oklch(0.7214 0.0637 163.39)",
+          "oklch(0.8357 0.0637 163.39)",
+          "oklch(0.9500 0.0637 163.39)"
+        ]
+      },
+      "done-light": {
+        "role": "neutral",
+        "displayName": "done light",
+        "tonalRamp": [
+          "oklch(0.1500 0.0796 160.02)",
+          "oklch(0.2643 0.0796 160.02)",
+          "oklch(0.3786 0.0796 160.02)",
+          "oklch(0.4929 0.0796 160.02)",
+          "oklch(0.6071 0.0796 160.02)",
+          "oklch(0.7214 0.0796 160.02)",
+          "oklch(0.8357 0.0796 160.02)",
+          "oklch(0.9500 0.0796 160.02)"
+        ]
+      },
+      "error-dark": {
+        "role": "neutral",
+        "displayName": "error dark",
+        "tonalRamp": [
+          "oklch(0.1500 0.0816 19.01)",
+          "oklch(0.2643 0.0816 19.01)",
+          "oklch(0.3786 0.0816 19.01)",
+          "oklch(0.4929 0.0816 19.01)",
+          "oklch(0.6071 0.0816 19.01)",
+          "oklch(0.7214 0.0816 19.01)",
+          "oklch(0.8357 0.0816 19.01)",
+          "oklch(0.9500 0.0816 19.01)"
+        ]
+      },
+      "error-light": {
+        "role": "neutral",
+        "displayName": "error light",
+        "tonalRamp": [
+          "oklch(0.1500 0.1586 25.61)",
+          "oklch(0.2643 0.1586 25.61)",
+          "oklch(0.3786 0.1586 25.61)",
+          "oklch(0.4929 0.1586 25.61)",
+          "oklch(0.6071 0.1586 25.61)",
+          "oklch(0.7214 0.1586 25.61)",
+          "oklch(0.8357 0.1586 25.61)",
+          "oklch(0.9500 0.1586 25.61)"
+        ]
+      }
+    },
+    "typographyMeta": {
+      "display": {
+        "displayName": "display",
+        "purpose": "Panorama expresivo."
+      },
+      "headline": {
+        "displayName": "headline",
+        "purpose": "Título de página."
+      },
+      "title": {
+        "displayName": "title",
+        "purpose": "Título de sección."
+      },
+      "body": {
+        "displayName": "body",
+        "purpose": "Texto explicativo."
+      },
+      "label": {
+        "displayName": "label",
+        "purpose": "Etiquetas y controles."
+      },
+      "numeric": {
+        "displayName": "numeric",
+        "purpose": "Reloj principal."
+      }
+    },
+    "shadows": [
+      {
+        "name": "glass-dark",
+        "value": "0 18px 55px -20px rgba(0, 0, 0, 0.62)",
+        "purpose": "Vidrio oscuro."
+      },
+      {
+        "name": "glass-light",
+        "value": "0 18px 55px -20px rgba(37, 69, 95, 0.22)",
+        "purpose": "Vidrio claro."
+      },
+      {
+        "name": "panel",
+        "value": "-15px 0 60px -20px rgba(0, 0, 0, 0.4)",
+        "purpose": "Separación del panel modal."
+      }
+    ],
+    "motion": [
+      {
+        "name": "control-duration",
+        "value": "0.15s",
+        "purpose": "Color, fondo, borde y sombra de controles."
+      },
+      {
+        "name": "route-duration",
+        "value": "0.2s",
+        "purpose": "Transición local de páginas; cero si se reducen efectos."
+      },
+      {
+        "name": "navigation-duration",
+        "value": "0.25s",
+        "purpose": "Indicador compartido de navegación."
+      },
+      {
+        "name": "panel-duration",
+        "value": "0.3s",
+        "purpose": "Entrada local del panel."
+      },
+      {
+        "name": "core-duration",
+        "value": "0.8s",
+        "purpose": "Entrada del cristal."
+      },
+      {
+        "name": "ease-arrival",
+        "value": "cubic-bezier(0.16, 1, 0.3, 1)",
+        "purpose": "Entrada del cristal y panel."
+      },
+      {
+        "name": "progress-duration",
+        "value": "0.3s",
+        "purpose": "Cambio de ancho de progreso."
+      }
+    ],
+    "breakpoints": [
+      {
+        "name": "mobile-max",
+        "value": "640px"
+      },
+      {
+        "name": "rail-max",
+        "value": "850px"
+      },
+      {
+        "name": "compact-desktop-max",
+        "value": "1150px"
+      },
+      {
+        "name": "wide-min",
+        "value": "1600px"
+      }
+    ]
+  },
+  "components": [
+    {
+      "name": "Acción primaria",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "Acción principal con tinta adaptada al tema.",
+      "html": "<button class=\"ds-button ds-primary\">Crear proyecto</button>",
+      "css": ".ds-button{display:inline-flex;align-items:center;justify-content:center;gap:9px;border:0;border-radius:9px;padding:12px 17px;min-height:42px;font:500 12px \"IBM Plex Sans\",sans-serif;cursor:pointer;transition:background .15s,color .15s,border-color .15s,box-shadow .15s}.ds-button:disabled{opacity:.45;cursor:not-allowed}.ds-button:focus-visible{outline:2px solid var(--accent);outline-offset:4px}.ds-primary{background:var(--accent);color:var(--accent-ink);box-shadow:0 5px 15px -8px rgba(95,222,244,.35),inset 0 1px 0 rgba(255,255,255,.4)}.ds-primary:hover{background:color-mix(in srgb,var(--accent),white 15%)}@media(prefers-reduced-motion:reduce){*{transition-duration:.01ms!important;animation:none!important}}"
+    },
+    {
+      "name": "Acción secundaria",
+      "kind": "button",
+      "refersTo": "button-secondary",
+      "description": "Acción de apoyo en superficie sólida.",
+      "html": "<button class=\"ds-button ds-secondary\">Cancelar</button>",
+      "css": ".ds-button{display:inline-flex;align-items:center;justify-content:center;gap:9px;border:0;border-radius:9px;padding:12px 17px;min-height:42px;font:500 12px \"IBM Plex Sans\",sans-serif;cursor:pointer;transition:background .15s,color .15s,border-color .15s,box-shadow .15s}.ds-button:disabled{opacity:.45;cursor:not-allowed}.ds-button:focus-visible{outline:2px solid var(--accent);outline-offset:4px}.ds-secondary{background:var(--raised);color:var(--text)}.ds-secondary:hover{background:var(--hover)}@media(prefers-reduced-motion:reduce){*{transition-duration:.01ms!important;animation:none!important}}"
+    },
+    {
+      "name": "Botón de icono",
+      "kind": "button",
+      "refersTo": "icon-button",
+      "description": "Herramienta compacta con nombre accesible.",
+      "html": "<button class=\"ds-icon\" aria-label=\"Cerrar panel\"><svg viewBox=\"0 0 24 24\" width=\"20\" height=\"20\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\"><path d=\"m18 6-12 12M6 6l12 12\"/></svg></button>",
+      "css": ".ds-icon{border:0;background:transparent;min-height:36px;min-width:36px;display:inline-grid;place-items:center;border-radius:8px;color:var(--muted);cursor:pointer;transition:background .15s,color .15s}.ds-icon:hover{background:var(--hover);color:var(--accent)}.ds-icon:focus-visible{outline:2px solid var(--accent);outline-offset:4px}@media(prefers-reduced-motion:reduce){*{transition-duration:.01ms!important;animation:none!important}}"
+    },
+    {
+      "name": "Campo de texto",
+      "kind": "input",
+      "refersTo": "field",
+      "description": "Campo sólido y etiquetado para trabajo estable.",
+      "html": "<div class=\"ds-field\"><label for=\"ds-project-name\">Nombre del proyecto</label><input id=\"ds-project-name\" placeholder=\"Una nueva idea\"></div>",
+      "css": ".ds-field{display:grid;gap:9px;margin-bottom:22px;font:12px \"IBM Plex Sans\",sans-serif;color:var(--text)}.ds-field label{font-weight:500}.ds-field input{width:100%;padding:12px;border:1px solid var(--line);background:var(--input);color:var(--text);border-radius:8px;font:13px \"IBM Plex Sans\",sans-serif;caret-color:var(--accent);transition:background .15s,border-color .15s}.ds-field input::placeholder{color:var(--muted);opacity:1}.ds-field input:focus-visible{outline:2px solid var(--accent);outline-offset:4px}@media(prefers-reduced-motion:reduce){*{transition-duration:.01ms!important;animation:none!important}}"
+    },
+    {
+      "name": "Destino de navegación",
+      "kind": "nav",
+      "refersTo": "nav-link",
+      "description": "Destino activo sobre un fragmento de vidrio.",
+      "html": "<nav class=\"ds-nav\" aria-label=\"Navegación\"><a class=\"ds-link ds-active\" href=\"#resumen\" aria-current=\"page\"><svg width=\"19\" height=\"19\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\"><circle cx=\"12\" cy=\"12\" r=\"10\"/><path d=\"m14.31 8 5.74 9.94M9.69 8h11.48M7.38 12l5.74-9.94M9.69 16 3.95 6.06M14.31 16H2.83m13.79-4-5.74 9.94\"/></svg>Resumen</a></nav>",
+      "css": ".ds-nav{padding:14px;background:var(--glass);border-radius:18px;backdrop-filter:blur(22px) saturate(125%);box-shadow:var(--shadow),inset 0 1px 0 rgba(218,238,255,.1),inset 1px 0 0 rgba(218,238,255,.04)}.ds-link{display:flex;position:relative;align-items:center;gap:12px;padding:14px;border-radius:10px;color:var(--muted);font:13px \"IBM Plex Sans\",sans-serif;min-height:47px;text-decoration:none}.ds-link:hover{color:var(--text);background:var(--hover)}.ds-link:focus-visible{outline:2px solid var(--accent);outline-offset:4px}.ds-active{color:var(--accent);background:linear-gradient(105deg,rgba(107,186,212,.14),rgba(107,186,212,.04));box-shadow:inset 0 1px 0 rgba(179,227,244,.13)}.ds-active::after{content:\"\";position:absolute;width:3px;height:16px;right:12px;top:calc(50% - 8px);border-radius:4px;background:var(--accent)}@media(prefers-reduced-motion:reduce){*{transition-duration:.01ms!important;animation:none!important}}"
+    },
+    {
+      "name": "Etiqueta de categoría",
+      "kind": "chip",
+      "refersTo": "category-tag",
+      "description": "Metadato compacto, no interactivo.",
+      "html": "<span class=\"ds-category\">Software</span>",
+      "css": ".ds-category{padding:5px 8px;background:var(--raised);border-radius:5px;font:10px \"IBM Plex Sans\",sans-serif;color:var(--muted)}@media(prefers-reduced-motion:reduce){*{transition-duration:.01ms!important;animation:none!important}}"
+    },
+    {
+      "name": "Tarjeta de proyecto",
+      "kind": "card",
+      "refersTo": "project-card",
+      "description": "Superficie sólida interactiva para abrir un proyecto.",
+      "html": "<button class=\"ds-project\"><h2>Estudio digital</h2><p>Una idea en construcción.</p><div class=\"ds-track\"><span style=\"width:40%\"></span></div></button>",
+      "css": ".ds-project{text-align:left;border:0;padding:23px;background:var(--surface);color:var(--text);border-radius:14px;box-shadow:inset 0 1px 0 var(--line);cursor:pointer;transition:box-shadow .2s,background .2s}.ds-project:hover{background:var(--hover);box-shadow:inset 0 1px 0 rgba(185,227,244,.35),0 12px 28px -16px rgba(0,0,0,.5)}.ds-project:focus-visible{outline:2px solid var(--accent);outline-offset:4px}.ds-project h2{font:500 19px \"Sora Variable\",sans-serif;letter-spacing:-.03em;margin:0 0 11px}.ds-project p{color:var(--muted);font:12px/1.7 \"IBM Plex Sans\",sans-serif;min-height:42px;margin:0 0 22px}.ds-track{height:4px;border-radius:5px;background:var(--raised);overflow:hidden}.ds-track span{display:block;height:100%;border-radius:inherit;background:var(--accent);transition:width .3s}@media(prefers-reduced-motion:reduce){*{transition-duration:.01ms!important;animation:none!important}}"
+    }
+  ],
+  "narrative": {
+    "northStar": "Observatorio",
+    "overview": "Observatorio es un estudio con perspectiva: grafito profundo, luz hielo y cristal ahumado enmarcan una V reconocible. La alternativa clara transforma el mismo vocabulario en superficies minerales, con tinta azul y acento petróleo.\n\nEl vidrio pertenece a la navegación, al panorama y al temporizador flotante. Listas, tablas y formularios mantienen superficies sólidas para leer y trabajar con estabilidad. Sora aporta carácter a títulos y números; IBM Plex Sans sostiene la interfaz compacta. El movimiento queda cerca del elemento que cambia y respeta la preferencia del sistema y el control manual.",
+    "keyCharacteristics": [
+      "Cristal ahumado con reflejos suaves, no bordes pesados.",
+      "Superficies sólidas para el trabajo diario.",
+      "Luz hielo y su traducción mineral clara.",
+      "V geométrica, tipografía local y cifras tabulares.",
+      "Movimiento local breve con alternativa estática."
+    ],
+    "rules": [
+      {
+        "name": "The Material Boundary Rule",
+        "body": "Usa vidrio en la navegación, el panorama y el temporizador flotante; conserva superficies sólidas para listas, tablas y campos.",
+        "section": "elevation"
+      },
+      {
+        "name": "The Theme Pair Rule",
+        "body": "Cada superficie funcional usa las variables semánticas del tema; el tema claro cambia también tinta, acento, campos, bordes y estados.",
+        "section": "colors"
+      },
+      {
+        "name": "The Working Type Rule",
+        "body": "Sora se reserva a títulos, marca y cifras principales; IBM Plex Sans sostiene controles, filas y explicaciones.",
+        "section": "typography"
+      }
+    ],
+    "dos": [
+      "Do usar las variables semánticas del tema para superficies, texto, bordes y controles.",
+      "Do conservar sólidos los campos y las áreas de lectura prolongada.",
+      "Do mantener foco visible y etiquetas asociadas a cada campo.",
+      "Do usar cifras tabulares en tiempo, importes y métricas.",
+      "Do respetar movimiento reducido y mantener disponible la V estática.",
+      "Do reservar espacio final suficiente bajo la navegación móvil fija."
+    ],
+    "donts": [
+      "Don't extender el vidrio a todas las filas o campos de trabajo.",
+      "Don't sustituir la V reconocible por una ilustración genérica.",
+      "Don't presentar los ejemplos locales como actividad real del equipo.",
+      "Don't hacer que los efectos 3D bloqueen las acciones de la interfaz."
+    ]
+  }
+}
