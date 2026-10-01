@@ -24,3 +24,31 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Local agent packages; share project configuration separately
+.agents/skills/
+.claude/skills/
+.claude/settings.local.json
+.codex/skills/
+.codex/*.local.*
+.impeccable/config.local.json
+.impeccable/hook.cache.json
+.impeccable/critique/
+.impeccable/live/
+.impeccable/mocks/
+.impeccable/screenshots/
+.impeccable/review/
+.impeccable/*.log
+
+# Generated checks, downloads and temporary artifacts
+.cache/
+.vite/
+coverage/
+test-results/
+playwright-report/
+*.tsbuildinfo
+*.tmp
+*.bak
+*.exe
+*.dll
+*.pdb

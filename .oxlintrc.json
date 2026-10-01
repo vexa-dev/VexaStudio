@@ -1,6 +1,23 @@
 {
   "$schema": "./node_modules/oxlint/configuration_schema.json",
-  "plugins": ["react", "typescript", "oxc"],
+  "plugins": ["react", "typescript", "oxc", "jsx-a11y"],
+  "ignorePatterns": [
+    ".agents/**",
+    ".claude/**",
+    ".codex/**",
+    ".impeccable/**",
+    "dist/**"
+  ],
+  "overrides": [
+    {
+      "files": ["src/components/Core3D.tsx"],
+      "rules": { "react/immutability": "off" }
+    },
+    {
+      "files": ["src/pages/Records.tsx"],
+      "rules": { "jsx-a11y/no-noninteractive-tabindex": ["warn", { "tags": ["section"] }] }
+    }
+  ],
   "rules": {
     "react/rules-of-hooks": "error",
     "react/only-export-components": ["warn", { "allowConstantExport": true }]
