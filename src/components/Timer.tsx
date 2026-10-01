@@ -12,7 +12,7 @@ export function Timer({ compact = false }: { compact?: boolean }) {
   const [error, setError] = useState("");
   const [discard, setDiscard] = useState(false);
   useEffect(() => {
-    if (timer?.startedAt == null) return;
+    if (timer?.startedAt === null || timer?.startedAt === undefined) return;
     const id = setInterval(() => setNow(Date.now()), 1000);
     return () => clearInterval(id);
   }, [timer?.startedAt]);

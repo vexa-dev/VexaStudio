@@ -137,6 +137,8 @@ components:
 
 Observatorio es un estudio con perspectiva: grafito profundo, luz hielo y cristal ahumado enmarcan una V reconocible. La alternativa clara transforma el mismo vocabulario en superficies minerales, con tinta azul y acento petróleo.
 
+Tras integrar `main`, el sistema se aplica a la aplicación de socios conservando sus componentes funcionales. `src/index.css` traduce sus tokens semánticos (`fg`, `primary-solid`, `primary-text`, `surface-2`) a Observatorio; la demo de `/observatorio/` usa los alias documentados aquí en `src/observatorio.css`, aislados mediante `@scope`. La aplicación principal conserva sus tamaños de controles, tablas y hojas; la escala que sigue describe los patrones de la demo. Ambos comparten Sora, IBM Plex Sans, tema y núcleo 3D.
+
 El vidrio pertenece a la navegación, al panorama y al temporizador flotante. Listas, tablas y formularios mantienen superficies sólidas para leer y trabajar con estabilidad. Sora aporta carácter a títulos y números; IBM Plex Sans sostiene la interfaz compacta. El movimiento queda cerca del elemento que cambia y respeta la preferencia del sistema y el control manual.
 
 **Key Characteristics:**

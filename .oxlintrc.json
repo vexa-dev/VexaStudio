@@ -11,15 +11,32 @@
   "overrides": [
     {
       "files": ["src/components/Core3D.tsx"],
-      "rules": { "react/immutability": "off" }
+      "rules": {
+        "react/immutability": "off"
+      }
     },
     {
       "files": ["src/pages/Records.tsx"],
-      "rules": { "jsx-a11y/no-noninteractive-tabindex": ["warn", { "tags": ["section"] }] }
+      "rules": {
+        "jsx-a11y/no-noninteractive-tabindex": [
+          "warn",
+          {
+            "tags": ["section"]
+          }
+        ]
+      }
     }
   ],
   "rules": {
     "react/rules-of-hooks": "error",
-    "react/only-export-components": ["warn", { "allowConstantExport": true }]
+    "react/only-export-components": [
+      "warn",
+      {
+        "allowConstantExport": true
+      }
+    ],
+    "typescript/no-explicit-any": "error",
+    "no-unused-vars": "error",
+    "eqeqeq": "error"
   }
 }

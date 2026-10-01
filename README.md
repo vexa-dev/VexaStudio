@@ -2,6 +2,14 @@
 
 Demo interactiva local para el equipo VEXA: proyectos, sprints, tareas, horas y gastos. Interfaz liquid glass con un símbolo V tridimensional, temas oscuro/claro y movimiento adaptable.
 
+## Integración con la aplicación existente
+
+La resolución del PR #5 integra `main` sin sustituir sus flujos F1–F2. La aplicación principal conserva el acceso simulado de socios, los servicios mock, permisos, dashboard de participación, proyectos, tablero kanban, Mis tareas, horas, perfil y las pantallas previstas de gastos/equipo. Adopta los colores y tipografía Observatorio, navegación de cristal y núcleo 3D en el dashboard.
+
+La demo original de cuatro rutas se conserva en `/observatorio/`, con acceso desde la navegación de la aplicación. Sus datos (`vexa.observatorio.v1`) son independientes del mock principal: el reinicio de la demo no reemplaza los registros del equipo. Comparte la preferencia de tema con la aplicación; sus estilos se aíslan mediante `@scope` para evitar colisiones entre componentes. No se han incorporado las ramas F3/F4 que todavía no forman parte de `main`.
+
+`src/App.tsx` y `src/main.tsx` mantienen el router y los proveedores principales. `src/ObservatorioApp.tsx` contiene la demo; `src/index.css` define el sistema compartido y `src/observatorio.css` sus patrones propios. Se combinan las dependencias y las 63 pruebas de ambas líneas de trabajo.
+
 ## Desarrollo
 
 Requiere Node.js 22.12 o superior y npm.

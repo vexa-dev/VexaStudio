@@ -32,7 +32,7 @@ export default function Overview({ effects }: { effects: boolean }) {
             <br />
             Este es el pulso de tu estudio.
           </p>
-          <Link className="button primary" to="/proyectos">
+          <Link className="button primary" to="/observatorio/proyectos">
             Explorar proyectos <ArrowUpRight size={17} />
           </Link>
         </div>
@@ -80,7 +80,7 @@ export default function Overview({ effects }: { effects: boolean }) {
       <div className="overview-columns">
         <section>
           <SectionTitle title="En el radar">
-            <Link className="text-link" to="/proyectos">
+            <Link className="text-link" to="/observatorio/proyectos">
               Todos los proyectos <ArrowUpRight size={15} />
             </Link>
           </SectionTitle>
@@ -93,7 +93,7 @@ export default function Overview({ effects }: { effects: boolean }) {
               ).length;
               return (
                 <Link
-                  to={`/proyectos?proyecto=${p.id}`}
+                  to={`/observatorio/proyectos?proyecto=${p.id}`}
                   className="radar-row"
                   key={p.id}
                 >
@@ -136,12 +136,12 @@ export default function Overview({ effects }: { effects: boolean }) {
                 ? `${stats.tasks - stats.done} tareas por completar. Cada pequeño avance cuenta.`
                 : "Tu próximo proyecto comienza con una idea."}
             </p>
-            <Link to="/proyectos" className="quick-link">
+            <Link to="/observatorio/proyectos" className="quick-link">
               <Plus size={17} />
               <span>Dar forma a una idea</span>
               <ArrowUpRight size={16} />
             </Link>
-            <Link to="/horas" className="quick-link">
+            <Link to="/observatorio/horas" className="quick-link">
               <Clock3 size={17} />
               <span>Entrar en modo foco</span>
               <ArrowUpRight size={16} />
