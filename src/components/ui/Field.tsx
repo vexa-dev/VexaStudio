@@ -15,8 +15,8 @@ interface FieldBaseProps {
 
 const controlClass = (error?: string, className?: string) =>
   cn(
-    'min-h-11 w-full rounded-lg border bg-surface px-3 text-fg placeholder:text-muted disabled:opacity-60',
-    error ? 'border-danger' : 'border-border',
+    'min-h-11 w-full rounded-lg border bg-[var(--input)] px-3 text-fg placeholder:text-muted disabled:opacity-60',
+    error ? 'border-danger' : 'border-[var(--control-border)]',
     className,
   )
 

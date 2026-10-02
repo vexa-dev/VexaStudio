@@ -10,5 +10,5 @@ const tones: Record<Tone, string> = {
 }
 
 export function Card({ tone = 'default', className, ...props }: HTMLAttributes<HTMLDivElement> & { tone?: Tone }) {
-  return <div className={cn('rounded-xl border p-4 sm:p-5', tones[tone], className)} {...props} />
+  return <div className={cn('glass-card rounded-xl border p-4 sm:p-5', tones[tone], className)} {...props} />
 }

@@ -6,9 +6,9 @@ type Tone = 'neutral' | 'primary' | 'success' | 'warning' | 'danger'
 const tones: Record<Tone, string> = {
   neutral: 'bg-surface-2 text-muted',
   primary: 'bg-primary-soft text-primary-text',
-  success: 'bg-surface-2 text-success',
-  warning: 'bg-surface-2 text-warning',
-  danger: 'bg-surface-2 text-danger',
+  success: 'bg-[var(--success-soft)] text-success',
+  warning: 'bg-[var(--warning-soft)] text-warning',
+  danger: 'bg-[var(--danger-soft)] text-danger',
 }
 
 export function Badge({ tone = 'neutral', className, ...props }: HTMLAttributes<HTMLSpanElement> & { tone?: Tone }) {

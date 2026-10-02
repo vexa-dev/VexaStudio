@@ -12,6 +12,8 @@ import "@fontsource/ibm-plex-sans/latin-500.css";
 import "@fontsource/ibm-plex-sans/latin-600.css";
 import App from "./App.tsx";
 import "./index.css";
+import "./colors.css";
+import "./glass.css";
 
 registerSW({ immediate: true });
 
