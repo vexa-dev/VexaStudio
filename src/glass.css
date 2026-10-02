@@ -17,7 +17,11 @@
   --input: rgb(255 255 255 / .8);
   --glass-edge: rgb(255 255 255 / .95);
   --shadow: 0 20px 60px -35px rgb(15 20 28 / .22);
-  --sh-card: 0 12px 30px -20px rgb(15 20 28 / .16);
+  --sh-card: 0 4px 16px -10px rgb(15 20 28 / .12);
+  --card-surface: rgb(255 255 255 / .88);
+  --card-border: rgb(28 36 45 / .10);
+  --metric-surface: #edf2f6;
+  --metric-border: rgb(65 91 111 / .22);
   --sh-pop: 0 16px 38px -14px rgb(15 20 28 / .24);
   --nav-base: #f2f4f7;
   --nav-body: #dfe6ed;
@@ -53,10 +57,14 @@
   --input: rgb(8 10 14 / .65);
   --glass-edge: rgb(232 238 245 / .22);
   --shadow: 0 20px 60px -32px rgb(0 0 0 / .65);
-  --sh-card: 0 12px 30px -20px rgb(0 0 0 / .45);
+  --sh-card: 0 4px 16px -10px rgb(0 0 0 / .28);
+  --card-surface: rgb(24 27 32 / .88);
+  --card-border: rgb(232 238 245 / .11);
+  --metric-surface: #202830;
+  --metric-border: rgb(164 187 205 / .25);
   --sh-pop: 0 16px 38px -14px rgb(0 0 0 / .7);
-  --nav-base: #08090b;
-  --nav-body: #181c21;
+  --nav-base: #0e1115;
+  --nav-body: #0e1115;
   --nav-depth: #0e1115;
   --nav-selection: rgb(164 187 205 / .15);
   --reflection: rgb(255 255 255 / .085);
@@ -1269,4 +1277,35 @@ main[data-view="inicio"] .page-view > .dashboard-summary { grid-template-columns
   .dashboard-member { grid-template-columns: minmax(0, 1fr) auto; }
   .dashboard-member-hours { grid-column: 1 / -1; }
   main[data-view="inicio"] section[aria-labelledby="equipo"] .dashboard-member { padding-block: 12px; }
+}
+
+/* Dark navigation uses one flat color for the body, edge and drops. */
+.dark .lava-selection {
+  box-shadow: none;
+}
+
+/* Quiet card surfaces: uniform borders and a soft, short shadow. */
+.glass-card, .daily-update {
+  background: var(--card-surface);
+  border-color: var(--card-border);
+  box-shadow: var(--sh-card);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+:root { color-scheme: light; }
+.dark { color-scheme: dark; }
+
+/* Dark dialogs share one quiet palette; controls separate by surface, not bright outlines. */
+.dark .sheet {
+  --surface: #171a1f;
+  --surface-2: #22272d;
+  --input: #22272d;
+  --control-border: #3b424b;
+  --border: rgb(232 238 245 / .09);
+  --glass-edge: transparent;
+  background: var(--surface);
+  border-color: var(--border);
+  box-shadow: 0 20px 60px -24px rgb(0 0 0 / .55);
+  backdrop-filter: none;
 }

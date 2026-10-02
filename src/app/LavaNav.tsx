@@ -8,7 +8,7 @@ import { motionTokens, springs } from "@/lib/motion-tokens";
 import { navItems } from "./nav";
 import { useEffect, useRef } from "react";
 
-const dropSizes = [[4, 6], [7, 9], [10, 13]] as const;
+const dropSizes = [[6, 8], [9, 12], [13, 16], [8, 11], [11, 14]] as const;
 
 function LiquidEdge({ reduced }: { reduced: boolean | null }) {
   const path = useRef<SVGPathElement>(null);
@@ -76,7 +76,7 @@ function LiquidEdge({ reduced }: { reduced: boolean | null }) {
     <g filter="url(#steel-goo)" fill="url(#steel-liquid)">
       <path ref={path} d="M0 0H80C86 150 76 300 80 500S86 850 80 1000H0Z" />
       <g ref={drops} className="liquid-metaballs" style={{ display: reduced ? "none" : undefined }}>
-        {dropSizes.map((_, index) => <ellipse key={index} cx="76" cy={125 + index * 280} rx="5" ry="6" opacity="0" />)}
+        {dropSizes.map((_, index) => <ellipse key={index} cx="76" cy={100 + index * 180} rx="5" ry="6" opacity="0" />)}
       </g>
     </g>
   </svg>;
