@@ -1,4 +1,4 @@
-import { Check, FolderKanban, LogOut, UserRound } from 'lucide-react'
+import { Check, Users, LogOut, UserRound } from 'lucide-react'
 import { useCallback, useEffect, useRef, useState, type KeyboardEvent } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { Avatar } from '@/components/ui/Avatar'
@@ -89,11 +89,11 @@ export function UserMenu() {
           </Link>
           <Link
             role="menuitem"
-            to="/proyectos"
+            to="/equipo"
             className={`${itemClass} lg:hidden`}
             onClick={() => close(false)}
           >
-            <FolderKanban className="size-4" aria-hidden="true" /> Proyectos
+            <Users className="size-4" aria-hidden="true" /> Equipo
           </Link>
           <button
             type="button"

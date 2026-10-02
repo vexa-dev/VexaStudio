@@ -20,12 +20,12 @@ const BoardPage = lazy(() => import("@/features/tasks/pages/BoardPage"));
 const TasksPage = lazy(() => import("@/features/tasks/pages/TasksPage"));
 const TeamPage = lazy(() => import("@/features/team/pages/TeamPage"));
 const TimePage = lazy(() => import("@/features/time/pages/TimePage"));
-const ObservatorioApp = lazy(() => import("./ObservatorioApp"));
+
+const MyDayPage = lazy(() => import("@/features/day/MyDayPage"));
 
 export default function App() {
   const { pathname } = useLocation();
   useEffect(() => {
-    if (pathname.startsWith("/observatorio")) return;
     const title =
       navItems.find((item) => item.to === pathname)?.label ||
       (pathname.startsWith("/proyectos/")
@@ -41,18 +41,6 @@ export default function App() {
   return (
     <Routes>
       <Route
-        path="/observatorio/*"
-        element={
-          <Suspense
-            fallback={
-              <output aria-live="polite">Abriendo Observatorio…</output>
-            }
-          >
-            <ObservatorioApp />
-          </Suspense>
-        }
-      />
-      <Route
         path="/login"
         element={
           <Suspense fallback={null}>
@@ -63,6 +51,7 @@ export default function App() {
       <Route element={<AuthGuard />}>
         <Route element={<AppLayout />}>
           <Route index element={<DashboardPage />} />
+          <Route path="mi-dia" element={<MyDayPage />} />
           <Route path="proyectos" element={<ProjectsPage />} />
           <Route path="proyectos/:projectId" element={<BoardPage />} />
           <Route path="tareas" element={<TasksPage />} />

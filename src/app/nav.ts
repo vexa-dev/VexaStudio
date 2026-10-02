@@ -1,26 +1,28 @@
 import {
   Clock,
+  Sun,
   FolderKanban,
   LayoutDashboard,
   ListChecks,
   Users,
   Wallet,
   type LucideIcon,
-} from 'lucide-react'
+} from "lucide-react";
 
 export interface NavItem {
-  to: string
-  label: string
-  icon: LucideIcon
+  to: string;
+  label: string;
+  icon: LucideIcon;
   /** Visible en la barra inferior del móvil (máximo 5). */
-  mobile: boolean
+  mobile: boolean;
 }
 
 export const navItems: NavItem[] = [
-  { to: '/', label: 'Inicio', icon: LayoutDashboard, mobile: true },
-  { to: '/proyectos', label: 'Proyectos', icon: FolderKanban, mobile: false },
-  { to: '/tareas', label: 'Mis tareas', icon: ListChecks, mobile: true },
-  { to: '/horas', label: 'Horas', icon: Clock, mobile: true },
-  { to: '/gastos', label: 'Gastos', icon: Wallet, mobile: true },
-  { to: '/equipo', label: 'Equipo', icon: Users, mobile: true },
-]
+  { to: "/", label: "Inicio", icon: LayoutDashboard, mobile: true },
+  { to: "/mi-dia", label: "Mi día", icon: Sun, mobile: true },
+  { to: "/proyectos", label: "Proyectos", icon: FolderKanban, mobile: true },
+  { to: "/tareas", label: "Mis tareas", icon: ListChecks, mobile: true },
+  { to: "/horas", label: "Horas", icon: Clock, mobile: true },
+  { to: "/gastos", label: "Gastos", icon: Wallet, mobile: true },
+  { to: "/equipo", label: "Equipo", icon: Users, mobile: false },
+];
