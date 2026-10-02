@@ -31,6 +31,7 @@ export function MascotCompanion({
   const [viewportWidth, setViewportWidth] = useState(0);
   const [pose, setPose] = useState<Pose>("idle");
   const [dragging, setDragging] = useState(false);
+  const [cursor, setCursor] = useState<Position | null>(null);
   const gesture = useRef<{
     x: number;
     y: number;
@@ -79,6 +80,44 @@ export function MascotCompanion({
     // Bounds also reserve space for the running timer.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [hasTimer]);
+  useEffect(() => {
+    if (!visible || reduced) {
+      setCursor(null);
+      return;
+    }
+    let frame = 0;
+    let point: Position | null = null;
+    const update = () => {
+      if (frame) return;
+      frame = requestAnimationFrame(() => {
+        frame = 0;
+        setCursor(point);
+      });
+    };
+    const track = (event: globalThis.PointerEvent) => {
+      point =
+        event.pointerType === "mouse"
+          ? { x: event.clientX, y: event.clientY }
+          : null;
+      update();
+    };
+    const reset = () => {
+      point = null;
+      update();
+    };
+    const leave = (event: globalThis.PointerEvent) => {
+      if (!event.relatedTarget) reset();
+    };
+    window.addEventListener("pointermove", track, { passive: true });
+    window.addEventListener("pointerout", leave);
+    window.addEventListener("blur", reset);
+    return () => {
+      cancelAnimationFrame(frame);
+      window.removeEventListener("pointermove", track);
+      window.removeEventListener("pointerout", leave);
+      window.removeEventListener("blur", reset);
+    };
+  }, [visible, reduced]);
   useEffect(() => {
     if (!visible || dragging) return;
     if (pose === "idle" && reduced) return;
@@ -148,6 +187,26 @@ export function MascotCompanion({
   const mascotWidth = viewportWidth < 1024 ? 67.584 : 81.664;
   const facing =
     position.x + mascotWidth / 2 >= viewportWidth / 2 ? "left" : "right";
+  const mascotHeight = viewportWidth < 1024 ? 95.744 : 115.456;
+  const gaze = cursor
+    ? {
+        x:
+          Math.max(
+            -24,
+            Math.min(
+              24,
+              ((cursor.x - position.x - mascotWidth / 2) / 200) * 24,
+            ),
+          ) * (facing === "left" ? -1 : 1),
+        y: Math.max(
+          -14,
+          Math.min(
+            14,
+            ((cursor.y - position.y - mascotHeight * 0.25) / 200) * 14,
+          ),
+        ),
+      }
+    : { x: 0, y: 0 };
   return (
     <>
       <AnimatePresence>
@@ -188,6 +247,7 @@ export function MascotCompanion({
               <RobotIdleArtwork
                 blinking={pose === "blink"}
                 still={reduced || dragging}
+                gaze={gaze}
               />
             </button>
           </motion.div>
