@@ -1,0 +1,66 @@
+.access-shell { position: relative; isolation: isolate; display: flex; flex-direction: column; min-height: 100dvh; padding: max(24px, env(safe-area-inset-top)) clamp(20px, 5vw, 80px) max(20px, env(safe-area-inset-bottom)); }
+.access-topbar { display: flex; align-items: center; justify-content: space-between; width: 100%; max-width: 1240px; margin: 0 auto; }
+.access-content { display: grid; grid-template-columns: 1fr minmax(360px, 440px); align-items: center; gap: clamp(48px, 8vw, 120px); width: 100%; max-width: 1040px; margin: auto; padding: 24px 0; }
+.access-eyebrow { color: var(--muted); font-size: 11px; letter-spacing: .2em; font-weight: 600; margin-bottom: 22px; }
+.access-intro h1 { font-family: var(--font-display); font-size: clamp(40px, 5vw, 64px); font-weight: 500; line-height: 1.15; letter-spacing: -.055em; }
+.access-intro h1 span { color: var(--primary-text); }
+.access-description { max-width: 300px; color: var(--muted); font-size: 15px; line-height: 1.7; margin-top: 20px; }
+.access-mascot { width: 81.664px; height: 115.456px; margin: 44px 0 0 20px; }
+.access-mascot .robot-idle-art { display: block; width: 100%; height: 100%; overflow: visible; }
+.access-panel { position: relative; isolation: isolate; border: 1px solid var(--border); border-radius: 28px; padding: 32px; background: linear-gradient(145deg, color-mix(in srgb, var(--surface) 82%, transparent), color-mix(in srgb, var(--glass) 88%, transparent)); backdrop-filter: blur(28px) saturate(110%); box-shadow: 0 24px 64px -32px rgb(36 53 68 / .25), inset 0 1px 0 rgb(255 255 255 / .75); }
+.access-panel::before { content: ''; position: absolute; inset: 0; z-index: -1; border-radius: inherit; pointer-events: none; background: radial-gradient(ellipse at 50% 0%, rgb(123 151 173 / .13), transparent 58%); }
+.access-panel::after { content: ''; position: absolute; top: -1px; left: 22%; right: 22%; height: 1px; pointer-events: none; background: linear-gradient(90deg, transparent, var(--primary-text), transparent); opacity: .45; }
+.dark .access-panel { box-shadow: 0 28px 72px -28px rgb(0 0 0 / .65), inset 0 1px 0 rgb(255 255 255 / .12); }
+.dark .access-panel::before { background: radial-gradient(ellipse at 50% 0%, rgb(123 151 173 / .16), transparent 58%); }
+.access-panel-heading { margin-bottom: 28px; padding: 8px 0 20px; text-align: center; border-bottom: 1px solid var(--border); }
+.access-demo { display: inline-block; font-size: 11px; font-weight: 500; color: var(--muted); padding: 5px 10px; border: 1px solid var(--border); border-radius: 99px; margin-bottom: 16px; }
+.access-panel h2 { font-family: var(--font-display); font-size: 24px; line-height: 1.3; font-weight: 500; letter-spacing: -.035em; }
+.access-panel-heading p { color: var(--muted); font-size: 14px; margin-top: 8px; }
+.access-profiles { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+.access-profile { display: flex; align-items: center; gap: 8px; width: 100%; min-height: 54px; padding: 10px; border: 1px solid var(--border); background: var(--glass); border-radius: 12px; text-align: left; font-size: 13px; transition: background .18s, border-color .18s; }
+.access-profile:hover { background: var(--surface-2); border-color: var(--primary-text); }
+.access-profile:focus-visible { outline: 2px solid var(--primary-text); outline-offset: 3px; }
+.access-profile:disabled { cursor: wait; opacity: .65; }
+.access-arrow { color: var(--muted); flex-shrink: 0; }
+.access-note { margin-top: 14px; font-size: 11px; text-align: center; color: var(--muted); }
+.access-form { display: grid; gap: 10px; }
+.access-form label { font-size: 13px; font-weight: 500; }
+.access-form input { width: 100%; min-width: 0; height: 46px; padding: 0 14px; border: 1px solid var(--border); border-radius: 12px; background: var(--glass); color: var(--fg); font-size: 16px; }
+.access-form input::placeholder { color: var(--muted); opacity: .8; }
+.access-form input:focus-visible { outline: 2px solid var(--primary-text); outline-offset: 2px; }
+.access-password-label { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-top: 8px; }
+.access-password { position: relative; }
+.access-password input { padding-right: 48px; }
+.access-password > button { position: absolute; right: 2px; top: 1px; display: grid; place-items: center; width: 44px; height: 44px; color: var(--muted); border-radius: 10px; }
+.access-text-button { font-size: 12px; color: var(--primary-text); text-underline-offset: 4px; }
+.access-text-button:hover { text-decoration: underline; }
+.access-back { justify-self: center; padding: 8px; }
+.access-submit { display: flex; align-items: center; justify-content: center; gap: 10px; margin-top: 10px; min-height: 46px; border-radius: 12px; background: var(--primary-solid); color: var(--primary-fg); font-size: 14px; font-weight: 600; }
+.access-submit:hover { background: var(--primary-hover); }
+.access-form button:focus-visible { outline: 2px solid var(--primary-text); outline-offset: 3px; }
+.access-form-notice { color: var(--muted); font-size: 12px; line-height: 1.6; padding: 10px 0; }
+.access-demo-divider { display: flex; align-items: center; gap: 12px; margin: 24px 0 16px; color: var(--muted); font-size: 11px; }
+.access-demo-divider::before, .access-demo-divider::after { content: ''; height: 1px; flex: 1; background: var(--border); }
+.access-error { color: var(--danger); font-size: 14px; padding-bottom: 16px; }
+.access-footer { text-align: center; color: var(--muted); font-size: 11px; letter-spacing: .04em; }
+@media (max-width: 767px) {
+  .access-shell { padding-inline: 20px; }
+  .access-content { grid-template-columns: 1fr; max-width: 440px; gap: 24px; padding: 24px 0; }
+  .access-intro { position: relative; padding-right: 88px; }
+  .access-eyebrow { font-size: 9px; margin-bottom: 12px; letter-spacing: .15em; }
+  .access-intro h1 { font-size: 32px; }
+  .access-description { font-size: 13px; margin-top: 12px; }
+  .access-mascot { position: absolute; right: 0; bottom: 4px; width: 67.584px; height: 95.744px; margin: 0; }
+  .access-panel { padding: 24px 20px; border-radius: 24px; }
+  .access-profile { gap: 10px; }
+  .access-profile > :first-child { width: 28px; height: 28px; font-size: 10px; }
+  .access-profile { min-height: 54px; }
+  .access-panel h2 { font-size: 22px; }
+}
+@media (max-width: 359px) {
+  .access-shell { padding-inline: 16px; }
+  .access-panel { padding: 20px 14px; }
+  .access-profile { padding-inline: 10px; gap: 8px; }
+  .access-profile .access-arrow { display: none; }
+}
+@media (prefers-reduced-motion: reduce) { .access-profile { transition: none; } }
