@@ -10,57 +10,76 @@ import type {
   ProjectService,
   Services,
   SettingsService,
-} from '../types'
-import { getDb, getSessionUserId, setSessionUserId } from './db'
-import { dashboard } from './dashboard'
-import { sprints, tasks, time } from './work'
-import { delay, notImplemented } from './utils'
+} from "../types";
+import { getDb, getSessionUserId, setSessionUserId } from "./db";
+import { dashboard } from "./dashboard";
+import { sprints, tasks, time } from "./work";
+import { delay, notImplemented } from "./utils";
 
 const auth: AuthService = {
   async listLoginProfiles() {
-    return delay(getDb().profiles.filter((p) => p.active))
+    return delay(getDb().profiles.filter((p) => p.active));
   },
   async getSession() {
-    const id = getSessionUserId()
-    const profile = getDb().profiles.find((p) => p.id === id && p.active)
-    return delay(profile ?? null)
+    const id = getSessionUserId();
+    const profile = getDb().profiles.find((p) => p.id === id && p.active);
+    return delay(profile ?? null);
   },
   async signIn(userId) {
-    const profile = getDb().profiles.find((p) => p.id === userId && p.active)
-    if (!profile) throw new Error('Usuario no encontrado o inactivo')
-    setSessionUserId(profile.id)
-    return delay(profile)
+    const profile = getDb().profiles.find((p) => p.id === userId && p.active);
+    if (!profile) throw new Error("Usuario no encontrado o inactivo");
+    setSessionUserId(profile.id);
+    return delay(profile);
   },
   async signOut() {
-    setSessionUserId(null)
-    return delay(undefined)
+    setSessionUserId(null);
+    return delay(undefined);
   },
-}
+};
 
 const settings: SettingsService = {
   async get() {
-    return delay(getDb().settings)
+    return delay(getDb().settings);
   },
-}
+};
 
 const members: MemberService = {
   async list() {
-    return delay(getDb().profiles)
+    return delay(getDb().profiles);
   },
   async get(id) {
-    return delay(getDb().profiles.find((p) => p.id === id) ?? null)
+    return delay(getDb().profiles.find((p) => p.id === id) ?? null);
   },
-}
+};
 
 const projects: ProjectService = {
   async list() {
-    return delay(getDb().projects)
+    return delay(getDb().projects);
   },
   async get(id) {
-    return delay(getDb().projects.find((p) => p.id === id) ?? null)
+    return delay(getDb().projects.find((p) => p.id === id) ?? null);
   },
-}
+};
 
+const expenses: ExpenseService = {
+  async list() {
+    return delay(getDb().expenses);
+  },
+  async listVotes(expenseId) {
+    return delay(
+      getDb().expenseVotes.filter((vote) => vote.expenseId === expenseId),
+    );
+  },
+  async listRecurring() {
+    return delay(getDb().recurringExpenses);
+  },
+  create: (...args) =>
+    notImplemented<ExpenseService>("ExpenseService").create(...args),
+  vote: (...args) =>
+    notImplemented<ExpenseService>("ExpenseService").vote(...args),
+  void: (...args) =>
+    notImplemented<ExpenseService>("ExpenseService").void(...args),
+};
 /** Servicios del mock. Los de F2–F4 se van implementando bloque a bloque. */
 export function createMockServices(): Services {
   return {
@@ -71,14 +90,14 @@ export function createMockServices(): Services {
     sprints,
     tasks,
     time,
-    expenses: notImplemented<ExpenseService>('ExpenseService'),
+    expenses,
     dashboard,
-    daily: notImplemented<DailyService>('DailyService'),
-    comments: notImplemented<CommentService>('CommentService'),
-    announcements: notImplemented<AnnouncementService>('AnnouncementService'),
-    meetings: notImplemented<MeetingService>('MeetingService'),
-    notifications: notImplemented<NotificationService>('NotificationService'),
-  }
+    daily: notImplemented<DailyService>("DailyService"),
+    comments: notImplemented<CommentService>("CommentService"),
+    announcements: notImplemented<AnnouncementService>("AnnouncementService"),
+    meetings: notImplemented<MeetingService>("MeetingService"),
+    notifications: notImplemented<NotificationService>("NotificationService"),
+  };
 }
 
-export { resetMock } from './db'
+export { resetMock } from "./db";

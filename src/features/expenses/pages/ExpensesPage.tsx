@@ -3,7 +3,11 @@ import { useState } from "react";
 import { Card } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import { Sheet } from "@/components/ui/Sheet";
-import { buildSeed } from "@/services/mock/seed";
+import { useExpenseOverview } from "../hooks/useExpenseOverview";
+import { useMembers } from "@/features/team/hooks/useMembers";
+import { useSearchParams } from "react-router-dom";
+import { Skeleton } from "@/components/ui/Skeleton";
+import { ErrorState } from "@/components/ui/ErrorState";
 import { formatMoney } from "@/lib/format";
 import { formatDate } from "@/lib/dates";
 import type { Expense, ExpenseStatus } from "@/domain/types";
@@ -11,9 +15,28 @@ import { EmptyState } from "@/components/ui/EmptyState";
 import { PageHeader } from "@/components/ui/PageHeader";
 
 export default function ExpensesPage() {
-  const [data] = useState(() => buildSeed(new Date()));
-  const [filter, setFilter] = useState<ExpenseStatus | "all">("all");
-  const [selected, setSelected] = useState<Expense | null>(null);
+  const overview = useExpenseOverview();
+  const members = useMembers();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const data = {
+    ...overview.data,
+    expenses: overview.data?.expenses ?? [],
+    expenseVotes: overview.data?.expenseVotes ?? [],
+    profiles: members.data ?? [],
+  };
+  const [filter, setFilter] = useState<ExpenseStatus | "all">(
+    searchParams.get("filter") === "pending" ? "pending" : "all",
+  );
+  const selected =
+    data.expenses.find(
+      (expense) => expense.id === searchParams.get("expense"),
+    ) ?? null;
+  const setSelected = (expense: Expense | null) => {
+    const next = new URLSearchParams(searchParams);
+    if (expense) next.set("expense", expense.id);
+    else next.delete("expense");
+    setSearchParams(next, { replace: true });
+  };
   const labels = {
     pending: "Pendiente",
     approved: "Aprobado",
@@ -36,6 +59,23 @@ export default function ExpensesPage() {
   const votes = selected
     ? data.expenseVotes.filter((vote) => vote.expenseId === selected.id)
     : [];
+  if (overview.isError || members.isError)
+    return (
+      <ErrorState
+        message="No se pudo cargar el resumen de gastos."
+        onRetry={() => {
+          void overview.refetch();
+          void members.refetch();
+        }}
+      />
+    );
+  if (overview.isLoading || members.isLoading)
+    return (
+      <div aria-busy="true" aria-label="Cargando gastos">
+        <Skeleton className="h-40" />
+        <Skeleton className="mt-4 h-80" />
+      </div>
+    );
   return (
     <>
       <PageHeader
