@@ -44,7 +44,7 @@ export function TaskCard({
   return (
     <article
       className={cn(
-        'flex flex-col gap-3 rounded-xl border bg-surface p-3.5 shadow-card',
+        'glass-card task-card flex flex-col gap-3 rounded-xl border bg-surface p-3.5 shadow-card',
         isTracking ? 'border-primary' : 'border-border',
         dragging && 'shadow-pop',
       )}
