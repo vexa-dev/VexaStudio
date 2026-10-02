@@ -43,7 +43,7 @@ La implementación actual trabaja con datos simulados; no hay despliegue realiza
 ## Diseño y acceso
 
 El sistema vigente se documenta en `DESIGN.md` y los compromisos de producto en `PRODUCT.md`.
-Solo se conserva la imagen activa de mascota en `public/mascot/robot-concept-v3.png`.
+Solo se conserva la imagen activa de mascota en `public/mascot/vexa-robot.png`.
 Para explorar la aplicación, entra desde uno de los cuatro perfiles de demo.
 El formulario de correo/contraseña y recuperación muestra avisos de conexión pendiente.
 

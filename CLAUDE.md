@@ -58,7 +58,7 @@ src/
     supabase/               (vacío hasta la etapa 2)
   lib/                      dates.ts (helpers America/Lima), format.ts (montos y cifras), labels.ts,
                             utils.ts, useFirstPlay.ts y useReducedMotion.ts (política de movimiento)
-public/                     logos oficiales blanco/negro, íconos PWA y mascot/robot-concept-v3.png
+public/                     logos oficiales blanco/negro, íconos PWA y mascot/vexa-robot.png
 vercel.json                 rewrite de la SPA y caché de /assets
 PRODUCT.md, DESIGN.md       contexto de producto y sistema visual (los usa Impeccable)
 ```

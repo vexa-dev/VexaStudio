@@ -17,7 +17,7 @@ export default defineConfig({
     tailwindcss(),
     VitePWA({
       registerType: "autoUpdate",
-      includeAssets: ["vexa-fondo-blanco.svg", "vexa-fondo-negro.svg", "apple-touch-icon.png"],
+      includeAssets: ["vexa-logo-light.svg", "vexa-logo-dark.svg", "apple-touch-icon.png"],
       workbox: {
         // Se precachean solo las fuentes latinas (cubren el español); el resto se pide bajo demanda.
         globPatterns: [
@@ -37,15 +37,15 @@ export default defineConfig({
         display: "standalone",
         start_url: "/",
         icons: [
-          { src: "/pwa-192.png", sizes: "192x192", type: "image/png" },
-          { src: "/pwa-512.png", sizes: "512x512", type: "image/png" },
+          { src: "/pwa-icon-192.png", sizes: "192x192", type: "image/png" },
+          { src: "/pwa-icon-512.png", sizes: "512x512", type: "image/png" },
           {
-            src: "/pwa-maskable-512.png",
+            src: "/pwa-icon-maskable-512.png",
             sizes: "512x512",
             type: "image/png",
             purpose: "maskable",
           },
-          { src: "/vexa-fondo-blanco.svg", sizes: "any", type: "image/svg+xml" },
+          { src: "/vexa-logo-light.svg", sizes: "any", type: "image/svg+xml" },
         ],
       },
     }),
