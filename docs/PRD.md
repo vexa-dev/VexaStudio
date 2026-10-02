@@ -239,3 +239,9 @@ Decisiones tomadas:
 - Los repositorios siguen en GitHub; la plataforma solo reemplaza el tablero de tareas. Desarrollo en dos etapas: primero el frontend con datos simulados y luego Supabase. No se usa hoja de cálculo de transición.
 
 No quedan pendientes para iniciar el desarrollo.
+
+## Ajuste autorizado de Horas — 02/10/2026
+
+Por solicitud del usuario, en el frontend mock se permite registrar actividad sin tarea: `taskId` nullable, proyecto opcional, descripción y evidencia por enlace. El registro manual captura inicio real y duración en Lima; temporizadores nuevos identifican su origen. Registros legacy conservan datos existentes, sin asumir que sus timestamps representan horarios reales.
+
+Revisión entre socios/admin: sin autoaprobación, con aprobador/fecha y solicitud de aclaración con motivo. Las correcciones de aprobaciones dentro de la ventana de edición vuelven a pendiente; una aclaración habilita corrección fuera de esa ventana. Pagados/anulados no se editan. Se auditan creación, edición, aclaración, aprobación y anulación. Solo horas aprobadas no pagadas generan puntos. Vista inicial Registro, Historial filtrable, Resumen mensual (días/horarios en Lima) y Revisión. Sin integración remota en esta etapa.

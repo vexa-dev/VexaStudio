@@ -35,10 +35,10 @@ Vexa Studio convierte el trabajo diario de 4 socios (horas, gastos, sprints) en 
 ## Capabilities and Constraints
 
 - Etapa actual: solo frontend con datos simulados (capa de servicios `mock` sobre `localStorage`); Supabase (Auth, Postgres, RLS, Storage, Realtime) llega en la etapa 2. Web Push también es etapa 2; en la etapa 1 las notificaciones son solo in-app.
-- Reglas de negocio: 20 puntos por hora no pagada y validada; 2 puntos por S/ 1 de gasto aprobado, no reembolsado y no previo a la firma; mínimo mensual = horas/semana × 4 × 80 %; gasto mayor a S/ 50 pendiente hasta 3 votos a favor; un solo temporizador abierto por usuario; nadie borra, se anula con motivo; edición de un registro propio hasta 7 días o hasta su validación.
+- Reglas de negocio: 20 puntos por hora no pagada y validada; 2 puntos por S/ 1 de gasto aprobado, no reembolsado y no previo a la firma; mínimo mensual = horas/semana × 4 × 80 %; gasto mayor a S/ 50 pendiente hasta 3 votos a favor; un solo temporizador abierto por usuario; nadie borra, se anula con motivo; edición de un registro propio hasta 7 días, con reapertura de revisión si estaba aprobado; aclaraciones pendientes permiten corrección fuera de la ventana.
 - Roles: admin, socio y colaborador (fase 3). El admin administra configuración y ejecuta lo votado; no tiene poder sobre los datos de otros.
 - Idioma de la interfaz: español (Perú). Montos `S/ 1,234.50`, fechas `dd/mm/yyyy`.
-- Sin registro público: acceso por invitación.
+- Sin registro público: acceso por invitación en el producto previsto. Hoy el acceso funcional usa cuatro perfiles de demo sin contraseña; el formulario visual de correo/contraseña y recuperación solo informa que la conexión de cuentas está pendiente.
 - Fuera de alcance: chat en tiempo real y videollamadas.
 - Stack (ya en el repositorio): React, Vite, TypeScript strict, Tailwind CSS 4, React Router, TanStack Query, PWA, Vercel.
 
@@ -47,7 +47,7 @@ Vexa Studio convierte el trabajo diario de 4 socios (horas, gastos, sprints) en 
 - Nombre: VEXA Studio (VEXA es la marca del equipo).
 - Logo: `public/vexa-fondo-blanco.svg` y `public/vexa-fondo-negro.svg` (logos oficiales blanco/negro con verde #498974), también favicon.
 - El sistema visual vigente está documentado en `DESIGN.md`; PRODUCT.md solo guarda los compromisos de marca.
-- La identidad visual usa negro y blanco, verde oficial #498974, superficies translúcidas, Sora e IBM Plex Sans locales. Las vistas del producto comparten navegación y servicios simulados.
+- La identidad visual vigente usa grafito #08090B, blanco hielo #F7F8FA y acento de interfaz azul acero #7B97AD; el logo y la capa de la mascota conservan el verde oficial #498974. Superficies translúcidas, Sora e IBM Plex Sans locales. Las vistas comparten navegación y servicios simulados; la mascota activa es el robot v3, documentado en DESIGN.md.
 
 ## Evidence on Hand
 
@@ -59,7 +59,7 @@ Vexa Studio convierte el trabajo diario de 4 socios (horas, gastos, sprints) en 
 
 1. Registrar cuesta segundos: cada flujo diario se resuelve en una o dos pantallas y funciona con una mano en el celular.
 2. Las reglas del acuerdo se aplican solas; el usuario ve el resultado (cumplimiento, puntos, participación), no la fórmula.
-3. La confianza viene del historial: nadie borra, todo se anula con motivo y lo validado queda bloqueado.
+3. La confianza viene del historial: nadie borra, todo se anula con motivo y cada corrección de horas aprobadas reabre la revisión.
 4. Una sola plataforma para el trabajo del equipo; lo que ya existe gratis (chat, videollamada) no se reconstruye.
 5. Se crece por bloques y se recorta alcance antes de estirar plazos.
 
@@ -68,3 +68,9 @@ Vexa Studio convierte el trabajo diario de 4 socios (horas, gastos, sprints) en 
 - Contraste suficiente (AA), foco visible y labels en formularios.
 - Legible al aire libre y con poca luz: modo claro y modo oscuro cómodos en ambos extremos.
 - Interfaz completa en español (Perú).
+
+## Registro y revisión de horas (02/10/2026)
+
+Se admite actividad sin tarea: descripción obligatoria, proyecto opcional y respaldo por enlace. Registro manual con fecha, inicio en Lima y duración; temporizador por tarea o actividad. Horas pendientes hasta que otro socio/admin apruebe; se puede pedir aclaración con motivo y corregir. Nadie aprueba sus propias horas. Editar una aprobación reciente elimina su validación y vuelve a revisión; no se editan registros pagados o anulados. Los nuevos horarios finalizados no pueden ser futuros ni superponerse con otros horarios conocidos propios. No se atribuyen horarios ficticios a registros antiguos.
+
+Horas ofrece Registro, Historial completo, Resumen mensual con gráficos diarios y horarios y Revisión del equipo. Solo las horas aprobadas, no pagadas y no anuladas generan puntos. Estos flujos funcionan con servicios simulados y persistencia local; integración remota pendiente de la etapa 2.

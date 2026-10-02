@@ -58,7 +58,7 @@ src/
     supabase/               (vacío hasta la etapa 2)
   lib/                      dates.ts (helpers America/Lima), format.ts (montos y cifras), labels.ts,
                             utils.ts, useFirstPlay.ts y useReducedMotion.ts (política de movimiento)
-public/                     vexa-mark.svg (logo y favicon) e íconos PWA
+public/                     logos oficiales blanco/negro, íconos PWA y mascot/robot-concept-v3.png
 vercel.json                 rewrite de la SPA y caché de /assets
 PRODUCT.md, DESIGN.md       contexto de producto y sistema visual (los usa Impeccable)
 ```
@@ -68,7 +68,7 @@ PRODUCT.md, DESIGN.md       contexto de producto y sistema visual (los usa Impec
 - Cada módulo tiene una interfaz en `services/types.ts` con métodos asíncronos (devuelven `Promise`), como si hablaran con una API real.
 - `services/mock/` implementa esas interfaces con datos en memoria, persistidos en `localStorage` para que sobrevivan al recargar, y con un pequeño retraso artificial (150–300 ms) para probar estados de carga.
 - `services/index.ts` exporta la implementación según `VITE_DATA_SOURCE` (`mock` por defecto; `supabase` en la etapa 2).
-- Estado del mock: implementados Auth, Settings, Members, Projects, Dashboard (resumen mensual y puntos, con `domain/rules.ts`) y, en `mock/work.ts`, Sprints (listar, activo, crear), Tasks (listar, crear, editar, mover) y Time (temporizador único, registro manual, editar, anular con motivo), con permisos y `auditLog`. Faltan cerrar sprint y validar horas (F3) y el resto de servicios: fallan con un mensaje claro (`pending`/`notImplemented` en `mock/utils.ts`) hasta su bloque F3–F4.
+- Estado del mock: implementados Auth, Settings, Members, Projects, Dashboard (resumen mensual y puntos, con `domain/rules.ts`) y, en `mock/work.ts`, Sprints (listar, activo, crear), Tasks (listar, crear, editar, mover) y Time (temporizador único por tarea/actividad, registro manual sin tarea, historial, revisión con aprobación/aclaración, editar y anular con motivo), con permisos y `auditLog`. Gastos tiene lecturas de movimientos, votos y recurrentes compartidas con el dashboard; crear, votar y anular gastos siguen pendientes. Falta cerrar sprint (F3) y el resto de servicios: fallan con un mensaje claro (`pending`/`notImplemented` en `mock/utils.ts`) hasta su bloque F3–F4.
 - Los hooks de `features/*/hooks` usan TanStack Query sobre los servicios. Los componentes solo usan hooks.
 - Los cálculos de equity y cumplimiento viven en `domain/rules.ts`. El mock los usa para generar el resumen; en la etapa 2 el cálculo pasa a vistas SQL y el frontend solo lo lee, con el mismo tipo de resultado.
 - Los permisos (quién puede editar qué) se aplican en el servicio mock igual que lo hará RLS después; la UI además oculta lo que no corresponde.
@@ -86,7 +86,7 @@ PRODUCT.md, DESIGN.md       contexto de producto y sistema visual (los usa Impec
 - Un sprint activo con tareas en todas las columnas, horas registradas de varias semanas, gastos en distintos estados, dailies, comentarios y una convocatoria de reunión.
 - Gasto recurrente: dominio de VEXA, US$ 13 anual, próxima renovación 2027-02-23, previo a la firma (no suma puntos).
 - Settings: pointsPerHour 20, pointsPerSol 2, minCompliance 0.8, weeksPerMonth 4, expenseApprovalLimitPen 50, entryEditDays 7, dailyReminder 21:00 (lun, mié, vie), weeklyHoursReminder domingo 20:00.
-- Login simulado: pantalla para elegir uno de los 4 socios (sin contraseña). Debe haber una forma rápida de cambiar de usuario para probar permisos.
+- Login simulado: elegir uno de los 4 socios (sin contraseña). El formulario visual de correo/contraseña y recuperación muestra avisos de conexión pendiente; no autentica ni envía correos. Se conserva cambio de usuario para probar permisos.
 
 ## Reglas de negocio (resumen del PRD)
 
@@ -96,7 +96,7 @@ PRODUCT.md, DESIGN.md       contexto de producto y sistema visual (los usa Impec
 - Gasto > S/ 50: pendiente hasta 3 votos a favor. ≤ S/ 50: aprobado automáticamente.
 - Un solo temporizador abierto por usuario: iniciar uno detiene el anterior.
 - Cada usuario crea y edita solo sus propios registros; edición permitida 7 días o hasta que se validen. Nadie borra: se anula con motivo.
-- Horas validadas en el cierre de sprint quedan bloqueadas.
+- Ajuste autorizado de Horas (02/10/2026): se permite corregir una aprobación dentro de la ventana de edición, devolviéndola a pendiente y retirando sus puntos. Pagados/anulados quedan bloqueados. Una solicitud de aclaración habilita corrección fuera de esa ventana. Revisan otros socios/admin, sin autoaprobación.
 - Reunión semanal sin día fijo: el PO propone 2–3 horarios, los socios marcan disponibilidad, el PO confirma (con enlace de Meet) y marca asistencia.
 - Notificaciones: en esta etapa solo in-app. Web Push llega en la etapa 2.
 
@@ -106,7 +106,7 @@ PRODUCT.md, DESIGN.md       contexto de producto y sistema visual (los usa Impec
 - Textos de la UI en español (Perú). Montos en soles con formato `S/ 1,234.50`; fechas `dd/mm/yyyy`.
 - Modo claro y oscuro. Estados de carga, vacío y error en toda pantalla con datos.
 - Accesible: labels en formularios, foco visible, contraste suficiente.
-- Identidad VEXA: negro/blanco, verde oficial #498974, cristal translúcido, Sora e IBM Plex Sans locales. Usa los tokens semánticos de `src/glass.css`. La aplicación conserva sus servicios y reglas; la demo independiente fue retirada por solicitud del usuario. El detalle visual está en `DESIGN.md`; el contexto, en `PRODUCT.md`.
+- Identidad VEXA: grafito #08090B y blanco hielo #F7F8FA, acento de interfaz azul acero #7B97AD, verde oficial #498974 en logos y capa de la mascota, cristal translúcido, Sora e IBM Plex Sans locales. Usa los tokens semánticos de `src/glass.css`. La aplicación conserva sus servicios y reglas; la demo independiente fue retirada por solicitud del usuario. El detalle visual está en `DESIGN.md`; el contexto, en `PRODUCT.md`.
 - Cifras de datos (horas, puntos, %, montos) con la clase `.num` (tabulares, sin saltos al animar). El estado nunca depende solo del color: siempre va acompañado de texto.
 - Componentes de datos ya disponibles en `components/ui/`: `Meter` (progreso con marca de umbral), `SegmentedBar` (reparto entre personas), `CountUp` (cifra que cuenta), `Card` (tonos `default`, `raised`, `accent`). `Sheet` es la hoja modal para formularios y confirmaciones (abajo en el celular, centrada en escritorio) y `Toaster` (Sonner) muestra los avisos con `toast.success`/`toast.error`. Reutilízalos antes de crear otros.
 - Movimiento: solo `transform`, `opacity` y `clip-path`; curva `--ease-out`; entradas escalonadas de 60 ms con `.enter` y `stagger(i)`. Las animaciones de datos (barras, contadores) se reproducen solo la primera vez por sesión (`useFirstPlay`). Nada de animación en acciones frecuentes o de teclado. Con `prefers-reduced-motion` se conserva el cambio de estado (opacidad) y se quita el desplazamiento.

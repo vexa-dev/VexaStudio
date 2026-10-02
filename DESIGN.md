@@ -1,351 +1,181 @@
 ---
 name: VEXA Studio
-description: Observatorio de cristal ahumado y luz hielo para el trabajo del estudio.
+description: Espacio de trabajo compacto de grafito y blanco hielo, cristal translúcido y acento azul acero.
 colors:
-  bg-dark: "#0b1210"
-  text-dark: "#eef4f0"
-  muted-dark: "#a0b6aa"
-  surface-dark: "#14211b"
-  raised-dark: "#1b2d24"
-  glass-dark: "rgba(22, 31, 44, 0.72)"
-  line-dark: "rgba(172, 200, 232, 0.12)"
-  accent-dark: "#a2d6bc"
-  accent-ink-dark: "#10242e"
-  hover-dark: "#203041"
-  input-dark: "#111924"
-  bg-light: "#edf3ef"
-  text-light: "#182f27"
-  muted-light: "#536a60"
-  surface-light: "#f7faf8"
-  raised-light: "#e3ede7"
-  glass-light: "rgba(249, 252, 255, 0.76)"
-  line-light: "rgba(31, 65, 95, 0.14)"
-  accent-light: "#28694f"
-  accent-ink-light: "#fff"
-  hover-light: "#dfeaf0"
-  input-light: "#fff"
-  done-dark: "#9fd2b9"
-  done-light: "#276447"
-  error-dark: "#efaaaa"
-  error-light: "#a32929"
+  brand: "#498974"
+  accent: "#7b97ad"
+  bg-dark: "#08090b"
+  bg-light: "#f7f8fa"
+  glass-dark: "rgba(24, 27, 32, 0.68)"
+  glass-light: "rgba(255, 255, 255, 0.66)"
 typography:
   display:
     fontFamily: "Sora Variable, sans-serif"
-    fontSize: "clamp(28px, 3.3vw, 46px)"
     fontWeight: 500
-    lineHeight: 1.2
-    letterSpacing: "-0.03em"
-  headline:
-    fontFamily: "Sora Variable, sans-serif"
-    fontSize: "clamp(24px, 2.5vw, 35px)"
-    fontWeight: 500
-    letterSpacing: "-0.03em"
-  title:
-    fontFamily: "Sora Variable, sans-serif"
-    fontSize: "16px"
-    fontWeight: 500
-    letterSpacing: "-0.03em"
+    letterSpacing: "-0.035em"
   body:
     fontFamily: "IBM Plex Sans, sans-serif"
     fontSize: "13px"
-    fontWeight: 400
-    lineHeight: 1.7
-  label:
-    fontFamily: "IBM Plex Sans, sans-serif"
-    fontSize: "12px"
-    fontWeight: 500
-  numeric:
-    fontFamily: "Sora Variable, sans-serif"
-    fontSize: "clamp(26px, 3vw, 42px)"
-    fontWeight: 400
-    letterSpacing: "-0.02em"
+    lineHeight: 1.5
 rounded:
-  tag: "5px"
-  field: "8px"
-  button: "9px"
-  navigation: "10px"
-  surface: "14px"
-  hero: "16px"
-  shell: "18px"
-spacing:
-  control-gap: "8px"
-  inline-gap: "10px"
-  control-inset: "12px"
-  row-gap: "15px"
-  grid-gap: "20px"
-  card-inset: "23px"
-  section-inset: "24px"
-  panel-inset: "30px"
-components:
-  button-primary:
-    backgroundColor: "{colors.accent-dark}"
-    textColor: "{colors.accent-ink-dark}"
-    typography: "{typography.label}"
-    rounded: "{rounded.button}"
-    padding: "12px 17px"
-  button-primary-light:
-    backgroundColor: "{colors.accent-light}"
-    textColor: "{colors.accent-ink-light}"
-    typography: "{typography.label}"
-    rounded: "{rounded.button}"
-    padding: "12px 17px"
-  button-secondary:
-    backgroundColor: "{colors.raised-dark}"
-    textColor: "{colors.text-dark}"
-    rounded: "{rounded.button}"
-    padding: "12px 17px"
-  button-secondary-light:
-    backgroundColor: "{colors.raised-light}"
-    textColor: "{colors.text-light}"
-    rounded: "{rounded.button}"
-    padding: "12px 17px"
-  icon-button:
-    backgroundColor: "transparent"
-    textColor: "{colors.muted-dark}"
-    rounded: "{rounded.field}"
-    size: "36px"
-  field:
-    backgroundColor: "{colors.input-dark}"
-    textColor: "{colors.text-dark}"
-    rounded: "{rounded.field}"
-    padding: "12px"
-  field-light:
-    backgroundColor: "{colors.input-light}"
-    textColor: "{colors.text-light}"
-    rounded: "{rounded.field}"
-    padding: "12px"
-  nav-link:
-    textColor: "{colors.muted-dark}"
-    rounded: "{rounded.navigation}"
-    padding: "14px"
-  category-tag:
-    backgroundColor: "{colors.raised-dark}"
-    rounded: "{rounded.tag}"
-    padding: "5px 8px"
-  project-card:
-    backgroundColor: "{colors.surface-dark}"
-    textColor: "{colors.text-dark}"
-    rounded: "{rounded.surface}"
-    padding: "23px"
+  control: "12px"
+  navigation: "15px"
+  card-compact: "17px"
+  card-mobile: "18px"
+  login-panel: "28px"
 ---
 
-# Design System: VEXA Studio
+# Sistema de diseño: VEXA Studio
 
-## Overview
+Actualizado el 02/10/2026. Este documento describe la implementación vigente; sustituye las propuestas anteriores de Observatorio, paleta verde, esculturas 3D y zorro.
 
-**Creative North Star: "Observatorio"**
+## Dirección visual
 
-Observatorio es un estudio con perspectiva: grafito profundo, luz hielo y cristal ahumado enmarcan una V reconocible. La alternativa clara transforma el mismo vocabulario en superficies minerales, con tinta azul y acento petróleo.
+Interfaz compacta para trabajar con horas, tareas, proyectos y participación. Fondos grafito y blanco hielo, superficies de cristal y acentos azul acero. El logo oficial conserva el verde VEXA. Inicio y Mi día presentan cabeceras breves con fecha e información útil; el resumen personal de horas aparece antes de participación y equipo.
 
-Tras integrar `main`, el sistema se aplica a la aplicación de socios conservando sus componentes funcionales. `src/index.css` traduce sus tokens semánticos (`fg`, `primary-solid`, `primary-text`, `surface-2`) a Observatorio; la demo de `/observatorio/` usa los alias documentados aquí en `src/observatorio.css`, aislados mediante `@scope`. La aplicación principal conserva sus tamaños de controles, tablas y hojas; la escala que sigue describe los patrones de la demo. Ambos comparten Sora, IBM Plex Sans, tema y núcleo 3D.
+La demo independiente Observatorio y sus objetos 3D fueron retirados. No existe una portada decorativa ni un banner WorkspaceHero activo.
 
-El vidrio pertenece a la navegación, al panorama y al temporizador flotante. Listas, tablas y formularios mantienen superficies sólidas para leer y trabajar con estabilidad. Sora aporta carácter a títulos y números; IBM Plex Sans sostiene la interfaz compacta. El movimiento queda cerca del elemento que cambia y respeta la preferencia del sistema y el control manual.
+## Fuentes de verdad
 
-**Key Characteristics:**
-- Cristal ahumado con reflejos suaves, no bordes pesados.
-- Superficies sólidas para el trabajo diario.
-- Luz hielo y su traducción mineral clara.
-- V geométrica, tipografía local y cifras tabulares.
-- Movimiento local breve con alternativa estática.
+- `src/colors.css`: paletas de referencia OKLCH, verde de marca, neutros, acero y estados.
+- `src/glass.css`: roles semánticos de ambos temas, materiales y distribución compacta.
+- `src/index.css`: base, tipografía, aliases Tailwind y estilos funcionales. Sus valores iniciales de color son sobrescritos por `glass.css`, que se importa después.
+- `src/lib/motion-tokens.ts`: duraciones, desplazamientos, inclinación, mascota y navegación líquida.
+- `src/features/auth/pages/login.css`: composición y controles del acceso.
+- `src/components/mascot-companion.css`: tamaño, posición y controles de la mascota.
 
-## Colors
+Los componentes deben consumir roles semánticos. Los cambios de paleta se realizan en las referencias y en su asignación por tema.
 
-La paleta combina grafito, hielo y minerales azules; los tokens terminados en dark y light registran los dos temas reales. Las variables CSS sin sufijo son el enlace vivo entre tema y componente.
+## Color y temas
 
-### Primary
+| Rol | Claro | Oscuro |
+| --- | --- | --- |
+| Fondo `--bg` | `#f7f8fa` | `#08090b` |
+| Superficie `--surface` | `--neutral-50` | `--neutral-900` |
+| Superficie elevada `--surface-2` | `--neutral-100` | `--neutral-800` |
+| Texto `--fg` | `--neutral-900` | `--neutral-50` |
+| Texto secundario `--muted` | `--neutral-600` | `--neutral-400` |
+| Acento `--primary` | `--steel` (`#7b97ad`) | `--steel` (`#7b97ad`) |
+| Acción `--primary-solid` | `--steel-700` | `--steel-300` |
+| Texto sobre acción `--primary-fg` | Blanco | `#08090b` |
+| Texto de acento `--primary-text` | `--steel-800` | `--steel-200` |
+| Cristal `--glass` | Blanco al 66 % | `rgb(24 27 32)` al 68 % |
+| Borde de control `--control-border` | `--neutral-450` | `--neutral-550` |
 
-- **Luz hielo / petróleo mineral:** accent-dark y accent-light marcan acciones principales, navegación activa, foco, progreso y la V de la marca. accent-ink conserva una tinta legible sobre cada acento.
+Éxito, advertencia y error usan `--success`, `--warning`, `--danger` y sus fondos `*-soft`. Los estados incluyen texto; el color por sí solo no comunica su significado. La marca usa `public/vexa-fondo-blanco.svg` y `public/vexa-fondo-negro.svg`, sin recolorear su verde `#498974`.
 
-### Neutral
+El tema oscuro se activa mediante `.dark` en el elemento raíz. El selector está disponible tanto en acceso como dentro del espacio de trabajo.
 
-- **Grafito / mineral:** bg es el fondo; surface sostiene áreas de trabajo; raised sostiene controles secundarios y etiquetas.
-- **Cristal ahumado / cristal claro:** glass aporta transparencia solo en las superficies expresivas.
-- **Tinta / bruma:** text sostiene información principal y muted información secundaria. line dibuja separaciones suaves; hover comunica respuesta; input conserva un fondo sólido.
-- **Estados:** done usa verde contextual y error rojo contextual en ambos temas. No son acentos de marca adicionales.
+## Tipografía
 
-### Named Rules
+Sora Variable para marca, títulos y cifras principales. IBM Plex Sans local en pesos 400, 500 y 600 para lectura, etiquetas y controles. Las cifras de horas, porcentajes e importes usan `.num` para conservar ancho tabular.
 
-**The Theme Pair Rule.** Cada superficie funcional usa las variables semánticas del tema; el tema claro cambia también tinta, acento, campos, bordes y estados.
+Las cabeceras tranquilas usan títulos de 24–30 px y texto secundario de 13 px. El acceso usa un título de 40–64 px en escritorio y 32 px en móvil. La jerarquía favorece datos y acciones; Inicio muestra la participación y sus puntos sin un desplegable de cálculo.
 
-## Typography
+## Distribución y navegación
 
-**Display Font:** Sora Variable (sans-serif).
-**Body Font:** IBM Plex Sans (sans-serif), pesos locales 400, 500 y 600.
+A partir de 1024 px, `LavaNav` ocupa un raíl fijo de 80 px pegado al borde izquierdo y el shell deja 110 px para él. Los destinos tienen iconos, nombres accesibles y etiquetas visibles con hover o foco. La cabecera permanece arriba con contexto, temporizador, tema y usuario.
 
-**Character:** Títulos geométricos de peso moderado junto a una voz de lectura compacta y estable. Los títulos equilibran sus líneas y usan tracking negativo.
+Por debajo de 1024 px se muestra navegación inferior con seis destinos: Inicio, Mi día, Proyectos, Mis tareas, Horas y Gastos. Equipo se abre desde el menú del avatar. No hay menú hamburguesa. El contenido reserva espacio para el dock, las áreas seguras y el temporizador activo.
 
-### Hierarchy
+Desde 768 px se aplican cuadrículas y espaciados compactos: Mi día distribuye prioridades, foco y daily; tareas y registros de horas se agrupan en columnas. En móvil se apilan las regiones y el equipo se presenta en filas. El contenido adicional debe poder crecer y desplazarse sin quedar recortado.
 
-- **Display:** título expresivo del panorama, token display; en móvil pasa a (31px).
-- **Headline:** título de página, token headline; en móvil pasa a (25px).
-- **Title:** títulos de sección, token title; tarjetas de proyecto usan (19px), paneles (20px).
-- **Body:** texto explicativo, token body. El panorama usa (12px, 1.75) y (11px) en móvil. El estado vacío limita el texto a (42ch).
-- **Label:** controles principales y etiquetas de campos, token label. La navegación usa (13px); etiquetas de categoría y estados usan (10px). No convertir estos metadatos en encabezados decorativos.
-- **Numeric:** reloj principal, token numeric; las métricas emplean Sora de peso (450) y cifras tabulares.
+## Materiales y componentes
 
-### Named Rules
+Las tarjetas y el daily usan cristal de base consistente, borde tenue y desenfoque de 16 px con saturación del 115 %. Los radios varían según el componente: las cards compactas usan 17 px y las móviles 18 px; el panel de acceso usa 28 px en escritorio y 24 px en móvil.
 
-**The Working Type Rule.** Sora se reserva a títulos, marca y cifras principales; IBM Plex Sans sostiene controles, filas y explicaciones.
+La inclinación de cards está limitada a 1,1 grados por eje con ratón. No hay reflejo que siga al cursor. El fondo usa trazos geométricos estáticos y un halo tenue. La navegación líquida conserva el borde ondulante y gotas planas. En oscuro, panel, curva y gotas comparten el color sólido #0e1115, sin degradado, luces ni sombra en el indicador activo. El acabado claro se mantiene.
 
-## Layout
+Reutilizar `Button`, `Card`, `Field`, `Badge`, `Avatar`, `Meter`, `SegmentedBar`, `CountUp`, `Sheet` y `Toaster`. Las hojas de formulario conservan el comportamiento móvil y escritorio existente. Campos y controles deben mantener límites distinguibles, etiquetas, mensajes de error y foco visible.
 
-La navegación de escritorio flota a (20px) del borde, mide (220px) de ancho y deja el contenido con márgenes izquierdo (270px) y derecho (30px). El área de trabajo y la barra superior tienen máximo (1450px); la barra mide (85px) y el contenido comienza con (35px) de aire. La cuadrícula de proyectos usa tres columnas con separación (20px); el resumen combina columnas (1.5fr / 1fr) con separación (25px). No existe una escala universal de espaciado: los tokens registran pasos recurrentes observados.
+## Movimiento
 
-A (1150px) la navegación mide (190px) y los proyectos pasan a dos columnas. A (850px) se reduce a un raíl de iconos de (76px) y el resumen pasa a una columna. A (640px) la navegación se fija abajo: altura (64px), inset (12px), cuatro destinos; contenido con margen (20px) y espacio inferior (90px). Proyectos pasa a una columna. El panorama móvil conserva acción y V mediante una composición propia, no una simple reducción. Las tablas mantienen ancho mínimo (610px), desplazamiento horizontal y aviso; el temporizador flotante se sitúa a (90px) del fondo. A partir de (1600px) aumentan los márgenes y la altura del panorama.
+Los tokens generales usan 0,08 / 0,18 / 0,35 / 0,6 segundos para instantáneo, rápido, normal y lento. El acceso escalona sus regiones cada 0,08 segundos, eleva botones 2 px en hover y usa escala 0,97 al presionar.
 
-## Elevation & Depth
+La navegación líquida usa cinco emisores de gotas con radios variados de 6–16 unidades SVG, entre pequeñas, medianas y grandes. Los inicios se escalonan 800 ms; conserva duraciones de 1,8–3 segundos y pausas de 1–2,4 segundos para evitar saturación. Las animaciones de cifras y barras conservan su política de primera reproducción por sesión. `prefers-reduced-motion` desactiva inclinación, flotación y parpadeos automáticos y reduce el movimiento de las entradas.
 
-El sistema combina capas tonales sólidas con profundidad óptica en el vidrio. El cristal usa desenfoque (22px), saturación (125%) y reflejos interiores de un píxel. Las sombras son difusas y siguen el objeto; el claro reduce su densidad. El fondo añade dos halos radiales tenues.
+## Mascota vigente
 
-### Shadow Vocabulary
+Única imagen de producción: `public/mascot/robot-concept-v3.png`. Cabeza gris hielo y azul acero, visor grafito y capa verde VEXA como cuerpo, sin cuello, torso ni pies. `RobotIdleArtwork` separa cabeza y capa mediante recortes SVG y dibuja el visor y los ojos alineados sobre la ilustración.
 
-- **Vidrio oscuro:** (0 18px 55px -20px rgba(0, 0, 0, 0.62)).
-- **Vidrio claro:** (0 18px 55px -20px rgba(37, 69, 95, 0.22)).
-- **Panel lateral:** (-15px 0 60px -20px rgba(0, 0, 0, 0.4)).
-- **Acción primaria:** halo (0 5px 15px -8px rgba(95, 222, 244, 0.35)) y reflejo interior (inset 0 1px 0 rgba(255, 255, 255, 0.4)).
-- **Tarjeta activa por hover:** (inset 0 1px 0 rgba(185, 227, 244, 0.35), 0 12px 28px -16px rgba(0, 0, 0, 0.5)).
+Cabeza y capa flotan en ciclos independientes de 4,4 y 5,6 segundos. Los ojos cierran en el visor cada 3,5–6,5 segundos. Solo existe reposo animado; tocar o pasar el cursor no cambia la pose.
 
-### Named Rules
+`MascotCompanion` permite arrastrar con ratón o dedo y mover con flechas (16 px; Shift reduce el paso a 4 px). Guarda posición y estado oculto bajo `vexa-studio.mascot` en localStorage. Conserva controles para dormir y despertar, límites de pantalla y separación de navegación y temporizador. El acceso reutiliza la ilustración en reposo.
 
-**The Material Boundary Rule.** Usa vidrio en la navegación, el panorama y el temporizador flotante; conserva superficies sólidas para listas, tablas y campos.
+Las imágenes de zorro y los conceptos robot v1/v2 se eliminaron por estar sin uso. No conservar variantes descartadas dentro de `public`, ya que Vite las copia al build.
 
-## Shapes
+## Acceso
 
-Esquinas suavizadas y diferenciadas por escala: campo, botón, navegación, superficie, panorama y shell usan los tokens de rounded. No hay un radio único aplicado a todo. Avatares de equipo e indicadores son circulares; la V se mantiene angulosa. Separadores funcionales de (1px), pistas de progreso de (4px) y órbitas elípticas finas conectan el lenguaje con el observatorio.
+Cabecera con logo oficial y selector de tema, presentación tipográfica y mascota junto a un panel de cristal. Dos columnas en escritorio; una columna por debajo de 768 px. Los cuatro perfiles de demo se muestran en una cuadrícula de dos columnas, con carga, error y último perfil recordado. Elegir un perfil vuelve a la ruta solicitada.
 
-## Components
+El formulario visual de correo/contraseña permite mostrar contraseña y abrir recuperación. Todavía no autentica ni envía correos: al enviarlo informa que las cuentas se conectarán más adelante. El acceso funcional actual es la selección de perfiles simulados sin contraseña.
 
-### Buttons
+## Accesibilidad y mantenimiento
 
-Acciones compactas, tranquilas y claras. Primaria en accent con accent-ink; secundaria en raised con text. Radio button, padding (12px 17px), gap (9px), altura mínima (42px). Hover primario mezcla el acento con blanco (15%); secundario usa hover. Los botones de icono tienen radio field y mínimo (36px). Deshabilitados reducen opacidad a (0.45). Foco visible global: contorno de acento (2px), separación (4px).
+- Mantener etiquetas asociadas, foco visible, objetivos táctiles y estados de carga, error y vacío.
+- Conservar texto junto a estados y cifras tabulares en métricas.
+- Comprobar contraste sobre la composición real del cristal en ambos temas; los tokens aislados no garantizan el resultado.
+- Revisar móvil y escritorio y la preferencia de movimiento reducido tras cambios visuales.
+- Mantener logos, iconos PWA y la imagen activa de mascota. Retirar variantes sin referencias.
+- No presentar datos simulados como actividad real del estudio.
 
-### Chips
+Las capturas y scripts de revisión local viven en `design-preview/`, ignorado por Git. Las mediciones de propuestas previas no certifican la implementación vigente; cualquier auditoría nueva debe indicar las vistas y estados que comprobó.
 
-La categoría es una etiqueta sólida en raised: radio tag, padding (5px 8px), tipo (10px). Los estados se expresan con punto circular (5px) y texto: muted pendiente, accent activo, done completado. No son botones de filtro.
+## Verificación del 02/10/2026
 
-### Cards / Containers
+- Typecheck y compilación de producción completados; 55 pruebas de Vitest aprobadas.
+- Lint sin errores, con nueve advertencias existentes de accesibilidad en componentes compartidos y formularios.
+- Acceso revisado en claro y oscuro a 320, 390, 768 y 1366 px: cuatro perfiles y sin desbordamiento horizontal. Formulario, recuperación visual y retorno a `/horas` comprobados, sin errores JavaScript.
+- Mascota comprobada en escritorio y móvil: cabeza/capa independientes, parpadeo, posición anclada y alternativa estática con movimiento reducido. Sin errores JavaScript.
+- Build con una sola imagen en `dist/mascot/`: robot v3. La limpieza retiró aproximadamente 3,96 MB de imágenes descartadas del directorio público.
 
-Superficie sólida con radio surface. Tarjetas de proyecto usan padding (23px) y reflejo interior fino; hover cambia a hover y añade la sombra de tarjeta. Las listas sostienen filas separadas por line; las tablas mantienen textos y números legibles dentro de una región horizontal desplazable.
+## Dashboard operativo
 
-### Inputs / Fields
+Actualizado el 02/10/2026. Inicio presenta primero tus horas y participación; después el resumen operativo y el contexto del equipo.
 
-Fondo input, texto text, borde line de (1px), radio field y padding (12px); tamaño (13px). Etiqueta visible asociada por id, error enlazado mediante aria-describedby y anuncio de alerta. Error de campo cambia el borde a (#db9292); el mensaje usa los tokens error por tema. Foco visible comparte el contorno global. Selectores usan altura mínima (40px).
+1. Contexto personal: dos tarjetas destacadas con iconos contenidos, cifras grandes, unidades pequeñas y reflejo azul acero tenue. Horas agrupa el mínimo junto a la cifra, muestra el anillo de cumplimiento y reserva el pie para saldo, compromiso semanal y acceso a Horas. Participación separa el porcentaje de los puntos propios y totales; el reparto se representa con una barra fina y etiquetas por socio. Se conserva la explicación desplegable de puntos.
+2. Accesos complementarios «También en el estudio»: enlaces pequeños a tareas, proyectos, gastos por revisar y Mi día, con contadores junto a las etiquetas. La franja no tiene contenedor de tarjeta ni ocupa todo el ancho; se adapta mediante salto de línea. Identifica el borrador diario local si existe.
+3. Tareas por atender: hasta tres tareas de proyectos activos, filtro Equipo/Mías y acceso al tablero o Mis tareas. Se ordenan por cierre del sprint, después revisión, en progreso y pendientes; las tareas sin sprint se muestran después. Se excluyen tareas terminadas y sprints cerrados. Las fechas visibles son cierres de sprint, no plazos individuales de tareas; el modelo actual no contiene prioridad ni fecha límite de tarea.
+4. Gastos por revisar: concepto, importe, votos a favor y si el usuario ya votó, con enlace al detalle del gasto. Las renovaciones vencidas o de los próximos 30 días aparecen cuando existen. Se mantiene visible que emitir votos no está habilitado en la demo.
+5. Contexto del estudio: proyectos en marcha con tareas hechas/total y cierre de sprint; el equipo en un panel secundario de media anchura, con cuatro filas de nombre, horas/mínimo y cumplimiento. El detalle de puntos, área y participación de los demás se consulta en Equipo.
 
-### Navigation
+`DashboardOperations.tsx` usa los hooks de tareas, resúmenes de proyectos y gastos, con carga y error independientes. `attention.ts` define el orden de atención y tiene pruebas para cierres, estados, proyectos pausados y filtro personal. `useExpenseOverview` comparte los gastos y votos persistidos entre el dashboard y Gastos; la pantalla de Gastos dejó de regenerar un seed independiente. Sus enlaces usan `filter=pending` y `expense=<id>` para abrir directamente el detalle. Los servicios de lectura de gastos están implementados; las escrituras permanecen pendientes.
 
-Flotante y translúcida. Destinos con icono SVG y texto; activo usa accent, una base de gradiente hielo tenue y señal vertical. Hover usa hover y text; el indicador compartido cambia en (0.25s) cuando hay movimiento. El raíl intermedio conserva nombres accesibles; el dock móvil devuelve etiquetas visibles.
+La navegación y tarjetas conservan los tokens de ambos temas. Inicio aprovecha el ancho disponible hasta 1680 px. Horas y participación encabezan dos columnas iguales con altura natural y composición compacta. Desde 768 px los accesos complementarios ocupan una columna lateral sin tarjeta, de 160 px en tablet y 192 px desde 1280 px. El título queda como texto suelto sobre los botones, con objetivos táctiles de 44 px en tablet. En móvil estos accesos se ocultan; los módulos siguen disponibles en la navegación principal. El área operativa usa columnas independientes: tareas y proyectos a la izquierda; gastos y equipo a la derecha. Gastos conserva altura natural. En móvil se apilan métricas, tareas, gastos, proyectos y equipo. Se mantiene el desplazamiento natural bajo la navegación fija.
 
-### Panel lateral
+Verificación: tipos y compilación aprobados; 60 pruebas aprobadas; lint sin errores y con las nueve advertencias anteriores. Revisado en ambos temas a 320, 390, 768 y 1366 px sin desbordamiento horizontal ni errores JavaScript. Comprobados filtro Mías, apertura directa de gasto y coherencia entre ambos módulos al modificar el estado en un navegador aislado. Auditoría de texto a 1366 × 768: 100 muestras por tema, mínimos 6,62:1 en oscuro y 5,48:1 en claro, sin fallos detectados. Esta muestra no certifica todos los estados posibles.
 
-Dialog nativo sólido de ancho (min(540px, 100vw)) y altura (100dvh), borde izquierdo tenue y sombra difusa. Cabecera (27px 30px), cuerpo (30px); móvil usa (23px). Fondo modal (rgba(4, 10, 18, 0.55)) con blur (4px). Apertura local desde (30px) a la derecha durante (0.3s), easing (cubic-bezier(0.16, 1, 0.3, 1)); Escape cierra y devuelve foco.
+Revisión de distribución del 02/10/2026: comprobados 320, 390, 768, 1024, 1366 y 1920 px en ambos temas. Las métricas aparecen antes del resumen operativo; a 1920 px se usan 1680 px de contenido y Gastos mide aproximadamente 257 px frente a 407 px de Tareas. Sin desbordamiento horizontal ni errores JavaScript; accesos, filtro Mías y detalle de gasto comprobados. Tipos, compilación y 60 pruebas aprobados; lint conserva las nueve advertencias previas.
 
-### Cristal V y movimiento
+Acabado visual del 02/10/2026: las tarjetas principales mantienen cifras, contrastes y navegación; los accesos de módulos pasan de una superficie ancha de unos 80 px a enlaces compactos de 38 px. Revisados ambos temas de 320 a 1920 px, sin desbordamiento horizontal. Auditoría de 104 muestras de texto por tema: mínimos calculados 6,62:1 en oscuro y 5,48:1 en claro, sin fallos. Compilación, tipos y 60 pruebas aprobados; lint conserva las nueve advertencias previas.
 
-V extruida real, profundidad (0.4), bisel (0.11), seis segmentos. Material físico hielo (#9dd5e8), transmisión (0.94), rugosidad (0.06), grosor (1.2), índice óptico (1.5) y clearcoat (1). Reflejos de entorno y luces frías sostienen su lectura. Oscilación suave y respuesta al puntero solo mientras el núcleo es visible. Entrada (0.8s) con el easing del panel. SVG estático conserva silueta y facetas si no hay efectos o falla WebGL.
+Ajuste de densidad del 02/10/2026: se retira «¿Cómo se calcula?» de Inicio y su consulta de ajustes. Las métricas reducen cifras, anillo, separaciones y relleno, sin alturas fijas. Desde 768 px los accesos «También en el estudio» ocupan una columna lateral junto al resumen personal, sin contenedor de tarjeta. En móvil se ocultan para evitar repetir la navegación. Tareas sigue inmediatamente a las métricas.
 
-Las páginas hacen una transición local de (0.2s), con desplazamiento de entrada (8px) y salida (-4px); progreso usa (0.3s), controles (0.15s). Preferencia manual apaga entradas y progreso; prefers-reduced-motion elimina animaciones y reduce transiciones a (0.01ms).
+Verificación del ajuste de densidad: ambos temas de 320 a 1920 px sin desbordamiento ni errores JavaScript. En laptop de 1366 px el resumen personal mide unos 231 px y Tareas comienza a unos 417 px del borde superior. Tipos, compilación y 60 pruebas aprobados; lint conserva nueve advertencias previas.
 
-## Do's and Don'ts
+Acabado sutil de tarjetas: superficies uniformes con opacidad del 88 % en ambos temas, desenfoque de 12 px, borde fino uniforme y sombra corta y tenue. Las métricas de Inicio no usan degradado diagonal, reflejo interior ni línea luminosa superior. Se conserva la inclinación de 1,1 grados y su desactivación con movimiento reducido.
 
-### Do:
+Jerarquía del resumen personal: las dos métricas principales usan un tinte sólido azul gris suave (#edf2f6 en claro y #202830 en oscuro), borde ligeramente más definido y títulos de peso 600. Los paneles secundarios conservan superficies neutras. Esta distinción no añade degradados, líneas luminosas ni reflejos.
 
-- **Do** usar las variables semánticas del tema para superficies, texto, bordes y controles.
-- **Do** conservar sólidos los campos y las áreas de lectura prolongada.
-- **Do** mantener foco visible y etiquetas asociadas a cada campo.
-- **Do** usar cifras tabulares en tiempo, importes y métricas.
-- **Do** respetar movimiento reducido y mantener disponible la V estática.
-- **Do** reservar espacio final suficiente bajo la navegación móvil fija.
+## Horas: registro, historial y análisis
 
-### Don't:
+Actualización autorizada el 02/10/2026. La navegación interna contiene Registro (vista inicial), Historial, Resumen mensual y Revisión (socios/admin). Las vistas se enlazan con `?vista=` y conservan navegación atrás/adelante. Registro muestra el temporizador por actividad y acceso al formulario manual, con registros recientes debajo. No se requiere tarea: proyecto y tarea son opcionales; la descripción es obligatoria y el respaldo admite un enlace HTTP/HTTPS.
 
-- **Don't** extender el vidrio a todas las filas o campos de trabajo.
-- **Don't** sustituir la V reconocible por una ilustración genérica.
-- **Don't** presentar los ejemplos locales como actividad real del equipo.
-- **Don't** hacer que los efectos 3D bloqueen las acciones de la interfaz.
+Historial presenta todos los registros propios, fechas de actividad y creación, hora de inicio/fin cuando existe, duración, estado, revisión, respaldo y anulación. Filtra por fechas, texto y estado. El resumen permite elegir mes; separa registradas/aprobadas/sin aprobar/días activos y muestra barras diarias y por hora de Lima, con tablas textuales desplegables. Los intervalos se distribuyen entre horas/días y se recortan al mes. Los registros anteriores sin horario fiable suman al total diario pero no al gráfico horario.
 
-## Actualización de cristal VEXA
+Revisión muestra entradas finalizadas de otros miembros, con aprobar o pedir aclaración con motivo. La modificación de un registro aprobado reciente lo devuelve a pendiente; los pagados/anulados no se editan. Una aclaración pendiente habilita corrección sin el límite de antigüedad. Superficies uniformes, navegación discreta y controles de 44 px; las columnas se apilan en tablet/móvil. Persistencia exclusivamente mock/local, compatible con datos anteriores sin borrar el historial.
 
-Logos oficiales: `vexa-fondo-blanco.svg` y `vexa-fondo-negro.svg`. Verde de marca: `#498974`. Las superficies usan cristal translúcido, bordes iluminados y esquinas de 18–26 px. El objeto 3D es una escultura abstracta, no un logo. Mi día contiene prioridades personales, foco 25/5 y borrador de daily local. Gastos y Equipo muestran los datos del seed como vistas de ejemplo. Se respetan las preferencias de movimiento reducido.
+Verificación de Horas: ciclo completo de registro manual sin tarea, historial filtrado, aclaración, corrección y aprobación entre dos socios, más inicio/parada del temporizador. Cuarenta combinaciones de vista/tema/ancho (320, 390, 768, 1366, 1920 px) sin desbordamientos ni errores JavaScript. Tipos, producción y 71 pruebas en ocho archivos aprobados; lint mantiene únicamente las nueve advertencias previas.
 
-## Distribución compacta y paleta neutra
+### Refinamiento de Horas — 02/10/2026
 
-Desde 768 px se usa una distribución compacta: Mi día en tres columnas, tarjetas y portadas de menor altura, tareas por estado y registros de horas en columnas. El contenido puede seguir creciendo sin quedar recortado. La paleta base pasa a gris claro (#eef0f4) y grafito (#101115), con superficies #191b22 y reflejos plateados. El verde se reserva para la marca y acentos puntuales.
+El campo de sesión comienza con dos líneas (64 px), no admite estiramiento manual y crece al escribir o pulsar Enter. Registro manual ocupa una tarjeta de altura natural con tinte discreto, pasos breves y acción clara. La sesión activa y el temporizador global muestran tiempo tabular, actividad y control de finalizar compacto.
 
+Las filas de Registro, Historial y Revisión distribuyen actividad, proyecto/persona, fecha/horario, estado y tiempo en columnas, con altura aproximada de 68 px en escritorio. Al abrir una fila se consulta el detalle completo en un modal: fechas de actividad/creación, origen, tarea, proyecto, respaldo y revisión. Solo queda Aprobar como acción en filas de revisión; Pedir aclaración y su formulario están dentro del detalle.
 
-### Liquid space
-La navegación de escritorio usa una superficie azul acero continua pegada al borde izquierdo, con un borde derecho ondulante y gotas que se desprenden y desaparecen,
-iconos con etiquetas accesibles al foco y un indicador activo que conserva continuidad.
-Las superficies transparentes revelan un fondo de luces móviles. Reflejos localizados
-siguen el cursor y las tarjetas se inclinan suavemente. Una escultura de cristal WebGL
-rota y flota en todas las vistas del espacio de trabajo. Se conserva la composición
-compacta y se respeta la preferencia del sistema de reducir movimiento.
+Los selectores de proyecto, tarea, estado, fechas y mes en Horas usan menús propios con tokens del tema, cierre con Escape/clic exterior y devolución del foco al seleccionar. Los controles nativos restantes respetan `color-scheme`. En móvil, el botón + queda junto al título, la navegación Registro/Historial/Resumen/Revisión ocupa una fila y las acciones se integran a filas compactas. El detalle usa una superficie sólida para mantener legibilidad.
 
+El gráfico horario identifica el mes elegido y explica cuánto tiempo carece de horario cuando está vacío. Cambio comprobado entre septiembre (15–17 h) y octubre (9–11 h) usando datos aislados con horario conocido; no se atribuyen horarios a registros históricos. Verificados crecimiento del campo, registro manual con nuevos selectores, filtros y aprobación/aclaración desde modal. Pruebas: 71 aprobadas; producción/tipos sin errores y solo nueve advertencias previas de lint.
 
-### Paleta unificada de marca
-Fondo blanco (#ffffff) en modo claro y negro (#050505) en modo oscuro.
-Verde oficial #498974 con variantes de contraste para controles y texto.
-La barra líquida usa variables del tema: cristal blanco o negro con reflejos
-verdes suaves, compartiendo colores con tarjetas, cabecera y navegación móvil.
-Las superficies translúcidas conservan bordes luminosos, desenfoque y reflejos.
+Modales oscuros: todos los componentes Sheet comparten superficie sólida #171a1f, campos #22272d y bordes neutros #3b424b. Se elimina la línea luminosa interior y la transparencia del panel; divisores y contorno externo usan un 9 % de blanco. El foco y los errores conservan su señalización. El tema claro se mantiene. Los tokens se limitan al modal y sus menús.
 
-Las gotas del sidebar son figuras 2D de color plano, sin iluminación ni sombra.
-Cada emisión elige otra altura, velocidad, tamaño y trayectoria ascendente o descendente;
-se conserva la unión líquida al borde y la desaparición gradual.
-
-La barra conserva su degradado horizontal original. Las gotas toman el tono
-del punto de origen de ese degradado y se adaptan a sus reflejos al ondular
-el borde, sin iluminación radial propia ni sombras que les den volumen 3D.
-
-
-### Superficies tranquilas
-Cards transparentes con desenfoque fijo, sin inclinación, brillo al cursor ni efecto de hover.
-Fondo con contornos y trazos geométricos estáticos de bajo contraste.
-Los objetos 3D se retiraron de la cabecera, Inicio y Observatorio.
-Se conserva la navegación líquida con sus colores y velocidad aprobados.
-
-
-Las cards tienen una base translúcida consistente y un desenfoque de 16 px.
-La inclinación se limita a 0,65 grados por eje en dispositivos con ratón;
-no hay reflejo que siga el cursor. Se desactiva con movimiento reducido.
-
-
-### Retiro de la demo independiente
-La demo Observatorio se eliminó, junto con sus rutas, navegación y archivos exclusivos.
-Inicio conserva su banner de trabajo bajo el componente WorkspaceHero.
-Las referencias anteriores a la demo describen la evolución histórica del diseño.
-
-
-### Revisión con color-expert
-Skill instalada desde https://github.com/meodai/skill.color-expert en `.agents/skills/color-expert`.
-La referencia de marca continúa siendo #498974. `src/colors.css` define escalas OKLCH
-con matiz derivado de esa referencia; `src/glass.css` asigna los roles de ambos temas.
-Los botones principales usan variantes de contraste; éxito, advertencia y error
-usan tonos y fondos propios. Los controles esenciales tienen bordes más distinguibles.
-Los fondos negro/blanco, el difuminado y la inclinación mínima se conservan.
-
-La comprobación de las ocho vistas en ambos modos revisó 482 muestras de texto,
-componiendo los fondos CSS translúcidos. El menor contraste calculado fue 5,48:1,
-sin pares por debajo de 4,5:1 en esa muestra. Esta comprobación no equivale a una
-certificación de toda la interfaz: no evalúa cada estado, textura o composición posible.
-
-
-### Paleta grafito y blanco hielo
-Ambos temas usan ahora neutros fríos: fondo #08090B en oscuro y #F7F8FA en claro.
-El acento de interfaz es azul acero #7B97AD, con variantes OKLCH para botones y texto.
-Las superficies, sombras, sidebar y gotas comparten esta paleta; el logo conserva
-su verde oficial #498974 y los estados de éxito mantienen su significado verde.
-Se conservaron el glass de 16 px, la inclinación y los tamaños/frecuencia de gotas.
-La auditoría de ocho vistas en ambos modos revisó 482 muestras de texto visible:
-contraste mínimo calculado 5,26:1, sin fallos ni desbordamiento a 1366 × 768.
-Compilación de producción verificada. Esta muestra no cubre todos los estados posibles.
-
-
-### Cabeceras y jerarquía funcional
-Inicio y Mi día usan una cabecera compacta: título, fecha y una sola frase secundaria
-en el tono muted de cada tema, sin banners ni etiquetas decorativas repetidas.
-Inicio muestra primero las horas personales, después participación y el equipo.
-Los desgloses de puntos se consultan en «¿Cómo se calcula?».
-En móvil, el equipo se presenta como filas de nombre, participación y progreso.
-El menú hamburguesa se retiró; Equipo está en el menú del avatar móvil.
-Revisadas ambas vistas a 320, 390, 768 y 1366 px en claro/oscuro: sin scroll horizontal;
-a 768/1366 × 768, sin scroll de documento. Textos secundarios con contraste verificado.
