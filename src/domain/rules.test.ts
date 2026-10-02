@@ -132,9 +132,9 @@ describe('canEditEntry', () => {
   it('no permite editar pasados 7 días', () => {
     expect(canEditEntry(entry, new Date('2026-09-08T12:00:01Z'), settings)).toBe(false)
   })
-  it('no permite editar si está validado o anulado', () => {
+  it('permite corregir validado reciente pero no anulado', () => {
     const now = new Date('2026-09-02T00:00:00Z')
-    expect(canEditEntry({ ...entry, validated: true }, now, settings)).toBe(false)
+    expect(canEditEntry({ ...entry, validated: true }, now, settings)).toBe(true)
     expect(canEditEntry({ ...entry, voidedAt: created }, now, settings)).toBe(false)
   })
 })

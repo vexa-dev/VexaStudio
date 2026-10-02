@@ -108,3 +108,58 @@ describe('tareas y sprints', () => {
     ).rejects.toThrow('anterior')
   })
 })
+
+describe('actividades y revisión de horas', () => {
+  beforeEach(() => { getDb().timeEntries = [] })
+  const input = () => ({ taskId: null, date: '2026-09-01', startTime: '09:30', hours: 1.5, description: 'Preparé la propuesta comercial', projectId: null })
+  it('registra actividad sin tarea con horario de Lima', async () => {
+    const e = await time.addManual(input())
+    expect(e.taskId).toBeNull(); expect(e.startedAt).toBe('2026-09-01T14:30:00.000Z');expect(e.source).toBe('manual')
+  })
+  it('rechaza actividad vacía y horarios superpuestos', async () => {
+    await expect(time.addManual({...input(),description:''})).rejects.toThrow('Describe')
+    await time.addManual(input())
+    await expect(time.addManual({...input(),startTime:'10:00'})).rejects.toThrow('superpone')
+  })
+  it('otro socio aprueba y el autor no puede aprobar sus horas', async () => {
+    const e=await time.addManual(input())
+    await expect(time.validate([e.id])).rejects.toThrow('propias')
+    setSessionUserId(DIEGO)
+    const [approved]=await time.validate([e.id])
+    expect(approved.validated).toBe(true);expect(approved.validatedBy).toBe(DIEGO)
+    expect(getDb().auditLog.filter(a=>a.recordId===e.id)).toHaveLength(2)
+  })
+  it('pide aclaración con motivo y permite corregir volviendo a revisión', async () => {
+    const e=await time.addManual(input());setSessionUserId(DIEGO)
+    await expect(time.requestClarification(e.id,'')).rejects.toThrow('Explica')
+    await time.requestClarification(e.id,'Añade el resultado de la propuesta')
+    setSessionUserId(ROBER)
+    const changed=await time.update(e.id,{description:'Preparé tres opciones y las compartí'})
+    expect(changed.reviewNote).toBeNull();expect(changed.validated).toBe(false)
+  })
+  it('editar una aprobación reciente reabre revisión y elimina puntos', async () => {
+    const e=await time.addManual(input());setSessionUserId(DIEGO);await time.validate([e.id]);setSessionUserId(ROBER)
+    const changed=await time.update(e.id,{description:'Preparé cuatro opciones comerciales'})
+    expect(changed.validated).toBe(false);expect(changed.validatedBy).toBeNull()
+  })
+  it('colaboradores no aprueban y una solicitud mixta no se aplica parcialmente', async () => {
+    const e=await time.addManual(input());setSessionUserId(DIEGO)
+    await expect(time.validate([e.id,'missing'])).rejects.toThrow('finalizados')
+    expect(e.validated).toBe(false)
+    getDb().profiles.find(p=>p.id===DIEGO)!.role='collaborator'
+    await expect(time.validate([e.id])).rejects.toThrow('rol')
+  })
+})
+
+describe('protección de horarios', () => {
+  beforeEach(() => { getDb().timeEntries = [] })
+  it('rechaza un horario que termina en el futuro y fechas inválidas', async () => {
+    await expect(time.addManual({taskId:null,date:'2999-01-01',hours:1,startTime:'09:00',description:'Trabajo del estudio'})).rejects.toThrow('futura')
+    await expect(time.addManual({taskId:null,date:'2026-02-30',hours:1,startTime:'09:00',description:'Trabajo del estudio'})).rejects.toThrow('Fecha no válida')
+  })
+  it('permite iniciar temporizador sin tarea y conserva la descripción', async () => {
+    const e=await time.start(null,{description:'Organizar los acuerdos del equipo',projectId:null})
+    expect(e.taskId).toBeNull();expect(e.source).toBe('timer');expect(e.description).toContain('acuerdos')
+    expect((await time.stop())?.endedAt).not.toBeNull()
+  })
+})

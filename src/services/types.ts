@@ -84,7 +84,11 @@ export interface TimeEntryFilter {
 }
 
 export interface ManualEntryInput {
-  taskId: Id
+  taskId: Id | null
+  projectId?: Id | null
+  description?: string
+  evidenceUrl?: string | null
+  startTime?: string
   date: IsoDate
   hours: number
 }
@@ -94,14 +98,15 @@ export interface TimeService {
   /** Entrada con temporizador abierto del usuario actual, si existe. */
   getRunning(): Promise<TimeEntry | null>
   /** Inicia un temporizador; detiene el que estuviera abierto. */
-  start(taskId: Id): Promise<TimeEntry>
+  start(taskId: Id | null, activity?: Pick<ManualEntryInput, 'description' | 'projectId' | 'evidenceUrl'>): Promise<TimeEntry>
   stop(): Promise<TimeEntry | null>
   addManual(input: ManualEntryInput): Promise<TimeEntry>
-  update(id: Id, patch: Partial<Pick<TimeEntry, 'taskId' | 'hours' | 'startedAt'>>): Promise<TimeEntry>
+  update(id: Id, patch: Partial<Pick<TimeEntry, 'taskId' | 'hours' | 'startedAt' | 'description' | 'projectId' | 'evidenceUrl'>>): Promise<TimeEntry>
   /** Nadie borra: se anula con motivo. */
   void(id: Id, reason: string): Promise<TimeEntry>
-  /** Valida horas de otros socios (cierre de sprint). */
+  /** Aprueba registros finalizados de otras personas; solo socios/admin. */
   validate(entryIds: Id[]): Promise<TimeEntry[]>
+  requestClarification(id: Id, note: string): Promise<TimeEntry>
 }
 
 export interface NewExpenseInput {

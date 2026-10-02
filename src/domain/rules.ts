@@ -99,13 +99,14 @@ export function resolveExpenseStatus(
   return 'pending'
 }
 
-/** Un registro propio se edita hasta `entryEditDays` días o hasta su validación; nunca si está anulado. */
+/** Un registro propio se edita hasta `entryEditDays` días o y reabre la revisión al editar; nunca si está anulado o pagado. */
 export function canEditEntry(
-  entry: Pick<TimeEntry, 'createdAt' | 'validated' | 'voidedAt'>,
+  entry: Pick<TimeEntry, 'createdAt' | 'validated' | 'voidedAt'> & Partial<Pick<TimeEntry, 'paid' | 'reviewNote'>>,
   now: Date,
   settings: Pick<Settings, 'entryEditDays'>,
 ): boolean {
-  if (entry.validated || entry.voidedAt) return false
+  if (entry.paid || entry.voidedAt) return false
+  if (entry.reviewNote) return true
   const elapsed = now.getTime() - new Date(entry.createdAt).getTime()
   return elapsed <= settings.entryEditDays * MS_PER_DAY
 }

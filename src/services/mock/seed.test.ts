@@ -19,7 +19,7 @@ describe('seed', () => {
   it('mantiene referencias válidas entre tablas', () => {
     const taskIds = new Set(db.tasks.map((t) => t.id))
     const userIds = new Set(db.profiles.map((p) => p.id))
-    expect(db.timeEntries.every((e) => taskIds.has(e.taskId) && userIds.has(e.userId))).toBe(true)
+    expect(db.timeEntries.every((e) => (e.taskId !== null && taskIds.has(e.taskId ?? "")) && userIds.has(e.userId))).toBe(true)
     expect(db.expenseVotes.every((v) => db.expenses.some((e) => e.id === v.expenseId))).toBe(true)
   })
 

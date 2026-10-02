@@ -85,3 +85,23 @@ export function useVoidEntry() {
     onError: (error) => toast.error(messageOf(error)),
   })
 }
+
+export function useTimeHistory() {
+  return useQuery({ queryKey: ['time', 'history'], queryFn: () => services.time.listEntries() })
+}
+export function useReviewTime() {
+  const refresh = useRefreshTime()
+  return useMutation({
+    mutationFn: async ({ id, note }: { id: string; note?: string }) => { if (note === undefined) await services.time.validate([id]); else await services.time.requestClarification(id, note) },
+    onSuccess: async () => { await refresh(); toast.success('Revisión guardada') },
+    onError: error => toast.error(messageOf(error)),
+  })
+}
+export function useActivityTimer() {
+  const refresh = useRefreshTime()
+  return useMutation({
+    mutationFn: (activity: { description: string; projectId: string | null }) => services.time.start(null, activity),
+    onSuccess: () => refresh(),
+    onError: error => toast.error(messageOf(error)),
+  })
+}

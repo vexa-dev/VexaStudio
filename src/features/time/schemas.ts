@@ -1,7 +1,11 @@
 import { z } from 'zod'
 
 export const entrySchema = z.object({
-  taskId: z.string().min(1, 'Elige la tarea'),
+  taskId: z.string(),
+  projectId: z.string(),
+  description: z.string().trim().min(8, 'Describe brevemente el trabajo realizado (mínimo 8 caracteres)'),
+  evidenceUrl: z.string().trim().refine(v => !v || /^https?:\/\/[^\s]+$/i.test(v), 'Usa un enlace http o https'),
+  startTime: z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/, 'Indica la hora de inicio'),
   date: z.string().min(1, 'Elige la fecha'),
   hours: z
     .number({ error: 'Escribe las horas' })

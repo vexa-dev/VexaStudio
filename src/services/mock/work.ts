@@ -53,6 +53,18 @@ function assertHours(hours: number) {
   if (!Number.isFinite(hours) || hours <= 0 || hours > 24) throw new Error('Las horas deben estar entre 0 y 24')
 }
 
+function assertActivity(projectId?: Id | null, evidenceUrl?: string | null) {
+  if (projectId && !getDb().projects.some(p => p.id === projectId)) throw new Error('El proyecto no existe')
+  if (evidenceUrl && !/^https?:\/\/[^\s]+$/i.test(evidenceUrl)) throw new Error('Usa un enlace http o https')
+}
+function assertInterval(startedAt: string, hours: number, userId: Id, exclude?: Id) {
+  const start = new Date(startedAt).getTime()
+  const end = start + hours * HOUR_MS
+  if (!Number.isFinite(start) || end > Date.now()) throw new Error('El registro no puede terminar en el futuro')
+  const overlap = getDb().timeEntries.some(e => e.id !== exclude && e.userId === userId && !e.voidedAt && (e.source || e.endedAt === null) && start < (e.endedAt ? new Date(e.endedAt).getTime() : Date.now()) && end > new Date(e.startedAt).getTime())
+  if (overlap) throw new Error('Este horario se superpone con otro registro')
+}
+
 /** Cierra un registro abierto: fija el fin y calcula las horas. */
 function closeEntry(entry: TimeEntry, now: Date, userId: Id) {
   const before = { ...entry }
@@ -158,10 +170,12 @@ export const time: TimeService = {
     const userId = getSessionUserId()
     return delay(getDb().timeEntries.find((e) => e.userId === userId && e.endedAt === null && !e.voidedAt) ?? null)
   },
-  async start(taskId) {
+  async start(taskId, activity) {
     const user = currentUser()
     const db = getDb()
-    const task = findTask(taskId)
+    const task = taskId ? findTask(taskId) : null
+    if (!task && (activity?.description?.trim().length ?? 0) < 8) throw new Error('Describe el trabajo que vas a realizar')
+    assertActivity(activity?.projectId, activity?.evidenceUrl)
     const now = new Date()
     // Un solo temporizador abierto por persona: iniciar uno detiene el anterior.
     for (const open of db.timeEntries.filter((e) => e.userId === user.id && e.endedAt === null && !e.voidedAt)) {
@@ -171,6 +185,10 @@ export const time: TimeService = {
       id: newId('h'),
       userId: user.id,
       taskId,
+      projectId: task?.projectId ?? activity?.projectId ?? null,
+      description: activity?.description?.trim() ?? task?.title,
+      evidenceUrl: activity?.evidenceUrl ?? null,
+      source: 'timer',
       startedAt: now.toISOString(),
       endedAt: null,
       hours: 0,
@@ -184,7 +202,7 @@ export const time: TimeService = {
     db.timeEntries.push(entry)
     audit('time_entries', entry.id, 'create', null, entry, user.id)
     // Al iniciar el temporizador, la tarea pasa a "En progreso".
-    if (task.status === 'todo') {
+    if (task?.status === 'todo') {
       const before = { ...task }
       task.status = 'in_progress'
       audit('tasks', task.id, 'update', before, task, user.id)
@@ -200,18 +218,28 @@ export const time: TimeService = {
     save()
     return delay(open)
   },
-  async addManual({ taskId, date, hours }) {
+  async addManual({ taskId, date, hours, projectId, description, evidenceUrl, startTime }) {
     const user = currentUser()
-    findTask(taskId)
+    const task = taskId ? findTask(taskId) : null
+    if (!task && (description?.trim().length ?? 0) < 8) throw new Error('Describe el trabajo realizado')
+    assertActivity(projectId, evidenceUrl)
     assertHours(hours)
     if (date > todayLima()) throw new Error('No puedes registrar horas en una fecha futura')
     // Lima no tiene horario de verano (UTC-5): el mediodía de ese día es una hora segura.
-    const startedAt = new Date(`${date}T12:00:00-05:00`).toISOString()
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(date) || (startTime && !/^([01]\d|2[0-3]):[0-5]\d$/.test(startTime))) throw new Error('Fecha u hora no válida')
+    const start = new Date(`${date}T${startTime ?? '12:00'}:00-05:00`)
+    if (!Number.isFinite(start.getTime()) || todayLima(start) !== date) throw new Error('Fecha no válida')
+    const startedAt = start.toISOString()
+    if (startTime) assertInterval(startedAt, hours, user.id)
     const now = new Date().toISOString()
     const entry: TimeEntry = {
       id: newId('h'),
       userId: user.id,
       taskId,
+      projectId: task?.projectId ?? projectId ?? null,
+      description: description?.trim() ?? task?.title,
+      evidenceUrl: evidenceUrl || null,
+      source: startTime ? 'manual' : undefined,
       startedAt,
       endedAt: new Date(new Date(startedAt).getTime() + hours * HOUR_MS).toISOString(),
       hours,
@@ -232,15 +260,26 @@ export const time: TimeService = {
     const entry = ownEntry(id, user.id)
     if (entry.endedAt === null) throw new Error('Detén el temporizador antes de editar el registro')
     if (!canEditEntry(entry, new Date(), getDb().settings)) {
-      throw new Error('Este registro ya no se puede editar: pasaron los días permitidos o fue validado')
+      throw new Error('Este registro ya no se puede editar: pasaron los días permitidos o está pagado/anulado')
     }
     if (patch.taskId) findTask(patch.taskId)
     if (patch.hours !== undefined) assertHours(patch.hours)
+    assertActivity(patch.projectId, patch.evidenceUrl)
+    if (patch.description !== undefined && patch.description.trim().length < 8) throw new Error('Describe el trabajo realizado')
     const before = { ...entry }
     const startedAt = patch.startedAt ?? entry.startedAt
     const hours = patch.hours ?? entry.hours
-    Object.assign(entry, {
-      taskId: patch.taskId ?? entry.taskId,
+    if (!patch.taskId && patch.taskId !== undefined && (patch.description?.trim().length ?? entry.description?.length ?? 0) < 8) throw new Error('Describe el trabajo realizado')
+    assertInterval(startedAt, hours, user.id, entry.id)
+    Object.assign(entry, patch, {
+      taskId: patch.taskId === undefined ? entry.taskId : patch.taskId,
+      description: patch.description?.trim() ?? entry.description,
+      source: entry.source ?? (patch.startedAt ? 'manual' : undefined),
+      validated: false,
+      validatedAt: null,
+      validatedBy: null,
+      reviewNote: null,
+      reviewedBy: null,
       startedAt,
       hours,
       endedAt: new Date(new Date(startedAt).getTime() + hours * HOUR_MS).toISOString(),
@@ -262,5 +301,33 @@ export const time: TimeService = {
     save()
     return delay(entry)
   },
-  validate: pending('TimeService.validate'),
+  async validate(entryIds) {
+    const user = currentPartner()
+    const entries = [...new Set(entryIds)].map(id => {
+      const entry = getDb().timeEntries.find(e => e.id === id)
+      if (!entry || entry.voidedAt || !entry.endedAt || entry.hours <= 0) throw new Error('Solo se revisan registros finalizados y vigentes')
+      if (entry.userId === user.id) throw new Error('No puedes aprobar tus propias horas')
+      if (entry.validated) throw new Error('El registro ya está aprobado')
+      return entry
+    })
+    for (const entry of entries) {
+      const before = { ...entry }
+      Object.assign(entry, { validated: true, validatedAt: new Date().toISOString(), validatedBy: user.id, reviewNote: null, reviewedBy: user.id })
+      audit('time_entries', entry.id, 'update', before, entry, user.id)
+    }
+    save()
+    return delay(entries)
+  },
+  async requestClarification(id, note) {
+    const user = currentPartner()
+    const entry = getDb().timeEntries.find(e => e.id === id)
+    if (!entry || entry.userId === user.id || entry.validated || entry.voidedAt || !entry.endedAt) throw new Error('Este registro no está disponible para revisión')
+    if (note.trim().length < 8) throw new Error('Explica qué necesita aclaración')
+    const before = { ...entry }
+    entry.reviewNote = note.trim()
+    entry.reviewedBy = user.id
+    audit('time_entries', id, 'update', before, entry, user.id)
+    save()
+    return delay(entry)
+  },
 }

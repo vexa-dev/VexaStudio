@@ -70,7 +70,7 @@ export interface Task {
 export interface TimeEntry {
   id: Id
   userId: Id
-  taskId: Id
+  taskId: Id | null
   startedAt: IsoDateTime
   /** `null` mientras el temporizador está abierto. */
   endedAt: IsoDateTime | null
@@ -81,6 +81,14 @@ export interface TimeEntry {
   createdAt: IsoDateTime
   voidedAt: IsoDateTime | null
   voidReason: string | null
+  projectId?: Id | null
+  description?: string
+  evidenceUrl?: string | null
+  source?: 'manual' | 'timer'
+  validatedBy?: Id | null
+  reviewNote?: string | null
+  reviewedBy?: Id | null
+
 }
 
 export type ExpenseCategory = 'infrastructure' | 'software' | 'marketing' | 'legal' | 'other'
