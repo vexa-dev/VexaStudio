@@ -2,25 +2,25 @@
 name: VEXA Studio
 description: Observatorio de cristal ahumado y luz hielo para el trabajo del estudio.
 colors:
-  bg-dark: "#0c1017"
-  text-dark: "#e8edf4"
-  muted-dark: "#9aa9bc"
-  surface-dark: "#141b26"
-  raised-dark: "#1d2838"
+  bg-dark: "#0b1210"
+  text-dark: "#eef4f0"
+  muted-dark: "#a0b6aa"
+  surface-dark: "#14211b"
+  raised-dark: "#1b2d24"
   glass-dark: "rgba(22, 31, 44, 0.72)"
   line-dark: "rgba(172, 200, 232, 0.12)"
-  accent-dark: "#9be7f2"
+  accent-dark: "#a2d6bc"
   accent-ink-dark: "#10242e"
   hover-dark: "#203041"
   input-dark: "#111924"
-  bg-light: "#edf1f5"
-  text-light: "#1b2a3b"
-  muted-light: "#526174"
-  surface-light: "#f9fbfd"
-  raised-light: "#e5edf4"
+  bg-light: "#edf3ef"
+  text-light: "#182f27"
+  muted-light: "#536a60"
+  surface-light: "#f7faf8"
+  raised-light: "#e3ede7"
   glass-light: "rgba(249, 252, 255, 0.76)"
   line-light: "rgba(31, 65, 95, 0.14)"
-  accent-light: "#176278"
+  accent-light: "#28694f"
   accent-ink-light: "#fff"
   hover-light: "#dfeaf0"
   input-light: "#fff"
@@ -262,3 +262,90 @@ Las páginas hacen una transición local de (0.2s), con desplazamiento de entrad
 - **Don't** sustituir la V reconocible por una ilustración genérica.
 - **Don't** presentar los ejemplos locales como actividad real del equipo.
 - **Don't** hacer que los efectos 3D bloqueen las acciones de la interfaz.
+
+## Actualización de cristal VEXA
+
+Logos oficiales: `vexa-fondo-blanco.svg` y `vexa-fondo-negro.svg`. Verde de marca: `#498974`. Las superficies usan cristal translúcido, bordes iluminados y esquinas de 18–26 px. El objeto 3D es una escultura abstracta, no un logo. Mi día contiene prioridades personales, foco 25/5 y borrador de daily local. Gastos y Equipo muestran los datos del seed como vistas de ejemplo. Se respetan las preferencias de movimiento reducido.
+
+## Distribución compacta y paleta neutra
+
+Desde 768 px se usa una distribución compacta: Mi día en tres columnas, tarjetas y portadas de menor altura, tareas por estado y registros de horas en columnas. El contenido puede seguir creciendo sin quedar recortado. La paleta base pasa a gris claro (#eef0f4) y grafito (#101115), con superficies #191b22 y reflejos plateados. El verde se reserva para la marca y acentos puntuales.
+
+
+### Liquid space
+La navegación de escritorio usa una superficie azul acero continua pegada al borde izquierdo, con un borde derecho ondulante y gotas que se desprenden y desaparecen,
+iconos con etiquetas accesibles al foco y un indicador activo que conserva continuidad.
+Las superficies transparentes revelan un fondo de luces móviles. Reflejos localizados
+siguen el cursor y las tarjetas se inclinan suavemente. Una escultura de cristal WebGL
+rota y flota en todas las vistas del espacio de trabajo. Se conserva la composición
+compacta y se respeta la preferencia del sistema de reducir movimiento.
+
+
+### Paleta unificada de marca
+Fondo blanco (#ffffff) en modo claro y negro (#050505) en modo oscuro.
+Verde oficial #498974 con variantes de contraste para controles y texto.
+La barra líquida usa variables del tema: cristal blanco o negro con reflejos
+verdes suaves, compartiendo colores con tarjetas, cabecera y navegación móvil.
+Las superficies translúcidas conservan bordes luminosos, desenfoque y reflejos.
+
+Las gotas del sidebar son figuras 2D de color plano, sin iluminación ni sombra.
+Cada emisión elige otra altura, velocidad, tamaño y trayectoria ascendente o descendente;
+se conserva la unión líquida al borde y la desaparición gradual.
+
+La barra conserva su degradado horizontal original. Las gotas toman el tono
+del punto de origen de ese degradado y se adaptan a sus reflejos al ondular
+el borde, sin iluminación radial propia ni sombras que les den volumen 3D.
+
+
+### Superficies tranquilas
+Cards transparentes con desenfoque fijo, sin inclinación, brillo al cursor ni efecto de hover.
+Fondo con contornos y trazos geométricos estáticos de bajo contraste.
+Los objetos 3D se retiraron de la cabecera, Inicio y Observatorio.
+Se conserva la navegación líquida con sus colores y velocidad aprobados.
+
+
+Las cards tienen una base translúcida consistente y un desenfoque de 16 px.
+La inclinación se limita a 0,65 grados por eje en dispositivos con ratón;
+no hay reflejo que siga el cursor. Se desactiva con movimiento reducido.
+
+
+### Retiro de la demo independiente
+La demo Observatorio se eliminó, junto con sus rutas, navegación y archivos exclusivos.
+Inicio conserva su banner de trabajo bajo el componente WorkspaceHero.
+Las referencias anteriores a la demo describen la evolución histórica del diseño.
+
+
+### Revisión con color-expert
+Skill instalada desde https://github.com/meodai/skill.color-expert en `.agents/skills/color-expert`.
+La referencia de marca continúa siendo #498974. `src/colors.css` define escalas OKLCH
+con matiz derivado de esa referencia; `src/glass.css` asigna los roles de ambos temas.
+Los botones principales usan variantes de contraste; éxito, advertencia y error
+usan tonos y fondos propios. Los controles esenciales tienen bordes más distinguibles.
+Los fondos negro/blanco, el difuminado y la inclinación mínima se conservan.
+
+La comprobación de las ocho vistas en ambos modos revisó 482 muestras de texto,
+componiendo los fondos CSS translúcidos. El menor contraste calculado fue 5,48:1,
+sin pares por debajo de 4,5:1 en esa muestra. Esta comprobación no equivale a una
+certificación de toda la interfaz: no evalúa cada estado, textura o composición posible.
+
+
+### Paleta grafito y blanco hielo
+Ambos temas usan ahora neutros fríos: fondo #08090B en oscuro y #F7F8FA en claro.
+El acento de interfaz es azul acero #7B97AD, con variantes OKLCH para botones y texto.
+Las superficies, sombras, sidebar y gotas comparten esta paleta; el logo conserva
+su verde oficial #498974 y los estados de éxito mantienen su significado verde.
+Se conservaron el glass de 16 px, la inclinación y los tamaños/frecuencia de gotas.
+La auditoría de ocho vistas en ambos modos revisó 482 muestras de texto visible:
+contraste mínimo calculado 5,26:1, sin fallos ni desbordamiento a 1366 × 768.
+Compilación de producción verificada. Esta muestra no cubre todos los estados posibles.
+
+
+### Cabeceras y jerarquía funcional
+Inicio y Mi día usan una cabecera compacta: título, fecha y una sola frase secundaria
+en el tono muted de cada tema, sin banners ni etiquetas decorativas repetidas.
+Inicio muestra primero las horas personales, después participación y el equipo.
+Los desgloses de puntos se consultan en «¿Cómo se calcula?».
+En móvil, el equipo se presenta como filas de nombre, participación y progreso.
+El menú hamburguesa se retiró; Equipo está en el menú del avatar móvil.
+Revisadas ambas vistas a 320, 390, 768 y 1366 px en claro/oscuro: sin scroll horizontal;
+a 768/1366 × 768, sin scroll de documento. Textos secundarios con contraste verificado.

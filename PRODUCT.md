@@ -45,9 +45,9 @@ Vexa Studio convierte el trabajo diario de 4 socios (horas, gastos, sprints) en 
 ## Brand Commitments
 
 - Nombre: VEXA Studio (VEXA es la marca del equipo).
-- Logo: `public/vexa-mark.svg` (V reconocible con luz hielo sobre grafito), también favicon.
+- Logo: `public/vexa-fondo-blanco.svg` y `public/vexa-fondo-negro.svg` (logos oficiales blanco/negro con verde #498974), también favicon.
 - El sistema visual vigente está documentado en `DESIGN.md`; PRODUCT.md solo guarda los compromisos de marca.
-- La identidad visual adopta Observatorio, aprobado por el product owner: cristal ahumado, grafito, luz hielo, Sora e IBM Plex Sans locales. La demo independiente se conserva en `/observatorio/` sin reemplazar los servicios ni las reglas del producto principal.
+- La identidad visual usa negro y blanco, verde oficial #498974, superficies translúcidas, Sora e IBM Plex Sans locales. Las vistas del producto comparten navegación y servicios simulados.
 
 ## Evidence on Hand
 
