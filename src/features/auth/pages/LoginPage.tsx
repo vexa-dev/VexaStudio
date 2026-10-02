@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { BrandLogo } from '@/components/BrandLogo'
 import { Navigate, useLocation, useNavigate } from 'react-router-dom'
 import { Avatar } from '@/components/ui/Avatar'
 import { Badge } from '@/components/ui/Badge'
@@ -49,9 +50,9 @@ export default function LoginPage() {
   }
 
   return (
-    <main className="mx-auto flex min-h-dvh w-full max-w-md flex-col justify-center gap-8 px-4 py-10 pt-[max(2.5rem,env(safe-area-inset-top))]">
+    <main className="login-shell mx-auto flex min-h-dvh w-full max-w-md flex-col justify-center gap-8 px-4 py-10 pt-[max(2.5rem,env(safe-area-inset-top))]">
       <header className="enter flex flex-col gap-4">
-        <img src="/vexa-mark.svg" alt="" className="size-14" />
+        <BrandLogo className="size-20" />
         <div className="flex flex-col gap-1.5">
           <h1 className="text-3xl font-bold leading-tight">Bienvenido a VEXA Studio</h1>
           <p className="text-sm text-muted">
