@@ -13,6 +13,7 @@ import { navItems } from "./nav";
 import { ThemeToggle } from "./ThemeToggle";
 import { UserMenu } from "./UserMenu";
 import { useCardTilt } from "@/lib/useCardTilt";
+import { MascotCompanion } from "@/components/MascotCompanion";
 
 function Brand() {
   return (
@@ -78,6 +79,7 @@ export function AppLayout() {
       </main>
 
       <TimerBar />
+      <MascotCompanion hasTimer={hasTimer} />
 
       <nav
         aria-label="Principal móvil"
