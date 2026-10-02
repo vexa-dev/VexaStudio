@@ -62,7 +62,7 @@ Los componentes deben consumir roles semánticos. Los cambios de paleta se reali
 | Cristal `--glass` | Blanco al 66 % | `rgb(24 27 32)` al 68 % |
 | Borde de control `--control-border` | `--neutral-450` | `--neutral-550` |
 
-Éxito, advertencia y error usan `--success`, `--warning`, `--danger` y sus fondos `*-soft`. Los estados incluyen texto; el color por sí solo no comunica su significado. La marca usa `public/vexa-fondo-blanco.svg` y `public/vexa-fondo-negro.svg`, sin recolorear su verde `#498974`.
+Éxito, advertencia y error usan `--success`, `--warning`, `--danger` y sus fondos `*-soft`. Los estados incluyen texto; el color por sí solo no comunica su significado. La marca usa `public/vexa-logo-light.svg` y `public/vexa-logo-dark.svg`, sin recolorear su verde `#498974`.
 
 El tema oscuro se activa mediante `.dark` en el elemento raíz. El selector está disponible tanto en acceso como dentro del espacio de trabajo.
 
@@ -96,11 +96,11 @@ La navegación líquida usa cinco emisores de gotas con radios variados de 6–1
 
 ## Mascota vigente
 
-Única imagen de producción: `public/mascot/robot-concept-v3.png`. Cabeza gris hielo y azul acero, visor grafito y capa verde VEXA como cuerpo, sin cuello, torso ni pies. `RobotIdleArtwork` separa cabeza y capa mediante recortes SVG y dibuja el visor y los ojos alineados sobre la ilustración.
+Única imagen de producción: `public/mascot/vexa-robot.png`. Cabeza gris hielo y azul acero, visor grafito y capa verde VEXA como cuerpo, sin cuello, torso ni pies. `RobotIdleArtwork` separa cabeza y capa mediante recortes SVG y dibuja el visor y los ojos alineados sobre la ilustración.
 
 Cabeza y capa flotan en ciclos independientes de 4,4 y 5,6 segundos. Los ojos cierran en el visor cada 3,5–6,5 segundos. Solo existe reposo animado; tocar o pasar el cursor no cambia la pose.
 
-`MascotCompanion` permite arrastrar con ratón o dedo y mover con flechas (16 px; Shift reduce el paso a 4 px). Guarda posición y estado oculto bajo `vexa-studio.mascot` en localStorage. Conserva controles para dormir y despertar, límites de pantalla y separación de navegación y temporizador. El acceso reutiliza la ilustración en reposo.
+`MascotCompanion` permite arrastrar con ratón o dedo y mover con flechas (16 px; Shift reduce el paso a 4 px). Mira hacia el centro de la pantalla y gira al cruzar su punto medio. La cabeza acompaña la mirada con un giro y desplazamiento suaves mediante el resorte compartido `gentle`, en una capa independiente de la flotación; el desplazamiento vertical y una ligera compresión de la cabeza hacen legible la mirada arriba/abajo. La flotación de la cabeza se reduce para no competir con esa dirección. Durante el arrastre se centra. Los ojos siguen el ratón mediante un desplazamiento limitado dentro del visor, compensando el giro de la ilustración y conservando el parpadeo. La mirada se centra cuando el ratón sale de la ventana; con movimiento reducido o interacción táctil permanece centrada. El menú de usuario incluye «Ocultar mascota» / «Mostrar mascota»; no hay botones flotantes junto al robot. La posición y la preferencia de visibilidad persisten bajo `vexa-studio.mascot`, conservando compatibilidad con el estado oculto anterior. El efecto líquido del sidebar no captura el puntero. Se mantienen los límites de pantalla y la separación de navegación y temporizador. El acceso reutiliza la ilustración en reposo.
 
 Las imágenes de zorro y los conceptos robot v1/v2 se eliminaron por estar sin uso. No conservar variantes descartadas dentro de `public`, ya que Vite las copia al build.
 
