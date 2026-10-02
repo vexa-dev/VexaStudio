@@ -1,10 +1,15 @@
-import { CalendarOff } from "lucide-react";
+import {
+  ArrowUpRight,
+  Check,
+  Clock3,
+  ArrowRight,
+  ChartPie,
+} from "lucide-react";
 import { Link } from "react-router-dom";
 import { useState } from "react";
 import { Avatar } from "@/components/ui/Avatar";
 import { Card } from "@/components/ui/Card";
 import { CountUp } from "@/components/ui/CountUp";
-import { EmptyState } from "@/components/ui/EmptyState";
 import { ErrorState } from "@/components/ui/ErrorState";
 import { Meter } from "@/components/ui/Meter";
 import { SegmentedBar } from "@/components/ui/SegmentedBar";
@@ -13,15 +18,11 @@ import { useAuth } from "@/features/auth/hooks/useAuth";
 import { useMembers } from "@/features/team/hooks/useMembers";
 import { formatMonthLabel, monthKey } from "@/lib/dates";
 import { formatHours, formatInt, formatPercent } from "@/lib/format";
-import { areaLabel } from "@/lib/labels";
 import { useFirstPlay } from "@/lib/useFirstPlay";
 import { stagger } from "@/lib/utils";
 import { useMonthlySummary, usePoints } from "../hooks/useDashboard";
-import { useSettings } from "@/features/settings/hooks/useSettings";
-
-/** Escala del medidor: deja espacio después del mínimo para que las horas extra también se vean. */
-const meterMax = (hours: number, minimum: number) =>
-  Math.max(minimum * 1.25, hours, 1);
+import { DashboardOperations } from "./DashboardOperations";
+import "./dashboard.css";
 
 export default function DashboardPage() {
   const { user } = useAuth();
@@ -29,32 +30,28 @@ export default function DashboardPage() {
   const members = useMembers();
   const monthly = useMonthlySummary(month);
   const points = usePoints();
-  const settings = useSettings();
-  // Barras y contadores se animan la primera vez en la sesión; en las visitas siguientes aparecen ya listos.
   const animate = useFirstPlay("dashboard");
-
   const isLoading = members.isLoading || monthly.isLoading || points.isLoading;
   const isError = members.isError || monthly.isError || points.isError;
-  const firstName = user?.name.split(" ")[0];
 
   const header = (
-    <>
-      <header className="quiet-header">
-        <div>
-          <h1>Hola, {firstName}</h1>
-          <p className="quiet-caption">Un mismo horizonte, a tu ritmo.</p>
-        </div>
-        <div className="quiet-header-actions">
-          <span className="quiet-date">{formatMonthLabel(month)}</span>
-          <Link to="/proyectos" className="quiet-link">Ver proyectos ↗</Link>
-        </div>
-      </header>
-    </>
+    <header className="dashboard-header">
+      <div>
+        <p className="dashboard-period">{formatMonthLabel(month)}</p>
+        <h1>Hola, {user?.name.split(" ")[0] ?? "socio"}</h1>
+        <p className="dashboard-caption">
+          Tu avance y el del estudio, en un vistazo.
+        </p>
+      </div>
+      <Link to="/mi-dia" className="dashboard-action dashboard-action-primary">
+        Ir a Mi día <ArrowUpRight size={16} aria-hidden="true" />
+      </Link>
+    </header>
   );
 
-  if (isError) {
+  if (isError)
     return (
-      <>
+      <div className="studio-dashboard">
         {header}
         <ErrorState
           message="No se pudo calcular el resumen del mes."
@@ -64,49 +61,37 @@ export default function DashboardPage() {
             void points.refetch();
           }}
         />
-      </>
+      </div>
     );
-  }
 
-  if (isLoading || !members.data || !monthly.data || !points.data || !user) {
+  if (isLoading || !members.data || !monthly.data || !points.data || !user)
     return (
-      <>
+      <div className="studio-dashboard">
         {header}
-        <div className="grid gap-4 lg:grid-cols-[1.5fr_1fr]" aria-busy="true">
-          <Skeleton className="h-56" />
-          <Skeleton className="h-56" />
-          <Skeleton className="h-72 lg:col-span-2" />
+        <div
+          className="dashboard-overview dashboard-metrics"
+          aria-busy="true"
+          aria-label="Cargando resumen"
+        >
+          <Skeleton className="h-72" />
+          <Skeleton className="h-72" />
         </div>
-      </>
+        <DashboardOperations userId={user?.id ?? ""} />
+      </div>
     );
-  }
 
-  // Tu fila primero: es la que más se consulta desde el celular.
+  const summaries = monthly.data;
+  const pointSummaries = points.data;
+  const summaryOf = (id: string) => summaries.find((s) => s.userId === id);
+  const pointsOf = (id: string) => pointSummaries.find((p) => p.userId === id);
   const partners = members.data
-    .filter((m) => monthly.data.some((s) => s.userId === m.id))
+    .filter((m) => summaryOf(m.id))
     .sort((a, b) => Number(b.id === user.id) - Number(a.id === user.id));
-  const totalHours = monthly.data.reduce((sum, s) => sum + s.hours, 0);
-  const summaryOf = (id: string) => monthly.data.find((s) => s.userId === id);
-  const pointsOf = (id: string) => points.data.find((p) => p.userId === id);
-
+  const totalHours = summaries.reduce((sum, s) => sum + s.hours, 0);
+  const totalPoints = pointSummaries.reduce((sum, p) => sum + p.totalPoints, 0);
+  const completed = summaries.filter((s) => s.meetsMinimum).length;
   const mine = summaryOf(user.id);
   const myPoints = pointsOf(user.id);
-  const totalPoints = points.data.reduce((sum, p) => sum + p.totalPoints, 0);
-
-  if (totalHours === 0 && totalPoints === 0) {
-    return (
-      <>
-        {header}
-        <EmptyState
-          icon={CalendarOff}
-          title="Aún no hay horas este mes"
-          description="Cuando el equipo registre horas verás aquí el reparto de participación y el cumplimiento de cada socio."
-        />
-      </>
-    );
-  }
-
-  // La barra mantiene el orden del equipo (no el de tu fila) para que cada persona conserve su lugar.
   const segments = members.data
     .filter((m) => pointsOf(m.id))
     .map((m) => ({
@@ -116,173 +101,218 @@ export default function DashboardPage() {
       value: pointsOf(m.id)?.totalPoints ?? 0,
       highlight: m.id === user.id,
     }));
-  const shareSummary = `Reparto de participación: ${segments.map((s) => `${s.label} ${s.caption}`).join(", ")}`;
+  const shareSummary = `Participación acumulada: ${segments.map((s) => `${s.label} ${s.caption}`).join(", ")}`;
+
+  const teamPanel = (
+    <section
+      aria-labelledby="dashboard-team"
+      className="dashboard-team-section enter"
+      style={stagger(3)}
+    >
+      <Card className="dashboard-compact-team">
+        <div className="dashboard-section-heading">
+          <div>
+            <h2 id="dashboard-team">El equipo este mes</h2>
+            <p>
+              {formatHours(totalHours)} registradas · {completed}/
+              {partners.length} cumplen el mínimo
+            </p>
+          </div>
+        </div>
+        <ul className="dashboard-mini-members">
+          {partners.map((member) => {
+            const s = summaryOf(member.id);
+            if (!s) return null;
+            return (
+              <li key={member.id}>
+                <div className="dashboard-mini-person">
+                  <Avatar name={member.name} size="sm" />
+                  <span>
+                    {member.name.split(" ")[0]}
+                    {member.id === user.id ? (
+                      <span className="dashboard-you">Tú</span>
+                    ) : null}
+                  </span>
+                </div>
+                <div className="dashboard-mini-progress">
+                  <span className="num">
+                    {formatHours(s.hours)}{" "}
+                    <span>/ {formatHours(s.minimumHours)}</span>
+                  </span>
+                  <Meter
+                    value={s.hours}
+                    max={Math.max(s.minimumHours, s.hours, 1)}
+                    label={`${member.name}: ${formatHours(s.hours)} de ${formatHours(s.minimumHours)} mínimas`}
+                    className="h-1"
+                    animate={animate}
+                  />
+                </div>
+                <span
+                  className={`dashboard-compliance num ${s.meetsMinimum ? "is-complete" : ""}`}
+                >
+                  {formatPercent(s.compliance)}
+                </span>
+              </li>
+            );
+          })}
+        </ul>
+        <Link to="/equipo" className="dashboard-text-link">
+          Ver equipo <ArrowUpRight size={15} aria-hidden="true" />
+        </Link>
+      </Card>
+    </section>
+  );
 
   return (
-    <>
+    <div className="studio-dashboard">
       {header}
-      <div className="dashboard-summary grid gap-4 lg:grid-cols-2">
+      <div className="dashboard-overview dashboard-metrics">
         {mine ? (
           <section
-            aria-labelledby="tu-mes"
+            aria-labelledby="dashboard-personal"
             className="enter"
             style={stagger(1)}
           >
-            <Card className="flex h-full flex-col gap-4">
-              <h2 id="tu-mes" className="text-base font-semibold">
-                Tus horas
-              </h2>
-              <p className="personal-hours num">
-                <strong>{formatHours(mine.hours)}</strong>
-                <span> / {formatHours(mine.minimumHours)} este mes</span>
-              </p>
-              <div className="pb-1">
-                <Meter
-                  value={mine.hours}
-                  max={meterMax(mine.hours, mine.minimumHours)}
-                  threshold={mine.minimumHours}
-                  label={`${formatHours(mine.hours)} de ${formatHours(mine.minimumHours)} mínimas`}
-                  animate={animate}
-                />
+            <Card className="dashboard-personal-card">
+              <div className="dashboard-card-heading">
+                <h2 id="dashboard-personal">
+                  <span className="dashboard-metric-icon">
+                    <Clock3 size={18} aria-hidden="true" />
+                  </span>{" "}
+                  Tus horas este mes
+                </h2>
+                <span
+                  className={`dashboard-status ${mine.meetsMinimum ? "is-complete" : ""}`}
+                >
+                  {mine.meetsMinimum ? (
+                    <Check size={12} aria-hidden="true" />
+                  ) : null}
+                  {mine.meetsMinimum ? "Mínimo cumplido" : "En progreso"}
+                </span>
               </div>
-              <p className="text-sm text-muted">
-                {mine.meetsMinimum
-                  ? mine.hours > mine.minimumHours
-                    ? `Ya cumples el mínimo, con ${formatHours(mine.hours - mine.minimumHours)} de más.`
-                    : "Justo en el mínimo del mes."
-                  : `Te faltan ${formatHours(mine.minimumHours - mine.hours)} para el mínimo.`}{" "}
-                Tu compromiso es de {user.weeklyHours} h por semana.
-              </p>
+              <div className="dashboard-personal-main">
+                <div>
+                  <p className="dashboard-hours num">
+                    <CountUp
+                      value={mine.hours}
+                      format={(v) => String(Number(v.toFixed(2)))}
+                      animate={animate}
+                    />
+                    <span> h</span>
+                  </p>
+                  <p className="dashboard-caption">
+                    de{" "}
+                    <strong className="num">
+                      {formatHours(mine.minimumHours)}
+                    </strong>{" "}
+                    mínimas este mes
+                  </p>
+                </div>
+                <div className="dashboard-dial">
+                  <svg viewBox="0 0 100 100" aria-hidden="true">
+                    <circle
+                      className="dashboard-dial-track"
+                      cx="50"
+                      cy="50"
+                      r="43"
+                    />
+                    <circle
+                      className="dashboard-dial-progress"
+                      cx="50"
+                      cy="50"
+                      r="43"
+                      strokeDasharray={2 * Math.PI * 43}
+                      strokeDashoffset={
+                        2 *
+                        Math.PI *
+                        43 *
+                        (1 - Math.min(Math.max(mine.compliance, 0), 1))
+                      }
+                    />
+                  </svg>
+                  <div>
+                    <strong className="num">
+                      {formatPercent(mine.compliance)}
+                    </strong>
+                    <span>del mínimo</span>
+                  </div>
+                </div>
+              </div>
+              <div className="dashboard-personal-bottom">
+                <dl className="dashboard-personal-stats">
+                  <div>
+                    <dt>
+                      {mine.meetsMinimum ? "Sobre el mínimo" : "Por completar"}
+                    </dt>
+                    <dd className="num">
+                      {formatHours(Math.abs(mine.minimumHours - mine.hours))}
+                    </dd>
+                  </div>
+                  <div>
+                    <dt>Compromiso semanal</dt>
+                    <dd className="num">{formatHours(user.weeklyHours)}</dd>
+                  </div>
+                </dl>
+                <Link to="/horas" className="dashboard-text-link">
+                  Ver mis horas <ArrowRight size={15} aria-hidden="true" />
+                </Link>
+              </div>
             </Card>
           </section>
         ) : null}
 
-        <section aria-labelledby="reparto" className="enter" style={stagger(2)}>
-          <Card tone="raised" className="flex h-full flex-col gap-5">
-            <h2 id="reparto" className="text-base font-semibold">
-              Reparto de participación
-            </h2>
+        <section
+          aria-labelledby="dashboard-share"
+          className="enter"
+          style={stagger(2)}
+        >
+          <Card className="dashboard-share-card">
+            <div className="dashboard-card-heading">
+              <h2 id="dashboard-share">
+                <span className="dashboard-metric-icon">
+                  <ChartPie size={18} aria-hidden="true" />
+                </span>
+                Tu participación
+              </h2>
+              <span className="dashboard-period-note">Acumulada</span>
+            </div>
             {myPoints ? (
-              <div className="flex flex-col gap-1.5">
-                <p className="font-display text-2xl font-bold leading-tight sm:text-3xl">
-                  Tienes el{" "}
+              <div className="dashboard-share-value">
+                <p className="num">
                   <CountUp
                     value={myPoints.participation * 100}
-                    format={(v) => `${Math.round(v)} %`}
-                    className="num text-primary-text"
+                    format={(v) => `${Math.round(v)}`}
                     animate={animate}
-                  />{" "}
-                  del reparto
+                  />
+                  <span className="dashboard-percentage-unit"> %</span>
                 </p>
-                <p className="text-sm text-muted">{formatInt(myPoints.totalPoints)} de {formatInt(totalPoints)} puntos del equipo</p>
+                <dl className="dashboard-share-points">
+                  <div>
+                    <dt>Tus puntos</dt>
+                    <dd className="num">{formatInt(myPoints.totalPoints)}</dd>
+                  </div>
+                  <div>
+                    <dt>Total del equipo</dt>
+                    <dd className="num">{formatInt(totalPoints)}</dd>
+                  </div>
+                </dl>
               </div>
-            ) : null}
+            ) : (
+              <p className="dashboard-caption">
+                Aún no hay puntos asignados a tu perfil.
+              </p>
+            )}
             <SegmentedBar
               segments={segments}
               summary={shareSummary}
               animate={animate}
+              className="dashboard-share-distribution"
             />
-            {settings.data ? (
-              <details className="text-sm text-muted">
-                <summary className="inline-flex min-h-11 cursor-pointer items-center font-medium text-primary-text">
-                  ¿Cómo se calcula?
-                </summary>
-                {myPoints ? <p className="pb-2">
-                  <span className="num">{formatInt(myPoints.totalPoints)}</span>{" "}
-                  de <span className="num">{formatInt(totalPoints)}</span>{" "}
-                  puntos:{" "}
-                  <span className="num">{formatInt(myPoints.hourPoints)}</span>{" "}
-                  por horas y{" "}
-                  <span className="num">{formatInt(myPoints.moneyPoints)}</span>{" "}
-                  por gastos aprobados.
-                </p> : null}
-                <p className="pb-1">
-                  Cada hora validada y no pagada suma{" "}
-                  <span className="num">{settings.data.pointsPerHour}</span>{" "}
-                  puntos. Cada S/ 1 de gasto aprobado, no reembolsado y
-                  posterior a la firma suma{" "}
-                  <span className="num">{settings.data.pointsPerSol}</span>. Tu
-                  participación es tu parte de los puntos del equipo.
-                </p>
-              </details>
-            ) : null}
-          </Card>
-        </section>
-
-        <section
-          aria-labelledby="equipo"
-          className="enter lg:col-span-2"
-          style={stagger(3)}
-        >
-          <Card>
-            <h2 id="equipo" className="mb-1 text-base font-semibold">
-              El equipo este mes
-            </h2>
-            <div
-              aria-hidden="true"
-              className="hidden grid-cols-[minmax(0,1.2fr)_minmax(0,1.4fr)_5rem_6rem] gap-4 border-b border-border pb-2 text-xs font-medium text-muted sm:grid"
-            >
-              <span>Socio</span>
-              <span>Horas del mes</span>
-              <span className="text-right">Puntos</span>
-              <span className="text-right">Participación</span>
-            </div>
-            <ul className="divide-y divide-border">
-              {partners.map((member) => {
-                const s = summaryOf(member.id);
-                const p = pointsOf(member.id);
-                if (!s || !p) return null;
-                return (
-                  <li
-                    key={member.id}
-                    className="dashboard-member grid gap-x-4 gap-y-2.5 py-3.5 sm:grid-cols-[minmax(0,1.2fr)_minmax(0,1.4fr)_5rem_6rem] sm:items-center"
-                  >
-                    <div className="dashboard-member-name flex min-w-0 items-center gap-3">
-                      <Avatar name={member.name} size="sm" />
-                      <div className="min-w-0">
-                        <p className="truncate text-sm font-medium">
-                          {member.name}
-                          {member.id === user.id ? (
-                            <span className="text-muted"> (tú)</span>
-                          ) : null}
-                        </p>
-                        <p className="truncate text-xs text-muted">
-                          {areaLabel[member.area]}
-                        </p>
-                      </div>
-                    </div>
-                    <p className="num text-right text-sm font-semibold sm:hidden"><span className="sr-only">Participación: </span>{formatPercent(p.participation)}</p>
-                    <div className="dashboard-member-hours">
-                      <Meter
-                        value={s.hours}
-                        max={meterMax(s.hours, s.minimumHours)}
-                        threshold={s.minimumHours}
-                        label={`${formatHours(s.hours)} de ${formatHours(s.minimumHours)} mínimas`}
-                        className="h-2"
-                        animate={animate}
-                      />
-                      <p className="num mt-1.5 text-xs text-muted">
-                        {formatHours(s.hours)} de {formatHours(s.minimumHours)}
-                        {s.meetsMinimum
-                          ? " · cumple el mínimo"
-                          : ` · faltan ${formatHours(s.minimumHours - s.hours)}`}
-                      </p>
-                    </div>
-                    <p className="num hidden text-right text-sm font-semibold sm:block">
-                      <span className="sr-only">Puntos: </span>
-                      {formatInt(p.totalPoints)}
-                    </p>
-                    <p className="num hidden text-right text-sm font-semibold sm:block">
-                      <span className="sr-only">Participación: </span>
-                      {formatPercent(p.participation)}
-                    </p>
-                  </li>
-                );
-              })}
-            </ul>
           </Card>
         </section>
       </div>
-    </>
+
+      <DashboardOperations userId={user.id} team={teamPanel} />
+    </div>
   );
 }
