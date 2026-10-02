@@ -1,4 +1,4 @@
-import { Suspense } from "react";
+import { Suspense, useState } from "react";
 import { BrandLogo } from "@/components/BrandLogo";
 import { PageTransition } from "@/components/ui/PageTransition";
 import { useLocation } from "react-router-dom";
@@ -14,6 +14,7 @@ import { ThemeToggle } from "./ThemeToggle";
 import { UserMenu } from "./UserMenu";
 import { useCardTilt } from "@/lib/useCardTilt";
 import { MascotCompanion } from "@/components/MascotCompanion";
+import { readMascotPreference, saveMascotPreference } from "@/lib/mascot-preference";
 
 function Brand() {
   return (
@@ -34,6 +35,12 @@ export function AppLayout() {
     navItems.find((item) => item.to === pathname)?.label ??
     "Espacio de trabajo";
   const hasTimer = Boolean(useRunningEntry().data);
+  const [mascotVisible, setMascotVisible] = useState(() => !readMascotPreference().sleeping);
+  function toggleMascot() {
+    const visible = !mascotVisible;
+    setMascotVisible(visible);
+    saveMascotPreference({ sleeping: !visible });
+  }
   return (
     <div className="integrated-shell min-h-dvh lg:pl-60" {...tilt}>
       <a
@@ -58,7 +65,7 @@ export function AppLayout() {
           </span>
           <TimerChip />
           <ThemeToggle />
-          <UserMenu />
+          <UserMenu mascotVisible={mascotVisible} onToggleMascot={toggleMascot} />
         </div>
       </header>
 
@@ -79,7 +86,7 @@ export function AppLayout() {
       </main>
 
       <TimerBar />
-      <MascotCompanion hasTimer={hasTimer} />
+      <MascotCompanion hasTimer={hasTimer} visible={mascotVisible} />
 
       <nav
         aria-label="Principal móvil"
