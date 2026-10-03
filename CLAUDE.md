@@ -4,10 +4,11 @@ Plataforma interna de VEXA (4 socios): tablero de sprints y tareas, registro de 
 
 **Fuente de verdad:** `docs/PRD.md`. Ante cualquier duda de alcance o reglas, léelo antes de implementar. Si algo no está en el PRD, pregunta; no lo inventes.
 
-## Etapa actual: solo frontend (datos simulados)
+## Etapa actual: frontend con datos simulados y backend Supabase en local
 
-- Se construye **todo el frontend primero**, con datos simulados. Supabase se integra después (etapa 2 del PRD).
-- No crear migraciones SQL ni conectar datos remotos en esta etapa. `apps/web/src/lib/supabase.ts` permanece como cliente opcional preparado y sin uso en los servicios mock.
+- El frontend sigue funcionando con datos simulados: `VITE_DATA_SOURCE=mock` es el valor por defecto.
+- Autorizado el 03/10/2026: registro de actividad (auditoría) y backend Supabase, primero en local (CLI + Docker); el proyecto en la nube se conecta al final. Las migraciones SQL viven en `supabase/` y nunca llevan la clave `service_role` a un cliente.
+- `apps/web/src/lib/supabase.ts` sigue como cliente opcional; la UI solo cambia de fuente mediante `VITE_DATA_SOURCE`.
 - Las pantallas **nunca** importan datos simulados directamente: siempre pasan por la capa de servicios (ver "Capa de datos"). Así, en la etapa 2 solo se agrega la implementación de Supabase sin tocar la UI.
 
 ## Stack
@@ -59,9 +60,10 @@ Los imports `@vexa/domain/<módulo>` y `@vexa/services` identifican código comp
 
 ## Capa de datos
 
+- `AuditService` (solo lectura: `list` paginado por `seq` y `timeline`) forma parte de la capa de servicios. Las escrituras del registro son internas al mock; en Supabase las hace un trigger. Visibilidad: admin ve todo; socio ve sus proyectos y sus acciones; colaborador solo las suyas.
 - Cada módulo tiene una interfaz en `packages/services/src/index.ts` con métodos asíncronos (devuelven `Promise`), como si hablaran con una API real.
 - `apps/web/src/services/mock/` implementa esas interfaces con datos en memoria, persistidos en `localStorage` para que sobrevivan al recargar, y con un pequeño retraso artificial (150–300 ms) para probar estados de carga.
-- `apps/web/src/services/index.ts` exporta la implementación según `VITE_DATA_SOURCE` (`mock` por defecto; `supabase` en la etapa 2).
+- `apps/web/src/services/index.ts` exporta la implementación según `VITE_DATA_SOURCE` (`mock` por defecto; `supabase` cuando se integre).
 - Estado del mock: implementados Auth, Settings, Members, Projects, Dashboard (resumen mensual y puntos, con `packages/domain/src/rules.ts`) y, en `mock/work.ts`, Sprints (listar, activo, crear), Tasks (listar, crear, editar, mover) y Time (temporizador único por tarea/actividad, registro manual sin tarea, historial, revisión con aprobación/aclaración, editar y anular con motivo), con permisos y `auditLog`. Gastos tiene lecturas de movimientos, votos y recurrentes compartidas con el dashboard; crear, votar y anular gastos siguen pendientes. Falta cerrar sprint (F3) y el resto de servicios: fallan con un mensaje claro (`pending`/`notImplemented` en `mock/utils.ts`) hasta su bloque F3–F4.
 - Los hooks de `features/*/hooks` usan TanStack Query sobre los servicios. Los componentes solo usan hooks.
 - Los cálculos de equity y cumplimiento viven en `packages/domain/src/rules.ts`. El mock los usa para generar el resumen; en la etapa 2 el cálculo pasa a vistas SQL y el frontend solo lo lee, con el mismo tipo de resultado.
@@ -135,7 +137,7 @@ Las skills viven en `.claude/skills` (registro en `skills-lock.json`). Úsalas a
 
 ## Ajuste autorizado del flujo (02/10/2026)
 
-Admin de cualquier área crea proyectos y tareas, asigna responsables y gestiona miembros. Socios sin rol admin y colaboradores solo mueven sus propias tareas en Mis tareas. Proyectos se limita a membresía explícita, independientemente de asignaciones puntuales, y su kanban es de consulta para no admins. La capa de servicios mock aplica permisos. Task.projectId admite null. Finalizar tarea/reloj crea borradores; Horas confirma un total distribuido en un registro, sin sumar estimaciones ni duplicar puntos. Mi día queda para meta, prioridades y pomodoro, con enlace a Tareas. Daily local plegado, sin crear horas. Esta definición sustituye permisos/flujo previos de F2; no integrar backend en esta etapa.
+Admin de cualquier área crea proyectos y tareas, asigna responsables y gestiona miembros. Socios sin rol admin y colaboradores solo mueven sus propias tareas en Mis tareas. Proyectos se limita a membresía explícita, independientemente de asignaciones puntuales, y su kanban es de consulta para no admins. La capa de servicios mock aplica permisos. Task.projectId admite null. Finalizar tarea/reloj crea borradores; Horas confirma un total distribuido en un registro, sin sumar estimaciones ni duplicar puntos. Mi día queda para meta, prioridades y pomodoro, con enlace a Tareas. Daily local plegado, sin crear horas. Esta definición sustituye permisos/flujo previos de F2; el backend se autorizó después (03/10/2026, ver "Etapa actual").
 
 
 ### Descripciones, etiquetas y desplegables
@@ -146,4 +148,4 @@ Admin de cualquier área crea proyectos y tareas, asigna responsables y gestiona
 
 ## Estructura multiplataforma autorizada (03/10/2026)
 
-La web vive en `apps/web`; dominio y contratos en `packages`. Mantener los comandos desde la raíz y un solo lockfile. Escritorio/móvil están reservados, sin runtime nativo ni backend integrado. `npm run lint` incluye el control de límites. El mock y localStorage son adaptadores de web; no trasladarlos a los paquetes compartidos. Equipo consulta servicios/hooks; DailyService.list ya lee datos persistidos, las escrituras daily siguen pendientes.
+La web vive en `apps/web`; dominio y contratos en `packages`. Mantener los comandos desde la raíz y un solo lockfile. Escritorio/móvil están reservados, sin runtime nativo. `npm run lint` incluye el control de límites. El mock y localStorage son adaptadores de web; no trasladarlos a los paquetes compartidos. Equipo consulta servicios/hooks; DailyService.list ya lee datos persistidos, las escrituras daily siguen pendientes.

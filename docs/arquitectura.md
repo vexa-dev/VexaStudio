@@ -99,3 +99,7 @@ En Vercel mantener **Root Directory en la raíz del repositorio**, con instalaci
 Se retiraron las capturas y scripts temporales de `design-preview`, la compilación anterior de `dist` en la raíz y los artefactos de build utilizados para validar la reorganización. Estas carpetas están ignoradas por Git; `apps/web/dist` se vuelve a generar con `npm run build`.
 
 También se quitaron cinco dependencias sin referencias en la aplicación: `@react-three/fiber`, `three`, `@types/three`, `@fontsource-variable/inter` y `@fontsource-variable/plus-jakarta-sans`. La interfaz mantiene Sora e IBM Plex Sans. El cliente opcional de Supabase y los directorios reservados para escritorio/móvil se conservan como preparación explícita del plan.
+
+## Registro de actividad y Supabase (03/10/2026)
+
+`AuditService` es solo de lectura y vive junto a los demás contratos en `packages/services`; los tipos y el diff de campos son puros y están en `packages/domain/src/audit.ts`. El mock escribe el registro dentro de cada operación de servicio (un `requestId` por operación); Supabase lo hará con triggers. El backend se desarrolla primero en local y el mock sigue siendo la fuente por defecto.

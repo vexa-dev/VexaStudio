@@ -40,6 +40,12 @@ dist-ssr
 .impeccable/review/
 .impeccable/*.log
 
+# Local-only memory and code index (Engram, CodeGraph, skill registry)
+.codegraph/
+.engram/
+.atl/
+odd/
+
 # Generated checks, downloads and temporary artifacts
 .cache/
 .vite/
