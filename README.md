@@ -13,6 +13,7 @@ npm run dev -- --host 127.0.0.1 --port 5173
 ```
 
 ```powershell
+npm run typecheck
 npm run lint
 npm test
 npm run build
@@ -30,20 +31,25 @@ npm run preview
 
 ## Arquitectura
 
-React, TypeScript, React Router, Vite y Tailwind. Componentes compartidos en
-`src/components/ui`, funcionalidades en `src/features` y servicios simulados en
-`src/services/mock`. Las escalas de color de marca se definen en `src/colors.css`; los roles visuales y
-los temas, en `src/glass.css`.
-Los tokens de movimiento están en `src/lib/motion-tokens.ts`.
+El repositorio usa npm workspaces y un único `package-lock.json`:
 
-La configuración opcional de Supabase está en `src/lib/supabase.ts`; usa
-`.env.local` con las variables públicas indicadas en `.env.example`.
-La implementación actual trabaja con datos simulados; no hay despliegue realizado.
+- `apps/web`: aplicación React/Vite, pantallas, estilos, PWA y adaptadores de navegador.
+- `packages/domain`: tipos, reglas, fechas de Lima, formatos, prioridad de tareas y lógica de foco.
+- `packages/services`: contratos asíncronos compartidos; las implementaciones actuales están en la web.
+- `apps/desktop` y `apps/mobile`: espacios reservados con instrucciones; todavía no son aplicaciones.
+
+Los comandos de desarrollo, pruebas y build se ejecutan desde la raíz. Para revisar los límites usa `npm run check:boundaries`. Las decisiones, revisión de código y guía para añadir funcionalidades están en [docs/arquitectura.md](docs/arquitectura.md).
+
+El alias `@/` apunta a `apps/web/src`; los paquetes se importan mediante `@vexa/domain/<módulo>` y `@vexa/services`. Los tokens visuales y componentes permanecen en la web hasta que exista una segunda interfaz que los comparta.
+
+La configuración opcional de Supabase está en `apps/web/src/lib/supabase.ts`. Crea `apps/web/.env.local` usando `apps/web/.env.example`; sus valores son públicos de cliente. La aplicación sigue usando datos simulados y no conecta datos remotos.
+
+Vercel se configura con la **raíz del repositorio**, `npm ci`, `npm run build` y salida `apps/web/dist`, definidos en `vercel.json`. No cambiar la raíz de Vercel a `apps/web`, porque necesita acceder a los paquetes compartidos. `npm run preview` sirve esa misma compilación.
 
 ## Diseño y acceso
 
 El sistema vigente se documenta en `DESIGN.md` y los compromisos de producto en `PRODUCT.md`.
-Solo se conserva la imagen activa de mascota en `public/mascot/vexa-robot.png`.
+Solo se conserva la imagen activa de mascota en `apps/web/public/mascot/vexa-robot.png`.
 Para explorar la aplicación, entra desde uno de los cuatro perfiles de demo.
 El formulario de correo/contraseña y recuperación muestra avisos de conexión pendiente.
 

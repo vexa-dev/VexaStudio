@@ -37,12 +37,12 @@ La demo independiente Observatorio y sus objetos 3D fueron retirados. No existe 
 
 ## Fuentes de verdad
 
-- `src/colors.css`: paletas de referencia OKLCH, verde de marca, neutros, acero y estados.
-- `src/glass.css`: roles semánticos de ambos temas, materiales y distribución compacta.
-- `src/index.css`: base, tipografía, aliases Tailwind y estilos funcionales. Sus valores iniciales de color son sobrescritos por `glass.css`, que se importa después.
-- `src/lib/motion-tokens.ts`: duraciones, desplazamientos, inclinación, mascota y navegación líquida.
-- `src/features/auth/pages/login.css`: composición y controles del acceso.
-- `src/components/mascot-companion.css`: tamaño, posición y controles de la mascota.
+- `apps/web/src/colors.css`: paletas de referencia OKLCH, verde de marca, neutros, acero y estados.
+- `apps/web/src/glass.css`: roles semánticos de ambos temas, materiales y distribución compacta.
+- `apps/web/src/index.css`: base, tipografía, aliases Tailwind y estilos funcionales. Sus valores iniciales de color son sobrescritos por `glass.css`, que se importa después.
+- `apps/web/src/lib/motion-tokens.ts`: duraciones, desplazamientos, inclinación, mascota y navegación líquida.
+- `apps/web/src/features/auth/pages/login.css`: composición y controles del acceso.
+- `apps/web/src/components/mascot-companion.css`: tamaño, posición y controles de la mascota.
 
 Los componentes deben consumir roles semánticos. Los cambios de paleta se realizan en las referencias y en su asignación por tema.
 
@@ -62,7 +62,7 @@ Los componentes deben consumir roles semánticos. Los cambios de paleta se reali
 | Cristal `--glass` | Blanco al 66 % | `rgb(24 27 32)` al 68 % |
 | Borde de control `--control-border` | `--neutral-450` | `--neutral-550` |
 
-Éxito, advertencia y error usan `--success`, `--warning`, `--danger` y sus fondos `*-soft`. Los estados incluyen texto; el color por sí solo no comunica su significado. La marca usa `public/vexa-logo-light.svg` y `public/vexa-logo-dark.svg`, sin recolorear su verde `#498974`.
+Éxito, advertencia y error usan `--success`, `--warning`, `--danger` y sus fondos `*-soft`. Los estados incluyen texto; el color por sí solo no comunica su significado. La marca usa `apps/web/public/vexa-logo-light.svg` y `apps/web/public/vexa-logo-dark.svg`, sin recolorear su verde `#498974`.
 
 El tema oscuro se activa mediante `.dark` en el elemento raíz. El selector está disponible tanto en acceso como dentro del espacio de trabajo.
 
@@ -96,7 +96,7 @@ La navegación líquida usa cinco emisores de gotas con radios variados de 6–1
 
 ## Mascota vigente
 
-Única imagen de producción: `public/mascot/vexa-robot.png`. Cabeza gris hielo y azul acero, visor grafito y capa verde VEXA como cuerpo, sin cuello, torso ni pies. `RobotIdleArtwork` separa cabeza y capa mediante recortes SVG y dibuja el visor y los ojos alineados sobre la ilustración.
+Única imagen de producción: `apps/web/public/mascot/vexa-robot.png`. Cabeza gris hielo y azul acero, visor grafito y capa verde VEXA como cuerpo, sin cuello, torso ni pies. `RobotIdleArtwork` separa cabeza y capa mediante recortes SVG y dibuja el visor y los ojos alineados sobre la ilustración.
 
 Cabeza y capa flotan en ciclos independientes de 4,4 y 5,6 segundos. Los ojos cierran en el visor cada 3,5–6,5 segundos. Solo existe reposo animado; tocar o pasar el cursor no cambia la pose.
 
@@ -127,7 +127,7 @@ Las capturas y scripts de revisión local viven en `design-preview/`, ignorado p
 - Lint sin errores, con nueve advertencias existentes de accesibilidad en componentes compartidos y formularios.
 - Acceso revisado en claro y oscuro a 320, 390, 768 y 1366 px: cuatro perfiles y sin desbordamiento horizontal. Formulario, recuperación visual y retorno a `/horas` comprobados, sin errores JavaScript.
 - Mascota comprobada en escritorio y móvil: cabeza/capa independientes, parpadeo, posición anclada y alternativa estática con movimiento reducido. Sin errores JavaScript.
-- Build con una sola imagen en `dist/mascot/`: robot v3. La limpieza retiró aproximadamente 3,96 MB de imágenes descartadas del directorio público.
+- Build con una sola imagen en `apps/web/dist/mascot/`: robot v3. La limpieza retiró aproximadamente 3,96 MB de imágenes descartadas del directorio público.
 
 ## Dashboard operativo
 

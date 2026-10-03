@@ -7,13 +7,13 @@ Plataforma interna de VEXA (4 socios): tablero de sprints y tareas, registro de 
 ## Etapa actual: solo frontend (datos simulados)
 
 - Se construye **todo el frontend primero**, con datos simulados. Supabase se integra después (etapa 2 del PRD).
-- No crear migraciones SQL ni conectar datos remotos en esta etapa. `src/lib/supabase.ts` permanece como cliente opcional preparado y sin uso en los servicios mock.
+- No crear migraciones SQL ni conectar datos remotos en esta etapa. `apps/web/src/lib/supabase.ts` permanece como cliente opcional preparado y sin uso en los servicios mock.
 - Las pantallas **nunca** importan datos simulados directamente: siempre pasan por la capa de servicios (ver "Capa de datos"). Así, en la etapa 2 solo se agrega la implementación de Supabase sin tocar la UI.
 
 ## Stack
 
-- React + Vite + TypeScript (strict) + Tailwind CSS 4 + React Router. Tailwind se integra con `@tailwindcss/vite` (sin `tailwind.config`); los colores viven como tokens en `src/index.css`.
-- Iconos: lucide-react. Alias de imports: `@/` apunta a `src/`.
+- React + Vite + TypeScript (strict) + Tailwind CSS 4 + React Router. Tailwind se integra con `@tailwindcss/vite` (sin `tailwind.config`); los colores viven como tokens en `apps/web/src/index.css`.
+- Iconos: lucide-react. Alias de imports: `@/` apunta a `apps/web/src/`.
 - Estado del servidor: TanStack Query. Formularios: react-hook-form + zod. Drag & drop del kanban: @dnd-kit
 - Fechas: date-fns. Zona horaria del negocio: `America/Lima` (UTC-5, sin horario de verano). Guardar fechas en ISO UTC; convertir a Lima solo para mostrar y para cortes de semana/mes.
 - PWA: vite-plugin-pwa (manifest + service worker)
@@ -27,7 +27,7 @@ Plataforma interna de VEXA (4 socios): tablero de sprints y tareas, registro de 
 npm run dev          # servidor local
 npm run build        # build de producción
 npm run lint         # oxlint
-npm run typecheck    # tsc -b --noEmit
+npm run typecheck    # tipos de todos los workspaces
 npm run test         # Vitest (una pasada)
 npm run test:watch   # Vitest en modo watch
 npm run preview      # sirve el build de producción
@@ -37,40 +37,34 @@ Antes de dar una tarea por terminada: `npm run typecheck && npm run lint && npm 
 
 ## Estructura
 
+```text
+apps/web/                   aplicación React/Vite y adaptadores de navegador
+  src/app/                  router, layout, providers
+  src/features/             funcionalidades, pantallas y hooks
+  src/components/           componentes HTML/CSS y mascota
+  src/services/             selección de implementación y mock persistido
+  src/lib/                  utilidades específicas de la web
+  public/                   logos, iconos PWA y mascota
+apps/desktop/               reservado para React + Tauri (sin app todavía)
+apps/mobile/                reservado para React Native + Expo (sin app todavía)
+packages/domain/src/        tipos, reglas, fechas, formatos, prioridad y foco puros
+packages/services/src/      interfaces asíncronas de servicios, sin implementación
+scripts/check-boundaries.mjs control de dependencias e imports
+vitest.config.ts            pruebas de web y paquetes desde la raíz
+docs/                       producto, propuesta y arquitectura vigente
+vercel.json                 build de apps/web/dist y rewrite SPA
 ```
-docs/                       PRD.md, acuerdo-socios.md
-src/
-  app/                      router, layout (sidebar/bottom-nav), providers
-  features/<modulo>/        auth, projects, tasks, time, expenses, dashboard,
-                            daily, comments, announcements, meetings, notifications
-                            (cada uno: components/, hooks/, pages/)
-  components/ui/            componentes reutilizables sin lógica de negocio
-                            (Button, Card, Field/TextareaField/ChoicePicker, Badge, Avatar, Meter, SegmentedBar,
-                            CountUp, Sheet, Toaster…)
-  domain/
-    types.ts                tipos del dominio (reflejan el modelo de datos del PRD)
-    rules.ts                funciones puras: puntos, participación, cumplimiento,
-                            aprobación de gastos, ventana de edición (con tests)
-  services/
-    types.ts                interfaces de cada servicio (TaskService, TimeService…)
-    index.ts                elige la implementación según VITE_DATA_SOURCE
-    mock/                   implementación simulada + seed.ts
-    supabase/               (vacío hasta la etapa 2)
-  lib/                      dates.ts (helpers America/Lima), format.ts (montos y cifras), labels.ts,
-                            utils.ts, useFirstPlay.ts y useReducedMotion.ts (política de movimiento)
-public/                     logos oficiales blanco/negro, íconos PWA y mascot/vexa-robot.png
-vercel.json                 rewrite de la SPA y caché de /assets
-PRODUCT.md, DESIGN.md       contexto de producto y sistema visual (los usa Impeccable)
-```
+
+Los imports `@vexa/domain/<módulo>` y `@vexa/services` identifican código compartido. `@/` sigue apuntando exclusivamente a `apps/web/src`. Los paquetes compartidos no importan pantallas, React, Vite ni APIs del navegador. Consulta `docs/arquitectura.md` antes de añadir nuevas dependencias o mover código.
 
 ## Capa de datos
 
-- Cada módulo tiene una interfaz en `services/types.ts` con métodos asíncronos (devuelven `Promise`), como si hablaran con una API real.
-- `services/mock/` implementa esas interfaces con datos en memoria, persistidos en `localStorage` para que sobrevivan al recargar, y con un pequeño retraso artificial (150–300 ms) para probar estados de carga.
-- `services/index.ts` exporta la implementación según `VITE_DATA_SOURCE` (`mock` por defecto; `supabase` en la etapa 2).
-- Estado del mock: implementados Auth, Settings, Members, Projects, Dashboard (resumen mensual y puntos, con `domain/rules.ts`) y, en `mock/work.ts`, Sprints (listar, activo, crear), Tasks (listar, crear, editar, mover) y Time (temporizador único por tarea/actividad, registro manual sin tarea, historial, revisión con aprobación/aclaración, editar y anular con motivo), con permisos y `auditLog`. Gastos tiene lecturas de movimientos, votos y recurrentes compartidas con el dashboard; crear, votar y anular gastos siguen pendientes. Falta cerrar sprint (F3) y el resto de servicios: fallan con un mensaje claro (`pending`/`notImplemented` en `mock/utils.ts`) hasta su bloque F3–F4.
+- Cada módulo tiene una interfaz en `packages/services/src/index.ts` con métodos asíncronos (devuelven `Promise`), como si hablaran con una API real.
+- `apps/web/src/services/mock/` implementa esas interfaces con datos en memoria, persistidos en `localStorage` para que sobrevivan al recargar, y con un pequeño retraso artificial (150–300 ms) para probar estados de carga.
+- `apps/web/src/services/index.ts` exporta la implementación según `VITE_DATA_SOURCE` (`mock` por defecto; `supabase` en la etapa 2).
+- Estado del mock: implementados Auth, Settings, Members, Projects, Dashboard (resumen mensual y puntos, con `packages/domain/src/rules.ts`) y, en `mock/work.ts`, Sprints (listar, activo, crear), Tasks (listar, crear, editar, mover) y Time (temporizador único por tarea/actividad, registro manual sin tarea, historial, revisión con aprobación/aclaración, editar y anular con motivo), con permisos y `auditLog`. Gastos tiene lecturas de movimientos, votos y recurrentes compartidas con el dashboard; crear, votar y anular gastos siguen pendientes. Falta cerrar sprint (F3) y el resto de servicios: fallan con un mensaje claro (`pending`/`notImplemented` en `mock/utils.ts`) hasta su bloque F3–F4.
 - Los hooks de `features/*/hooks` usan TanStack Query sobre los servicios. Los componentes solo usan hooks.
-- Los cálculos de equity y cumplimiento viven en `domain/rules.ts`. El mock los usa para generar el resumen; en la etapa 2 el cálculo pasa a vistas SQL y el frontend solo lo lee, con el mismo tipo de resultado.
+- Los cálculos de equity y cumplimiento viven en `packages/domain/src/rules.ts`. El mock los usa para generar el resumen; en la etapa 2 el cálculo pasa a vistas SQL y el frontend solo lo lee, con el mismo tipo de resultado.
 - Los permisos (quién puede editar qué) se aplican en el servicio mock igual que lo hará RLS después; la UI además oculta lo que no corresponde.
 
 ## Datos simulados (seed)
@@ -106,14 +100,14 @@ PRODUCT.md, DESIGN.md       contexto de producto y sistema visual (los usa Impec
 - Textos de la UI en español (Perú). Montos en soles con formato `S/ 1,234.50`; fechas `dd/mm/yyyy`.
 - Modo claro y oscuro. Estados de carga, vacío y error en toda pantalla con datos.
 - Accesible: labels en formularios, foco visible, contraste suficiente.
-- Identidad VEXA: grafito #08090B y blanco hielo #F7F8FA, acento de interfaz azul acero #7B97AD, verde oficial #498974 en logos y capa de la mascota, cristal translúcido, Sora e IBM Plex Sans locales. Usa los tokens semánticos de `src/glass.css`. La aplicación conserva sus servicios y reglas; la demo independiente fue retirada por solicitud del usuario. El detalle visual está en `DESIGN.md`; el contexto, en `PRODUCT.md`.
+- Identidad VEXA: grafito #08090B y blanco hielo #F7F8FA, acento de interfaz azul acero #7B97AD, verde oficial #498974 en logos y capa de la mascota, cristal translúcido, Sora e IBM Plex Sans locales. Usa los tokens semánticos de `apps/web/src/glass.css`. La aplicación conserva sus servicios y reglas; la demo independiente fue retirada por solicitud del usuario. El detalle visual está en `DESIGN.md`; el contexto, en `PRODUCT.md`.
 - Cifras de datos (horas, puntos, %, montos) con la clase `.num` (tabulares, sin saltos al animar). El estado nunca depende solo del color: siempre va acompañado de texto.
 - Componentes de datos ya disponibles en `components/ui/`: `Meter` (progreso con marca de umbral), `SegmentedBar` (reparto entre personas), `CountUp` (cifra que cuenta), `Card` (tonos `default`, `raised`, `accent`). `Sheet` es la hoja modal para formularios y confirmaciones (abajo en el celular, centrada en escritorio) y `Toaster` (Sonner) muestra los avisos con `toast.success`/`toast.error`. Reutilízalos antes de crear otros.
 - Movimiento: solo `transform`, `opacity` y `clip-path`; curva `--ease-out`; entradas escalonadas de 60 ms con `.enter` y `stagger(i)`. Las animaciones de datos (barras, contadores) se reproducen solo la primera vez por sesión (`useFirstPlay`). Nada de animación en acciones frecuentes o de teclado. Con `prefers-reduced-motion` se conserva el cambio de estado (opacidad) y se quita el desplazamiento.
 - Nativo en móvil: objetivos táctiles de 44 px, `dvh`, áreas seguras, `touch-action: manipulation`, sin resaltado de toque; los estilos `hover` solo con puntero fino.
 - Formularios con react-hook-form + zod (esquemas junto a cada módulo en `schemas.ts`); campos con `Field`, `SelectField` o `TextareaField`. Las mutaciones de cada módulo viven en `hooks/` y muestran su aviso de éxito o error con Sonner. Cada pantalla se carga de forma diferida (`lazy` en `App.tsx`).
 - Temporizador: la barra móvil (`TimerBar`) va sobre la navegación inferior y el chip (`TimerChip`) en el encabezado de escritorio; ambos solo aparecen con un temporizador activo. Nadie borra registros: se anulan con motivo.
-- Tras cualquier cambio de UI, el hook de Impeccable revisa el archivo; el detector completo se corre con `.claude/skills/impeccable/scripts/impeccable detect src` y debe devolver `[]`.
+- Tras cualquier cambio de UI, el hook de Impeccable revisa el archivo; el detector completo se corre con `.claude/skills/impeccable/scripts/impeccable detect apps/web/src` y debe devolver `[]`.
 
 ## Skills del proyecto
 
@@ -149,3 +143,7 @@ Admin de cualquier área crea proyectos y tareas, asigna responsables y gestiona
 - Usar `components/ui/ChoicePicker` para todos los menús de opciones; no introducir `<select>` nativos. Calendarios compartidos: DatePicker de TimePickers. Ambos usan `usePopupPosition` para respetar pantalla, modales y transforms.
 - Descripción Markdown opcional por tarea, editable solo por admin. Renderizar con TaskMarkdown (react-markdown + remark-gfm, skipHtml); no habilitar HTML crudo.
 - ProjectLabel pertenece a un solo proyecto. El catálogo se administra desde ProjectLabelsSheet mediante servicios/hooks, solo admin. Colaboradores reciben únicamente etiquetas adjuntas a tareas, sin catálogo. El servicio valida el proyecto y canonicaliza nombre/color; editar etiqueta propaga a todas sus tareas. Mantener estas reglas en el futuro backend/RLS.
+
+## Estructura multiplataforma autorizada (03/10/2026)
+
+La web vive en `apps/web`; dominio y contratos en `packages`. Mantener los comandos desde la raíz y un solo lockfile. Escritorio/móvil están reservados, sin runtime nativo ni backend integrado. `npm run lint` incluye el control de límites. El mock y localStorage son adaptadores de web; no trasladarlos a los paquetes compartidos. Equipo consulta servicios/hooks; DailyService.list ya lee datos persistidos, las escrituras daily siguen pendientes.

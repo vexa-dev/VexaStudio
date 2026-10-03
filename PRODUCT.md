@@ -45,14 +45,14 @@ Vexa Studio convierte el trabajo diario de 4 socios (horas, gastos, sprints) en 
 ## Brand Commitments
 
 - Nombre: VEXA Studio (VEXA es la marca del equipo).
-- Logo: `public/vexa-logo-light.svg` y `public/vexa-logo-dark.svg` (logos oficiales blanco/negro con verde #498974), también favicon.
+- Logo: `apps/web/public/vexa-logo-light.svg` y `apps/web/public/vexa-logo-dark.svg` (logos oficiales blanco/negro con verde #498974), también favicon.
 - El sistema visual vigente está documentado en `DESIGN.md`; PRODUCT.md solo guarda los compromisos de marca.
 - La identidad visual vigente usa grafito #08090B, blanco hielo #F7F8FA y acento de interfaz azul acero #7B97AD; el logo y la capa de la mascota conservan el verde oficial #498974. Superficies translúcidas, Sora e IBM Plex Sans locales. Las vistas comparten navegación y servicios simulados; la mascota activa es el robot v3, documentado en DESIGN.md.
 
 ## Evidence on Hand
 
 - `docs/PRD.md` y `docs/acuerdo-socios.md`.
-- Seed simulado con los 4 socios, 3 proyectos (Vexa Studio, Fivuza, Vantage) y datos de ejemplo en `src/services/mock/seed.ts`.
+- Seed simulado con los 4 socios, 3 proyectos (Vexa Studio, Fivuza, Vantage) y datos de ejemplo en `apps/web/src/services/mock/seed.ts`.
 - No hay testimonios, clientes, métricas de uso ni datos reales de horas o gastos todavía; no se deben inventar.
 
 ## Product Principles
