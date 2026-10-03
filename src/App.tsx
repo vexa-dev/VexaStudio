@@ -1,6 +1,7 @@
 import { lazy, Suspense, useEffect } from "react";
 import { Link, Route, Routes, useLocation } from "react-router-dom";
 import { AppLayout } from "@/app/AppLayout";
+import { StudioGuard } from "@/features/auth/components/StudioGuard";
 import { AuthGuard } from "@/features/auth/components/AuthGuard";
 import { navItems } from "@/app/nav";
 
@@ -56,8 +57,10 @@ export default function App() {
           <Route path="proyectos/:projectId" element={<BoardPage />} />
           <Route path="tareas" element={<TasksPage />} />
           <Route path="horas" element={<TimePage />} />
-          <Route path="gastos" element={<ExpensesPage />} />
-          <Route path="equipo" element={<TeamPage />} />
+          <Route element={<StudioGuard />}>
+            <Route path="gastos" element={<ExpensesPage />} />
+            <Route path="equipo" element={<TeamPage />} />
+          </Route>
           <Route path="perfil" element={<ProfilePage />} />
         </Route>
       </Route>

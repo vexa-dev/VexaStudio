@@ -1,30 +1,40 @@
-import { ExternalLink, GripVertical, Play, Square } from 'lucide-react'
-import type { ReactNode } from 'react'
-import { Avatar } from '@/components/ui/Avatar'
-import { Button } from '@/components/ui/Button'
-import type { Profile, Task, TaskStatus } from '@/domain/types'
-import { formatHours } from '@/lib/format'
-import { taskStatusLabel } from '@/lib/labels'
-import { cn } from '@/lib/utils'
+import {
+  AlignLeft,
+  ExternalLink,
+  GripVertical,
+  Play,
+  Square,
+} from "lucide-react";
+import type { ReactNode } from "react";
+import { Avatar } from "@/components/ui/Avatar";
+import { Button } from "@/components/ui/Button";
+import type { Profile, Task, TaskStatus } from "@/domain/types";
+import { formatHours } from "@/lib/format";
+import { taskStatusLabel } from "@/lib/labels";
+import { cn } from "@/lib/utils";
 
-const STATUSES: TaskStatus[] = ['todo', 'in_progress', 'review', 'done']
+import { ChoicePicker } from "@/components/ui/ChoicePicker";
+import { TaskLabels } from "./TaskContent";
+
+const STATUSES: TaskStatus[] = ["todo", "in_progress", "review", "done"];
 
 interface TaskCardProps {
-  task: Task
-  assignee?: Profile
+  task: Task;
+  assignee?: Profile;
   /** Nombre del proyecto, útil cuando la tarjeta se muestra fuera de su tablero. */
-  projectName?: string
+  projectName?: string;
   /** El temporizador se inicia solo en tareas propias. */
-  canTrack: boolean
-  isTracking: boolean
-  busy?: boolean
+  canTrack: boolean;
+  isTracking: boolean;
+  readOnly?: boolean;
+  busy?: boolean;
   /** Asa de arrastre (solo escritorio). */
-  handle?: ReactNode
-  dragging?: boolean
-  onOpen: (task: Task) => void
-  onMove: (task: Task, status: TaskStatus) => void
-  onStart: (task: Task) => void
-  onStop: () => void
+  handle?: ReactNode;
+  dragging?: boolean;
+  onOpen: (task: Task) => void;
+  onMove: (task: Task, status: TaskStatus) => void;
+  onStart: (task: Task) => void;
+  onStop: () => void;
 }
 
 export function TaskCard({
@@ -33,6 +43,7 @@ export function TaskCard({
   projectName,
   canTrack,
   isTracking,
+  readOnly,
   busy,
   handle,
   dragging,
@@ -43,34 +54,51 @@ export function TaskCard({
 }: TaskCardProps) {
   return (
     <article
+      data-task-id={task.id}
       className={cn(
-        'glass-card task-card flex flex-col gap-3 rounded-xl border bg-surface p-3.5 shadow-card',
-        isTracking ? 'border-primary' : 'border-border',
-        dragging && 'shadow-pop',
+        "task-card",
+        isTracking && "task-card-active",
+        dragging && "task-card-dragging",
       )}
     >
+      <TaskLabels labels={task.labels} />
       <div className="flex items-start gap-2">
         {handle}
         <button
           type="button"
           onClick={() => onOpen(task)}
-          className="min-h-11 flex-1 text-left text-sm font-medium leading-snug"
+          className="task-card-title"
         >
           {task.title}
         </button>
       </div>
 
-      <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5 text-xs text-muted">
+      <div className="task-card-meta">
+        {task.description?.trim() && (
+          <span
+            title="Tiene descripción"
+            className="inline-flex items-center gap-1"
+          >
+            <AlignLeft size={14} />
+            Descripción
+          </span>
+        )}
         {projectName ? <span>{projectName}</span> : null}
         {assignee ? (
           <span className="flex items-center gap-1.5">
-            <Avatar name={assignee.name} size="sm" />
-            {assignee.name.split(' ')[0]}
+            <Avatar
+              name={assignee.name}
+              size="sm"
+              className="task-card-avatar"
+            />
+            {assignee.name.split(" ")[0]}
           </span>
         ) : (
           <span>Sin responsable</span>
         )}
-        {task.estimateHours !== null ? <span className="num">{formatHours(task.estimateHours)} est.</span> : null}
+        {task.estimateHours !== null ? (
+          <span className="num">{formatHours(task.estimateHours)} est.</span>
+        ) : null}
         {task.link ? (
           <a
             href={task.link}
@@ -84,30 +112,43 @@ export function TaskCard({
         ) : null}
       </div>
 
-      <div className="flex flex-wrap items-center gap-2">
-        <label className="sr-only" htmlFor={`move-${task.id}`}>
-          Mover «{task.title}» a
-        </label>
-        <select
-          id={`move-${task.id}`}
-          value={task.status}
-          onChange={(e) => onMove(task, e.target.value as TaskStatus)}
-          className="min-h-11 min-w-[7.5rem] flex-1 rounded-lg border border-border bg-surface px-2.5 text-sm"
-        >
-          {STATUSES.map((status) => (
-            <option key={status} value={status}>
-              {taskStatusLabel[status]}
-            </option>
-          ))}
-        </select>
-        {canTrack ? (
+      <div className="task-card-actions">
+        {readOnly ? (
+          <span className="text-sm text-muted">
+            {taskStatusLabel[task.status]}
+          </span>
+        ) : (
+          <ChoicePicker
+            label={`Mover «${task.title}» a`}
+            hideLabel
+            value={task.status}
+            disabled={busy}
+            onChange={(value) => onMove(task, value as TaskStatus)}
+            options={STATUSES.map((status) => ({
+              value: status,
+              label: taskStatusLabel[status],
+            }))}
+          />
+        )}
+        {canTrack && task.status !== "done" ? (
           isTracking ? (
-            <Button size="sm" disabled={busy} onClick={onStop}>
+            <Button
+              className="task-card-timer"
+              size="sm"
+              disabled={busy}
+              onClick={onStop}
+            >
               <Square className="size-3.5 fill-current" aria-hidden="true" />
               Detener
             </Button>
           ) : (
-            <Button size="sm" variant="secondary" disabled={busy} onClick={() => onStart(task)}>
+            <Button
+              size="sm"
+              variant="ghost"
+              className="task-card-timer"
+              disabled={busy}
+              onClick={() => onStart(task)}
+            >
               <Play className="size-3.5 fill-current" aria-hidden="true" />
               Iniciar
             </Button>
@@ -115,19 +156,21 @@ export function TaskCard({
         ) : null}
       </div>
     </article>
-  )
+  );
 }
 
 /** Asa para arrastrar; el resto de la tarjeta sigue siendo táctil y desplazable. */
-export function DragHandle(props: React.ButtonHTMLAttributes<HTMLButtonElement>) {
+export function DragHandle(
+  props: React.ButtonHTMLAttributes<HTMLButtonElement>,
+) {
   return (
     <button
       type="button"
       aria-label="Arrastrar tarea"
-      className="-ml-1.5 flex min-h-11 w-8 shrink-0 cursor-grab touch-none items-center justify-center rounded-lg text-muted active:cursor-grabbing"
+      className="task-card-drag-handle"
       {...props}
     >
       <GripVertical className="size-4" aria-hidden="true" />
     </button>
-  )
+  );
 }

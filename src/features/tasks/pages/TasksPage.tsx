@@ -1,127 +1,173 @@
-import { ListChecks } from "lucide-react";
-import { useState } from "react";
-import { Link } from "react-router-dom";
+import { useEffect, useRef, useState } from "react";
+import { Link, useSearchParams } from "react-router-dom";
+import { Plus, ListChecks } from "lucide-react";
 import { Button } from "@/components/ui/Button";
+import { PageHeader } from "@/components/ui/PageHeader";
+import { Sheet } from "@/components/ui/Sheet";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { ErrorState } from "@/components/ui/ErrorState";
-import { PageHeader } from "@/components/ui/PageHeader";
 import { Skeleton } from "@/components/ui/Skeleton";
-import type { Task, TaskStatus } from "@/domain/types";
+import type { Task } from "@/domain/types";
 import { useAuth } from "@/features/auth/hooks/useAuth";
-import { useProjects } from "@/features/projects/hooks/useProjects";
 import { useMembers } from "@/features/team/hooks/useMembers";
+import { useProjects } from "@/features/projects/hooks/useProjects";
 import {
   useRunningEntry,
   useStartTimer,
   useStopTimer,
 } from "@/features/time/hooks/useTime";
-import { taskStatusLabel } from "@/lib/labels";
-import { stagger } from "@/lib/utils";
-import { TaskCard } from "../components/TaskCard";
+import { KanbanBoard } from "../components/KanbanBoard";
+import { TaskContent } from "../components/TaskContent";
 import { TaskFormSheet } from "../components/TaskFormSheet";
-import { useTaskActions } from "../hooks/useTaskActions";
-import { useTasks } from "../hooks/useTasks";
-
-const SECTIONS: TaskStatus[] = ["in_progress", "review", "todo"];
+import { TaskTimer } from "../components/TaskTimer";
+import { useTasks, useMoveTask } from "../hooks/useTasks";
+import { taskStatusLabel } from "@/lib/labels";
 
 export default function TasksPage() {
   const { user } = useAuth();
-  const tasks = useTasks({ assigneeId: user?.id }, { enabled: Boolean(user) });
+  const admin = user?.role === "admin";
+  const [onlyMine, setOnlyMine] = useState(false);
+  const [open, setOpen] = useState(false);
+  const [editing, setEditing] = useState<Task>();
+  const [detail, setDetail] = useState<Task>();
+  const tasks = useTasks();
+  const [params] = useSearchParams();
+  const focused = useRef("");
+  const selectedId = params.get("tarea") ?? "";
+  useEffect(() => {
+    if (
+      !selectedId ||
+      focused.current === selectedId ||
+      !tasks.data?.some((t) => t.id === selectedId)
+    )
+      return;
+    const card = document.querySelector(
+      `[data-task-id="${CSS.escape(selectedId)}"]`,
+    );
+    if (card) {
+      card.scrollIntoView({ block: "center", inline: "nearest" });
+      focused.current = selectedId;
+    }
+  }, [selectedId, tasks.data]);
   const projects = useProjects();
   const members = useMembers();
   const running = useRunningEntry();
   const start = useStartTimer();
   const stop = useStopTimer();
-  const [editing, setEditing] = useState<Task | undefined>();
-  const { move } = useTaskActions(setEditing);
-
-  const mine = (tasks.data ?? []).filter((t) => t.sprintId !== null);
-  const projectName = (id: string) =>
-    projects.data?.find((p) => p.id === id)?.name;
-  const done = mine.filter((t) => t.status === "done");
-
-  const card = (task: Task, index: number) => (
-    <li key={task.id} className="enter" style={stagger(index)}>
-      <TaskCard
-        task={task}
-        assignee={members.data?.find((m) => m.id === task.assigneeId)}
-        projectName={projectName(task.projectId)}
-        canTrack
-        isTracking={running.data?.taskId === task.id}
-        busy={start.isPending || stop.isPending}
-        onOpen={setEditing}
-        onMove={move}
-        onStart={(t) => start.mutate(t.id)}
-        onStop={() => stop.mutate()}
-      />
-    </li>
+  const move = useMoveTask();
+  const shown = (tasks.data ?? []).filter(
+    (t) => !onlyMine || t.assigneeId === user?.id,
   );
-
   return (
     <>
       <PageHeader
-        title="Mis tareas"
-        description="Lo que tienes asignado en los sprints activos. Inicia el temporizador con un toque."
+        title={admin ? "Tareas del equipo" : "Mis tareas"}
+        description="Organiza tu trabajo. Al terminar una tarea, revisa y confirma sus horas en Horas."
+        actions={
+          admin ? (
+            <Button
+              onClick={() => {
+                setEditing(undefined);
+                setOpen(true);
+              }}
+            >
+              <Plus size={16} /> Nueva tarea
+            </Button>
+          ) : undefined
+        }
       />
-
-      {tasks.isLoading ? (
-        <div className="flex flex-col gap-3" aria-busy="true">
-          <Skeleton className="h-32" />
-          <Skeleton className="h-32" />
-        </div>
-      ) : tasks.isError ? (
-        <ErrorState
-          message="No se pudieron cargar tus tareas."
-          onRetry={() => tasks.refetch()}
-        />
-      ) : mine.length === 0 ? (
-        <EmptyState
-          icon={ListChecks}
-          title="No tienes tareas asignadas"
-          description="Cuando te asignen una en un sprint activo aparecerá aquí."
-          action={
-            <Link to="/proyectos">
-              <Button variant="secondary">Ver proyectos</Button>
-            </Link>
-          }
-        />
-      ) : (
-        <div className="task-groups flex flex-col gap-6">
-          {SECTIONS.map((status) => {
-            const list = mine.filter((t) => t.status === status);
-            if (list.length === 0) return null;
-            return (
-              <section key={status} aria-label={taskStatusLabel[status]}>
-                <h2 className="mb-2 px-1 text-sm font-semibold text-muted">
-                  {taskStatusLabel[status]}{" "}
-                  <span className="num">· {list.length}</span>
-                </h2>
-                <ul className="grid gap-3 md:grid-cols-2">{list.map(card)}</ul>
-              </section>
-            );
-          })}
-          {done.length > 0 ? (
-            <details>
-              <summary className="min-h-11 cursor-pointer px-1 text-sm font-semibold text-muted">
-                Hechas <span className="num">· {done.length}</span>
-              </summary>
-              <ul className="mt-2 grid gap-3 md:grid-cols-2">
-                {done.map(card)}
-              </ul>
-            </details>
-          ) : null}
+      <TaskTimer />
+      {admin && (
+        <div className="mb-4 flex items-center gap-3">
+          <Button
+            variant={onlyMine ? "primary" : "secondary"}
+            onClick={() => setOnlyMine(!onlyMine)}
+            aria-pressed={onlyMine}
+          >
+            Solo mis tareas
+          </Button>
+          <span className="text-sm text-muted">
+            {shown.length} tareas · incluye tareas sin proyecto
+          </span>
         </div>
       )}
-
-      {editing ? (
-        <TaskFormSheet
-          open
-          task={editing}
-          projectId={editing.projectId}
-          sprintId={editing.sprintId}
-          onClose={() => setEditing(undefined)}
+      {tasks.isLoading ? (
+        <Skeleton className="h-72" />
+      ) : tasks.isError ? (
+        <ErrorState
+          message="No se pudieron cargar las tareas."
+          onRetry={() => tasks.refetch()}
         />
-      ) : null}
+      ) : !shown.length ? (
+        <EmptyState
+          icon={ListChecks}
+          title="Sin tareas asignadas"
+          description="Aquí aparecerá el trabajo que te asigne un administrador."
+        />
+      ) : (
+        <KanbanBoard
+          tasks={shown}
+          members={members.data ?? []}
+          currentUserId={user?.id ?? ""}
+          runningTaskId={running.data?.taskId ?? null}
+          projectNames={Object.fromEntries(
+            (projects.data ?? []).map((p) => [p.id, p.name]),
+          )}
+          busy={start.isPending || stop.isPending}
+          onOpen={(task) => {
+            if (admin) {
+              setEditing(task);
+              setOpen(true);
+            } else setDetail(task);
+          }}
+          onMove={(task, status) => move.mutate({ id: task.id, status })}
+          onStart={(task) => start.mutate(task.id)}
+          onStop={() => stop.mutate()}
+        />
+      )}
+      {admin && (
+        <TaskFormSheet
+          key={editing?.id ?? "new"}
+          open={open}
+          onClose={() => setOpen(false)}
+          task={editing}
+          projectId={editing?.projectId ?? null}
+          sprintId={editing?.sprintId ?? null}
+        />
+      )}
+      <Sheet
+        open={Boolean(detail)}
+        onClose={() => setDetail(undefined)}
+        title="Detalle de tu tarea"
+      >
+        {detail && (
+          <div className="flex flex-col gap-4">
+            <h3 className="font-semibold">{detail.title}</h3>
+            <p className="text-sm text-muted">
+              {taskStatusLabel[detail.status]} · {detail.estimateHours ?? "Sin"}{" "}
+              horas estimadas
+            </p>
+            <p className="text-sm">
+              {detail.projectId
+                ? (projects.data?.find((p) => p.id === detail.projectId)
+                    ?.name ?? "Tarea asignada de otro proyecto")
+                : "Sin proyecto"}
+            </p>
+            <TaskContent task={detail} />
+            {detail.link && (
+              <a
+                href={detail.link}
+                target="_blank"
+                rel="noreferrer"
+                className="text-primary-text"
+              >
+                Abrir entregable ↗
+              </a>
+            )}
+            <Link to="/horas">Ver mis registros de horas ↗</Link>
+          </div>
+        )}
+      </Sheet>
     </>
   );
 }

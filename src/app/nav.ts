@@ -1,3 +1,5 @@
+import { canAccessStudio } from "@/domain/access";
+import type { Role } from "@/domain/types";
 import {
   Clock,
   Sun,
@@ -26,3 +28,10 @@ export const navItems: NavItem[] = [
   { to: "/gastos", label: "Gastos", icon: Wallet, mobile: true },
   { to: "/equipo", label: "Equipo", icon: Users, mobile: false },
 ];
+
+export function navigationFor(role: Role | undefined) {
+  return navItems.filter(
+    (item) =>
+      !["/gastos", "/equipo"].includes(item.to) || canAccessStudio(role),
+  );
+}

@@ -7,13 +7,13 @@ import type {
   MeetingService,
   MemberService,
   NotificationService,
-  ProjectService,
   Services,
   SettingsService,
 } from "../types";
 import { getDb, getSessionUserId, setSessionUserId } from "./db";
+import { requireStudioAccess } from "./studio-access";
 import { dashboard } from "./dashboard";
-import { sprints, tasks, time } from "./work";
+import { projects, sprints, tasks, time } from "./work";
 import { delay, notImplemented } from "./utils";
 
 const auth: AuthService = {
@@ -52,25 +52,19 @@ const members: MemberService = {
   },
 };
 
-const projects: ProjectService = {
-  async list() {
-    return delay(getDb().projects);
-  },
-  async get(id) {
-    return delay(getDb().projects.find((p) => p.id === id) ?? null);
-  },
-};
-
 const expenses: ExpenseService = {
   async list() {
+    requireStudioAccess();
     return delay(getDb().expenses);
   },
   async listVotes(expenseId) {
+    requireStudioAccess();
     return delay(
       getDb().expenseVotes.filter((vote) => vote.expenseId === expenseId),
     );
   },
   async listRecurring() {
+    requireStudioAccess();
     return delay(getDb().recurringExpenses);
   },
   create: (...args) =>

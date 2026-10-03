@@ -1,3 +1,6 @@
+import "../pages/time.css";
+import { createPortal } from "react-dom";
+import { usePopupPosition } from "@/components/ui/usePopupPosition";
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import {
   CalendarDays,
@@ -21,6 +24,9 @@ function Picker({
   const [open, setOpen] = useState(false);
   const root = useRef<HTMLDivElement>(null);
   const trigger = useRef<HTMLButtonElement>(null);
+  const popup = useRef<HTMLDivElement>(null);
+  const position = usePopupPosition(trigger, popup, open, 286);
+  const [target, setTarget] = useState<HTMLElement | null>(null);
   const [restoreFocus, setRestoreFocus] = useState(false);
   const close = () => {
     setRestoreFocus(true);
@@ -32,7 +38,10 @@ function Picker({
   useEffect(() => {
     if (!open) return;
     const outside = (event: PointerEvent) => {
-      if (!root.current?.contains(event.target as Node)) {
+      if (
+        !root.current?.contains(event.target as Node) &&
+        !popup.current?.contains(event.target as Node)
+      ) {
         setRestoreFocus(false);
         setOpen(false);
       }
@@ -40,15 +49,16 @@ function Picker({
     const escape = (event: KeyboardEvent) => {
       if (event.key === "Escape") {
         event.preventDefault();
+        event.stopPropagation();
         setRestoreFocus(true);
         setOpen(false);
       }
     };
     document.addEventListener("pointerdown", outside);
-    document.addEventListener("keydown", escape);
+    document.addEventListener("keydown", escape, true);
     return () => {
       document.removeEventListener("pointerdown", outside);
-      document.removeEventListener("keydown", escape);
+      document.removeEventListener("keydown", escape, true);
     };
   }, [open]);
   return (
@@ -62,56 +72,37 @@ function Picker({
         aria-expanded={open}
         onClick={() => {
           setRestoreFocus(false);
+          setTarget(trigger.current?.closest("dialog") ?? document.body);
           setOpen(!open);
         }}
       >
         <span>{text}</span>
         {calendar ? <CalendarDays size={16} /> : <ChevronDown size={16} />}
       </button>
-      {open ? (
-        <div className="hours-picker-popup" aria-label={label}>
-          {children(close)}
-        </div>
-      ) : null}
+      {open &&
+        target &&
+        createPortal(
+          <div
+            ref={popup}
+            className="hours-picker-popup"
+            style={{
+              ...position,
+              position: "fixed",
+              minWidth: 0,
+              maxWidth: "none",
+              overflowY: "auto",
+              zIndex: 10000,
+            }}
+            aria-label={label}
+          >
+            {children(close)}
+          </div>,
+          target,
+        )}
     </div>
   );
 }
-export function ChoicePicker({
-  label,
-  value,
-  options,
-  onChange,
-}: {
-  label: string;
-  value: string;
-  options: { value: string; label: string }[];
-  onChange: (value: string) => void;
-}) {
-  return (
-    <Picker
-      label={label}
-      text={options.find((o) => o.value === value)?.label ?? "Seleccionar"}
-    >
-      {(close) => (
-        <div className="hours-choice-options">
-          {options.map((o) => (
-            <button
-              type="button"
-              key={o.value}
-              aria-pressed={value === o.value}
-              onClick={() => {
-                onChange(o.value);
-                close();
-              }}
-            >
-              {o.label}
-            </button>
-          ))}
-        </div>
-      )}
-    </Picker>
-  );
-}
+export { ChoicePicker } from "@/components/ui/ChoicePicker";
 export function DatePicker({
   label,
   value,

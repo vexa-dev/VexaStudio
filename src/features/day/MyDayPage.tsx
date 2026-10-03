@@ -1,18 +1,14 @@
-"use client";
-import { useEffect, useRef, useState } from "react";
-import { Link } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import {
   ArrowUpRight,
   Check,
-  Coffee,
-  Pause,
+  ListTodo,
   Play,
-  RotateCcw,
-  Star,
-  Sun,
+  Plus,
   Target,
+  Trash2,
 } from "lucide-react";
-import { motion, useReducedMotion } from "motion/react";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { Skeleton } from "@/components/ui/Skeleton";
@@ -20,353 +16,340 @@ import { ErrorState } from "@/components/ui/ErrorState";
 import { useAuth } from "@/features/auth/hooks/useAuth";
 import { useTasks } from "@/features/tasks/hooks/useTasks";
 import { useProjects } from "@/features/projects/hooks/useProjects";
+import { useTimeHistory } from "@/features/time/hooks/useTime";
+import { monthlyActivity } from "@/features/time/analytics";
+import { ChoicePicker } from "@/features/time/components/TimePickers";
+import { todayLima } from "@/lib/dates";
+import { formatHours } from "@/lib/format";
 import { taskStatusLabel } from "@/lib/labels";
-import { motionTokens, springs, shouldAnimate } from "@/lib/motion-tokens";
-
-function read<T>(key: string, fallback: T): T {
-  try {
-    return JSON.parse(localStorage.getItem(key) ?? "null") ?? fallback;
-  } catch {
-    return fallback;
+import { DayDaily } from "./DayDaily";
+import { DayFocus } from "./DayFocus";
+import { readLocal, writeLocal, type DayPriority } from "./day-storage";
+import "@/features/time/pages/time.css";
+import "./day.css";
+function DayWorkspace({ userId, day }: { userId: string; day: string }) {
+  const key = `vexa.day-plan.${userId}.${day}`;
+  const navigate = useNavigate();
+  const [plan, setPlan] = useState<DayPriority[]>(() => {
+    const saved = readLocal<DayPriority[]>(key, []);
+    return Array.isArray(saved)
+      ? saved
+          .filter(
+            (p) => p && typeof p.id === "string" && typeof p.title === "string",
+          )
+          .slice(0, 3)
+      : [];
+  });
+  const goalKey = `vexa.day-goal.${userId}.${day}`;
+  const [goal, setGoal] = useState(() => readLocal<string>(goalKey, ""));
+  const [notice, setNotice] = useState("");
+  const [activity, setActivity] = useState("");
+  const [taskChoice, setTaskChoice] = useState("");
+  const tasks = useTasks({ assigneeId: userId });
+  const projects = useProjects();
+  const history = useTimeHistory();
+  const active = (tasks.data ?? []).filter((t) => t.status !== "done");
+  const completed = plan.filter(
+    (p) =>
+      p.done ||
+      tasks.data?.some((t) => t.id === p.taskId && t.status === "done"),
+  );
+  const pending = plan.filter((p) => !completed.includes(p));
+  const own = (history.data ?? []).filter((e) => e.userId === userId);
+  const stats = monthlyActivity(own, day.slice(0, 7));
+  const todayHours = stats.daily[Number(day.slice(8)) - 1] ?? 0;
+  const todayEntries = own.filter(
+    (e) => !e.voidedAt && e.endedAt && todayLima(new Date(e.startedAt)) === day,
+  );
+  const suggestions = [
+    ...new Set([
+      ...completed.map((p) => p.title),
+      ...todayEntries.map(
+        (e) =>
+          e.description ??
+          tasks.data?.find((t) => t.id === e.taskId)?.title ??
+          "Trabajo del estudio",
+      ),
+    ]),
+  ];
+  const suggested = active.filter((t) => !plan.some((p) => p.taskId === t.id));
+  function save(next: DayPriority[]) {
+    setPlan(next);
+    setNotice(
+      writeLocal(key, next)
+        ? "Plan guardado"
+        : "No se pudo guardar el plan; disponible solo en esta sesión.",
+    );
   }
-}
-function FocusTimer() {
-  const [mode, setMode] = useState<"focus" | "break">("focus");
-  const [remaining, setRemaining] = useState(25 * 60);
-  const [running, setRunning] = useState(false);
-  const [finished, setFinished] = useState(false);
-  const deadline = useRef(0);
-  const reduced = useReducedMotion();
-  const duration = mode === "focus" ? 25 * 60 : 5 * 60;
-  useEffect(() => {
-    if (!running) return;
-    const tick = () => {
-      const seconds = Math.max(
-        0,
-        Math.ceil((deadline.current - Date.now()) / 1000),
-      );
-      setRemaining(seconds);
-      if (seconds === 0) {
-        setRunning(false);
-        setFinished(true);
-      }
-    };
-    const interval = window.setInterval(tick, 250);
-    return () => window.clearInterval(interval);
-  }, [running]);
-  function choose(next: "focus" | "break") {
-    setRunning(false);
-    setFinished(false);
-    setMode(next);
-    setRemaining(next === "focus" ? 1500 : 300);
-  }
-  function toggle() {
-    if (running) {
-      setRemaining(
-        Math.max(0, Math.ceil((deadline.current - Date.now()) / 1000)),
-      );
-      setRunning(false);
-    } else {
-      const time = remaining || duration;
-      setRemaining(time);
-      deadline.current = Date.now() + time * 1000;
-      setRunning(true);
-      setFinished(false);
+  function add() {
+    if (plan.length >= 3) return;
+    const task = active.find((t) => t.id === taskChoice);
+    const title = task?.title ?? activity.trim();
+    if (title.length < 3) {
+      setNotice("Escribe una actividad de al menos 3 caracteres.");
+      return;
     }
+    save([
+      ...plan,
+      {
+        id: crypto.randomUUID(),
+        title,
+        taskId: task?.id ?? null,
+        projectId: task?.projectId ?? null,
+        done: false,
+      },
+    ]);
+    setActivity("");
+    setTaskChoice("");
   }
   return (
-    <Card className="focus-card flex flex-col items-center gap-5">
-      <div className="flex w-full items-center justify-between">
-        <h2 className="flex items-center gap-2 font-semibold">
-          <Target size={18} /> Tu foco
-        </h2>
-        <span className="eyebrow">25 / 5</span>
-      </div>
-      <div className="segmented-control" aria-label="Tipo de sesión">
-        <button aria-pressed={mode === "focus"} onClick={() => choose("focus")}>
-          <Target size={15} /> Foco
-        </button>
-        <button aria-pressed={mode === "break"} onClick={() => choose("break")}>
-          <Coffee size={15} /> Descanso
-        </button>
-      </div>
-      <div className="focus-clock">
-        <svg viewBox="0 0 200 200" aria-hidden="true">
-          <circle
-            cx="100"
-            cy="100"
-            r="88"
-            fill="none"
-            stroke="var(--border)"
-            strokeWidth="2"
-          />
-          <motion.circle
-            cx="100"
-            cy="100"
-            r="88"
-            fill="none"
-            stroke="var(--primary-text)"
-            strokeWidth="3"
-            strokeLinecap="round"
-            strokeDasharray={553}
-            initial={false}
-            animate={{ strokeDashoffset: 553 * (1 - remaining / duration) }}
-            transition={{ duration: reduced ? 0 : motionTokens.duration.fast }}
-            transform="rotate(-90 100 100)"
-          />
-        </svg>
-        <div>
-          <span className="focus-digits">
-            {String(Math.floor(remaining / 60)).padStart(2, "0")}
-            <span>:</span>
-            {String(remaining % 60).padStart(2, "0")}
-          </span>
-          <p>
-            {running
-              ? "Una cosa a la vez."
-              : finished
-                ? "Sesión completada"
-                : "Tu espacio para concentrarte"}
-          </p>
+    <div className="my-day-workspace">
+      <div className="day-work-layout">
+        <div className="day-plan-column">
+          <Card className="day-plan-card">
+            <div className="day-card-title">
+              <div>
+                <span className="day-eyebrow">Una cosa a la vez</span>
+                <h2>
+                  <ListTodo size={18} /> Tu plan de hoy
+                </h2>
+              </div>
+              <span className="day-plan-count">
+                {completed.length}/{plan.length} hechas
+              </span>
+            </div>
+            <p className="day-note">
+              Elige hasta tres prioridades. También puedes planear trabajo sin
+              una tarea asignada.
+            </p>
+            <label className="flex flex-col gap-2 mb-4 text-sm">
+              Meta de hoy
+              <input
+                className="min-h-11 rounded-lg border border-border bg-surface px-3"
+                placeholder="¿Qué quieres haber logrado al terminar el día?"
+                value={goal}
+                onChange={(e) => {
+                  setGoal(e.target.value);
+                  writeLocal(goalKey, e.target.value);
+                }}
+              />
+            </label>
+            {plan.length > 0 ? (
+              <ol className="day-plan-list">
+                {plan.map((p, index) => {
+                  const done = completed.includes(p);
+                  return (
+                    <li key={p.id} data-done={done}>
+                      <button
+                        className="day-complete"
+                        aria-label={`${done ? "Reabrir" : "Completar"} ${p.title}`}
+                        aria-pressed={done}
+                        disabled={Boolean(
+                          tasks.data?.some(
+                            (t) => t.id === p.taskId && t.status === "done",
+                          ),
+                        )}
+                        onClick={() =>
+                          save(
+                            plan.map((item) =>
+                              item.id === p.id
+                                ? { ...item, done: !done }
+                                : item,
+                            ),
+                          )
+                        }
+                      >
+                        {done ? <Check size={17} /> : index + 1}
+                      </button>
+                      <div>
+                        <strong>{p.title}</strong>
+                        <span>
+                          {p.taskId
+                            ? (projects.data?.find(
+                                (project) => project.id === p.projectId,
+                              )?.name ?? "Tarea asignada")
+                            : "Actividad libre"}
+                        </span>
+                      </div>
+                      {!done && (
+                        <Button
+                          variant="ghost"
+                          className="day-work-link"
+                          aria-label={`Trabajar en ${p.title}`}
+                          onClick={() =>
+                            navigate(
+                              `/tareas${p.taskId ? `?tarea=${p.taskId}` : ""}`,
+                            )
+                          }
+                        >
+                          <Play size={15} /> Ir a tareas
+                        </Button>
+                      )}
+                      <Button
+                        variant="ghost"
+                        aria-label={`Quitar ${p.title}`}
+                        onClick={() =>
+                          save(plan.filter((item) => item.id !== p.id))
+                        }
+                      >
+                        <Trash2 size={16} />
+                      </Button>
+                    </li>
+                  );
+                })}
+              </ol>
+            ) : (
+              <div className="day-plan-empty">
+                <Target size={24} />
+                <p>¿Qué haría que hoy sea un buen día?</p>
+                <span>Añade tu primera prioridad.</span>
+              </div>
+            )}
+            {plan.length < 3 ? (
+              <form
+                className="day-plan-form"
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  add();
+                }}
+              >
+                <ChoicePicker
+                  label="Añadir al plan"
+                  value={taskChoice}
+                  onChange={setTaskChoice}
+                  options={[
+                    { value: "", label: "Escribir una actividad libre" },
+                    ...suggested.map((t) => ({
+                      value: t.id,
+                      label: `${t.title} · ${taskStatusLabel[t.status]}`,
+                    })),
+                  ]}
+                />
+                {!taskChoice && (
+                  <label className="day-field">
+                    Actividad
+                    <input
+                      className="daily-input"
+                      value={activity}
+                      maxLength={180}
+                      onChange={(e) => setActivity(e.target.value)}
+                      placeholder="Ej. Preparar propuesta para un cliente"
+                    />
+                  </label>
+                )}
+                <Button
+                  type="submit"
+                  variant="secondary"
+                  disabled={!taskChoice && activity.trim().length < 3}
+                >
+                  <Plus size={16} /> Añadir prioridad
+                </Button>
+              </form>
+            ) : (
+              <p className="day-note">
+                Tu plan está completo. Quita una prioridad si necesitas
+                cambiarla.
+              </p>
+            )}
+            {tasks.isLoading && <Skeleton className="h-6" />}
+            {tasks.isError && (
+              <ErrorState
+                message="No se pudieron cargar las tareas."
+                onRetry={() => void tasks.refetch()}
+              />
+            )}
+            <output aria-live="polite" className="day-note">
+              {notice}
+            </output>
+            <p className="day-note">
+              Completar una prioridad marca tu plan personal; no aprueba horas
+              ni cambia el estado de la tarea.
+            </p>
+            <Link className="day-text-action" to="/tareas">
+              Ver mis tareas <ArrowUpRight size={14} />
+            </Link>
+          </Card>
+          <DayDaily userId={userId} today={day} suggestions={suggestions} />
+        </div>
+        <div className="day-work-column">
+          <Card className="day-summary-card">
+            <div className="day-card-title">
+              <h2>Hoy, en un vistazo</h2>
+              <span className="day-note">Lima</span>
+            </div>
+            <dl className="day-summary-stats">
+              <div>
+                <dt>Horas registradas</dt>
+                <dd>
+                  {history.isLoading
+                    ? "…"
+                    : history.isError
+                      ? "—"
+                      : formatHours(todayHours)}
+                </dd>
+              </div>
+              <div>
+                <dt>Prioridades hechas</dt>
+                <dd>
+                  {completed.length}
+                  <span> / {plan.length}</span>
+                </dd>
+              </div>
+            </dl>
+            {history.isError && (
+              <ErrorState
+                message="No se pudo cargar el resumen."
+                onRetry={() => void history.refetch()}
+              />
+            )}
+            <p className="day-next">
+              <span>Siguiente prioridad</span>
+              <strong>
+                {pending[0]?.title ??
+                  (plan.length
+                    ? "Plan completado"
+                    : "Aún no has preparado tu plan")}
+              </strong>
+            </p>
+            <Link to="/horas?vista=historial" className="day-text-action">
+              Ver mis horas <ArrowUpRight size={14} />
+            </Link>
+          </Card>
+          <DayFocus userId={userId} />
         </div>
       </div>
-      <div className="flex gap-2">
-        <Button onClick={toggle}>
-          {running ? <Pause size={16} /> : <Play size={16} />}{" "}
-          {running
-            ? "Pausar"
-            : remaining === duration || finished
-              ? "Comenzar"
-              : "Continuar"}
-        </Button>
-        <Button
-          variant="secondary"
-          onClick={() => choose(mode)}
-          aria-label="Reiniciar sesión"
-        >
-          <RotateCcw size={16} />
-        </Button>
-      </div>
-      <output className="text-center text-xs text-muted">
-        {finished
-          ? "Listo. Tómate un respiro antes de continuar."
-          : "Este foco es personal y no registra horas de trabajo."}
-      </output>
-    </Card>
-  );
-}
-
-function Daily({ userId, day }: { userId: string; day: string }) {
-  const key = `vexa.daily-draft.${userId}.${day}`;
-  const [draft, setDraft] = useState(() =>
-    read(key, { done: "", next: "", blockers: "" }),
-  );
-  const [status, setStatus] = useState("");
-  const labels = {
-    done: "¿Qué hiciste?",
-    next: "¿Qué harás ahora?",
-    blockers: "¿Hay algún bloqueo?",
-  };
-  function save() {
-    try {
-      localStorage.setItem(key, JSON.stringify(draft));
-      setStatus("Guardado en este navegador");
-    } catch {
-      setStatus("No se pudo guardar. Conserva este texto antes de salir.");
-    }
-  }
-  return (
-    <Card className="daily-card">
-      <div className="mb-5 flex items-start justify-between gap-3">
-        <div>
-          <h2 className="mt-1 text-xl font-semibold">
-            Tu daily
-          </h2>
-        </div>
-        <Sun className="text-primary-text" size={22} />
-      </div>
-      <form
-        onSubmit={(e) => {
-          e.preventDefault();
-          save();
-        }}
-        className="grid gap-4"
-      >
-        {(Object.keys(labels) as Array<keyof typeof labels>).map((field) => (
-          <label key={field} className="grid gap-2 text-sm font-medium">
-            {labels[field]}
-            <textarea
-              maxLength={2000}
-              rows={2}
-              value={draft[field]}
-              placeholder={
-                field === "blockers"
-                  ? "Sin bloqueos, o cuenta qué necesitas…"
-                  : "Una actualización breve y concreta…"
-              }
-              onChange={(e) => {
-                setDraft({ ...draft, [field]: e.target.value });
-                setStatus("Cambios sin guardar");
-              }}
-              className="daily-input resize-y"
-            />
-          </label>
-        ))}
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <p className="max-w-64 text-xs text-muted">
-            Borrador local por día. Todavía no se comparte con el equipo.
-          </p>
-          <Button type="submit">
-            <Check size={16} /> Guardar daily
-          </Button>
-        </div>
-        <output className="min-h-4 text-xs text-primary-text">{status}</output>
-      </form>
-    </Card>
+    </div>
   );
 }
 
 export default function MyDayPage() {
   const { user } = useAuth();
-  const tasks = useTasks({ assigneeId: user?.id }, { enabled: Boolean(user) });
-  const projects = useProjects();
-  const [today] = useState(() => new Date());
-  const day = new Intl.DateTimeFormat("en-CA", {
-    timeZone: "America/Lima",
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-  }).format(today);
-  const key = `vexa.priorities.${user?.id}`;
-  const [priorities, setPriorities] = useState<string[]>(() => read(key, []));
-  const [onlyPriority, setOnlyPriority] = useState(false);
-  const [notice, setNotice] = useState("");
-  const reduced = useReducedMotion();
-  const active = (tasks.data ?? []).filter((t) => t.status !== "done");
-  const visible = active.filter(
-    (t) => !onlyPriority || priorities.includes(t.id),
-  );
-  function prioritize(id: string) {
-    const next = priorities.includes(id)
-      ? priorities.filter((value) => value !== id)
-      : [...priorities, id];
-    setPriorities(next);
-    try {
-      localStorage.setItem(key, JSON.stringify(next));
-      setNotice("Prioridades guardadas en este navegador");
-    } catch {
-      setNotice("Prioridades disponibles solo en esta sesión");
-    }
-  }
+  const [day, setDay] = useState(todayLima);
+  useEffect(() => {
+    const id = setInterval(() => setDay(todayLima()), 30000);
+    return () => clearInterval(id);
+  }, []);
   return (
     <>
       <header className="quiet-header">
         <div>
           <h1>Mi día</h1>
-          <p className="quiet-caption">Haz espacio para tu próximo gran paso.</p>
+          <p className="quiet-caption">
+            Planea lo importante, trabaja y cuenta tu avance.
+          </p>
         </div>
         <span className="quiet-date">
           {new Intl.DateTimeFormat("es-PE", {
-            timeZone: "America/Lima", weekday: "long", day: "numeric", month: "long",
-          }).format(today)}
+            timeZone: "America/Lima",
+            weekday: "long",
+            day: "numeric",
+            month: "long",
+          }).format(new Date(`${day}T12:00:00-05:00`))}
         </span>
       </header>
-      <div className="day-grid">
-        <Card className="priority-card">
-          <div className="mb-5 flex flex-wrap items-start justify-between gap-3">
-            <div>
-              <h2 className="mt-1 text-xl font-semibold">
-                Tus prioridades
-              </h2>
-            </div>
-            <span className="count-pill">{active.length} pendientes</span>
-          </div>
-          <div className="segmented-control mb-5">
-            <button
-              aria-pressed={!onlyPriority}
-              onClick={() => setOnlyPriority(false)}
-            >
-              Todas
-            </button>
-            <button
-              aria-pressed={onlyPriority}
-              onClick={() => setOnlyPriority(true)}
-            >
-              <Star size={14} /> Prioridades
-            </button>
-          </div>
-          {tasks.isLoading ? (
-            <Skeleton className="h-40" />
-          ) : tasks.isError ? (
-            <ErrorState
-              message="No se pudieron cargar tus tareas."
-              onRetry={() => void tasks.refetch()}
-            />
-          ) : visible.length === 0 ? (
-            <div className="day-empty">
-              <Check size={28} />
-              <p>
-                {onlyPriority
-                  ? "Marca una estrella para dar prioridad a una tarea."
-                  : "Todo en orden. No tienes tareas pendientes."}
-              </p>
-            </div>
-          ) : (
-            <ul className="priority-list">
-              {visible.map((task) => (
-                <motion.li
-                  key={task.id}
-                  initial={false}
-                  whileHover={
-                    reduced || !shouldAnimate() ? {} : { x: motionTokens.distance.sm / 2 }
-                  }
-                  transition={springs.snappy}
-                >
-                  <button
-                    aria-label={`${priorities.includes(task.id) ? "Quitar prioridad a" : "Priorizar"} ${task.title}`}
-                    aria-pressed={priorities.includes(task.id)}
-                    onClick={() => prioritize(task.id)}
-                    className="star-button"
-                  >
-                    <Star
-                      size={18}
-                      fill={
-                        priorities.includes(task.id) ? "currentColor" : "none"
-                      }
-                    />
-                  </button>
-                  <Link
-                    to={`/proyectos/${task.projectId}`}
-                    className="min-w-0 flex-1"
-                  >
-                    <span className="block text-sm font-semibold">
-                      {task.title}
-                    </span>
-                    <span className="mt-1 block text-xs text-muted">
-                      {projects.data?.find((p) => p.id === task.projectId)
-                        ?.name ?? "Proyecto"}{" "}
-                      · {taskStatusLabel[task.status]}
-                    </span>
-                  </Link>
-                  <ArrowUpRight size={16} aria-hidden="true" />
-                </motion.li>
-              ))}
-            </ul>
-          )}
-          <output className="mt-4 min-h-4 text-xs text-muted">
-            {notice ||
-              "Las estrellas son prioridades personales, guardadas localmente."}
-          </output>
-          <Link
-            to="/tareas"
-            className="mt-4 inline-flex min-h-11 items-center gap-2 text-sm font-semibold text-primary-text"
-          >
-            Ver mis tareas <ArrowUpRight size={15} />
-          </Link>
-        </Card>
-        <FocusTimer />
-        {user && <Daily key={`${user.id}.${day}`} userId={user.id} day={day} />}
-      </div>
+      {user && (
+        <DayWorkspace key={`${user.id}.${day}`} userId={user.id} day={day} />
+      )}
     </>
   );
 }

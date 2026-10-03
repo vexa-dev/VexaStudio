@@ -1,14 +1,23 @@
-import { useEffect, useState } from 'react'
-
-/** Milisegundos transcurridos desde `startedAt`, actualizados cada segundo. */
-export function useElapsed(startedAt: string | undefined): number {
-  const [now, setNow] = useState(() => Date.now())
+import { useEffect, useState } from "react";
+import type { TimeEntry } from "@/domain/types";
+import { timerElapsed } from "@/domain/timer";
+export function useElapsed(
+  input: string | TimeEntry | null | undefined,
+): number {
+  const [now, setNow] = useState(() => Date.now());
   useEffect(() => {
-    if (!startedAt) return
-    const tick = () => setNow(Date.now())
-    tick()
-    const id = setInterval(tick, 1000)
-    return () => clearInterval(id)
-  }, [startedAt])
-  return startedAt ? now - new Date(startedAt).getTime() : 0
+    const tick = () => setNow(Date.now());
+    tick();
+    const id = setInterval(tick, 1000);
+    window.addEventListener("focus", tick);
+    document.addEventListener("visibilitychange", tick);
+    return () => {
+      clearInterval(id);
+      window.removeEventListener("focus", tick);
+      document.removeEventListener("visibilitychange", tick);
+    };
+  }, []);
+  return typeof input === "string"
+    ? Math.max(0, now - Date.parse(input))
+    : timerElapsed(input, now);
 }

@@ -19,7 +19,10 @@ export function attentionTasks(
     .filter(
       (task) =>
         task.status !== "done" &&
-        activeProjects.has(task.projectId) &&
+        (!task.projectId ||
+          activeProjects.has(task.projectId) ||
+          (!projects.some((p) => p.id === task.projectId) &&
+            task.assigneeId === userId)) &&
         (!task.sprintId || activeSprints.has(task.sprintId)) &&
         (!onlyMine || task.assigneeId === userId),
     )

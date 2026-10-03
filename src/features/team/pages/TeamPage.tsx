@@ -9,6 +9,8 @@ import { areaLabel, roleLabel } from "@/lib/labels";
 import { formatIsoDate } from "@/lib/dates";
 import { PageHeader } from "@/components/ui/PageHeader";
 
+import { ChoicePicker } from "@/components/ui/ChoicePicker";
+
 export default function TeamPage() {
   const [data] = useState(() => buildSeed(new Date()));
   const [member, setMember] = useState("all");
@@ -49,21 +51,16 @@ export default function TeamPage() {
           <h2 className="flex items-center gap-2 text-lg font-semibold">
             <MessageSquare size={20} /> El pulso del equipo
           </h2>
-          <label className="text-sm">
-            <span className="sr-only">Filtrar daily por socio</span>
-            <select
-              className="min-h-11 border border-border px-3"
-              value={member}
-              onChange={(event) => setMember(event.target.value)}
-            >
-              <option value="all">Todo el equipo</option>
-              {data.profiles.map((profile) => (
-                <option key={profile.id} value={profile.id}>
-                  {profile.name}
-                </option>
-              ))}
-            </select>
-          </label>
+          <ChoicePicker
+            label="Filtrar daily por socio"
+            hideLabel
+            value={member}
+            onChange={setMember}
+            options={[
+              { value: "all", label: "Todo el equipo" },
+              ...data.profiles.map((p) => ({ value: p.id, label: p.name })),
+            ]}
+          />
         </div>
         <div className="team-dailies grid gap-4">
           {daily.length === 0 ? (

@@ -22,9 +22,11 @@ type Pose = "idle" | "blink";
 export function MascotCompanion({
   hasTimer,
   visible,
+  resting = false,
 }: {
   hasTimer: boolean;
   visible: boolean;
+  resting?: boolean;
 }) {
   const reduced = useReducedMotion();
   const [position, setPosition] = useState<Position | null>(null);
@@ -214,7 +216,7 @@ export function MascotCompanion({
           <motion.div
             key="mascot"
             className="mascot-companion"
-            data-pose={pose}
+            data-pose={resting ? "rest" : pose}
             data-dragging={dragging}
             data-reduced={reduced}
             data-facing={facing}
@@ -245,6 +247,7 @@ export function MascotCompanion({
               onKeyDown={keyboardMove}
             >
               <RobotIdleArtwork
+                resting={resting}
                 blinking={pose === "blink"}
                 still={reduced || dragging}
                 gaze={gaze}

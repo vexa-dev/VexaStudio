@@ -4,25 +4,28 @@ export const motionTokens = {
   distance: { sm: 8, md: 16, lg: 24 },
   scale: { press: 0.97, pop: 1.015 },
   tilt: { maxDegrees: 1.1 },
-  login: { staggerSeconds: .08, hoverPx: 2 },
+  login: { staggerSeconds: 0.08, hoverPx: 2 },
   mascot: {
     headFollowX: 1.5,
     headFollowY: 2.8,
-    headFollowDegrees: .18,
-    headPitchScale: .004,
+    headFollowDegrees: 0.18,
+    headPitchScale: 0.004,
     capeFloatSeconds: 5.6,
     headFloatSeconds: 4.4,
     capeFloatPx: 30,
     headFloatPx: 18,
-    capeSwayDegrees: .65,
-    headSwayDegrees: .4,
-    eyelidSeconds: .075,
+    capeSwayDegrees: 0.65,
+    headSwayDegrees: 0.4,
+    eyelidSeconds: 0.075,
     breatheSeconds: 3.6,
+    coffeeFloatPx: 16,
+    coffeeSwayDegrees: 2,
+    steamRisePx: 14,
     greetingMs: 1000,
     blinkMs: 140,
     blinkPauseMs: { min: 3500, max: 6500 },
     sleepMs: 750,
-    fadeSeconds: .45,
+    fadeSeconds: 0.45,
   },
   liquid: {
     waveMs: 800,
@@ -39,6 +42,8 @@ export function shouldAnimate(essential = false) {
   return (
     typeof window !== "undefined" &&
     !window.matchMedia("(prefers-reduced-motion: reduce)").matches &&
-    (essential || typeof navigator === "undefined" || navigator.hardwareConcurrency > 4)
+    (essential ||
+      typeof navigator === "undefined" ||
+      navigator.hardwareConcurrency > 4)
   );
 }

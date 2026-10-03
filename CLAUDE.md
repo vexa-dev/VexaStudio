@@ -45,7 +45,7 @@ src/
                             daily, comments, announcements, meetings, notifications
                             (cada uno: components/, hooks/, pages/)
   components/ui/            componentes reutilizables sin lógica de negocio
-                            (Button, Card, Field/SelectField/TextareaField, Badge, Avatar, Meter, SegmentedBar,
+                            (Button, Card, Field/TextareaField/ChoicePicker, Badge, Avatar, Meter, SegmentedBar,
                             CountUp, Sheet, Toaster…)
   domain/
     types.ts                tipos del dominio (reflejan el modelo de datos del PRD)
@@ -86,7 +86,7 @@ PRODUCT.md, DESIGN.md       contexto de producto y sistema visual (los usa Impec
 - Un sprint activo con tareas en todas las columnas, horas registradas de varias semanas, gastos en distintos estados, dailies, comentarios y una convocatoria de reunión.
 - Gasto recurrente: dominio de VEXA, US$ 13 anual, próxima renovación 2027-02-23, previo a la firma (no suma puntos).
 - Settings: pointsPerHour 20, pointsPerSol 2, minCompliance 0.8, weeksPerMonth 4, expenseApprovalLimitPen 50, entryEditDays 7, dailyReminder 21:00 (lun, mié, vie), weeklyHoursReminder domingo 20:00.
-- Login simulado: elegir uno de los 4 socios (sin contraseña). El formulario visual de correo/contraseña y recuperación muestra avisos de conexión pendiente; no autentica ni envía correos. Se conserva cambio de usuario para probar permisos.
+- Login simulado: elegir uno de los 4 socios o Alex, colaborador de demostración (sin contraseña). El formulario visual de correo/contraseña y recuperación muestra avisos de conexión pendiente; no autentica ni envía correos. Se conserva cambio de usuario para probar permisos.
 
 ## Reglas de negocio (resumen del PRD)
 
@@ -94,7 +94,7 @@ PRODUCT.md, DESIGN.md       contexto de producto y sistema visual (los usa Impec
 - Participación = puntos del socio / puntos totales.
 - Mínimo mensual = horas_semana × 4 × 0.8. Cumple si horas del mes (Lima) ≥ mínimo, descontando ausencias justificadas.
 - Gasto > S/ 50: pendiente hasta 3 votos a favor. ≤ S/ 50: aprobado automáticamente.
-- Un solo temporizador abierto por usuario: iniciar uno detiene el anterior.
+- Un solo temporizador abierto por usuario: iniciar uno finaliza el anterior en borrador. El reloj vive en Tareas, persiste segmentos/fechas y continúa fuera de la página. Pausa manual; al volver se avisa una hora pendiente. Horas confirma borradores individualmente o en grupo antes de sumar al historial/resúmenes.
 - Cada usuario crea y edita solo sus propios registros; edición permitida 7 días o hasta que se validen. Nadie borra: se anula con motivo.
 - Ajuste autorizado de Horas (02/10/2026): se permite corregir una aprobación dentro de la ventana de edición, devolviéndola a pendiente y retirando sus puntos. Pagados/anulados quedan bloqueados. Una solicitud de aclaración habilita corrección fuera de esa ventana. Revisan otros socios/admin, sin autoaprobación.
 - Reunión semanal sin día fijo: el PO propone 2–3 horarios, los socios marcan disponibilidad, el PO confirma (con enlace de Meet) y marca asistencia.
@@ -137,3 +137,15 @@ Las skills viven en `.claude/skills` (registro en `skills-lock.json`). Úsalas a
 - Avanza por bloques del PRD (F1 → F2 → F3 → F4), no todo de golpe.
 - Antes de implementar un bloque, propone el plan (tipos, métodos de servicio, rutas y pantallas) y espera confirmación.
 - Mantén las soluciones simples y legibles.
+
+
+## Ajuste autorizado del flujo (02/10/2026)
+
+Admin de cualquier área crea proyectos y tareas, asigna responsables y gestiona miembros. Socios sin rol admin y colaboradores solo mueven sus propias tareas en Mis tareas. Proyectos se limita a membresía explícita, independientemente de asignaciones puntuales, y su kanban es de consulta para no admins. La capa de servicios mock aplica permisos. Task.projectId admite null. Finalizar tarea/reloj crea borradores; Horas confirma un total distribuido en un registro, sin sumar estimaciones ni duplicar puntos. Mi día queda para meta, prioridades y pomodoro, con enlace a Tareas. Daily local plegado, sin crear horas. Esta definición sustituye permisos/flujo previos de F2; no integrar backend en esta etapa.
+
+
+### Descripciones, etiquetas y desplegables
+
+- Usar `components/ui/ChoicePicker` para todos los menús de opciones; no introducir `<select>` nativos. Calendarios compartidos: DatePicker de TimePickers. Ambos usan `usePopupPosition` para respetar pantalla, modales y transforms.
+- Descripción Markdown opcional por tarea, editable solo por admin. Renderizar con TaskMarkdown (react-markdown + remark-gfm, skipHtml); no habilitar HTML crudo.
+- ProjectLabel pertenece a un solo proyecto. El catálogo se administra desde ProjectLabelsSheet mediante servicios/hooks, solo admin. Colaboradores reciben únicamente etiquetas adjuntas a tareas, sin catálogo. El servicio valida el proyecto y canonicaliza nombre/color; editar etiqueta propaga a todas sus tareas. Mantener estas reglas en el futuro backend/RLS.

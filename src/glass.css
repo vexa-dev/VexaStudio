@@ -338,13 +338,19 @@ button:not(:disabled) {
   transform: rotate(45deg) skewY(-25deg);
   border-color: rgb(229 242 235 / 0.5);
 }
+/* Solid dialog surfaces keep the light palette independent of the backdrop. */
 .sheet {
-  background: var(--glass);
-  backdrop-filter: blur(30px);
+  --surface: #ffffff;
+  --surface-2: #f0f3f6;
+  --input: #f7f8fa;
+  --control-border: #aab4bf;
+  --border: #dce2e8;
+  --glass-edge: transparent;
+  background: var(--surface);
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
   border-color: var(--border);
-  box-shadow:
-    var(--shadow),
-    inset 0 1px 0 var(--glass-edge);
+  box-shadow: 0 24px 64px -24px rgb(15 20 28 / .24);
 }
 .sheet::backdrop {
   backdrop-filter: blur(7px);

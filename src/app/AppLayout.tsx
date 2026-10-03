@@ -6,15 +6,21 @@ import { NavLink, Outlet } from "react-router-dom";
 import { LavaNav } from "./LavaNav";
 import { BackgroundLines } from "@/components/BackgroundLines";
 import { Skeleton } from "@/components/ui/Skeleton";
+import { TimerAlerts } from "@/features/time/components/TimerAlerts";
 import { TimerBar, TimerChip } from "@/features/time/components/TimerBar";
 import { useRunningEntry } from "@/features/time/hooks/useTime";
 import { cn } from "@/lib/utils";
-import { navItems } from "./nav";
+import { navItems, navigationFor } from "./nav";
 import { ThemeToggle } from "./ThemeToggle";
 import { UserMenu } from "./UserMenu";
 import { useCardTilt } from "@/lib/useCardTilt";
+import { useAuth } from "@/features/auth/hooks/useAuth";
+import { useFocusRest } from "@/features/day/useFocusRest";
 import { MascotCompanion } from "@/components/MascotCompanion";
-import { readMascotPreference, saveMascotPreference } from "@/lib/mascot-preference";
+import {
+  readMascotPreference,
+  saveMascotPreference,
+} from "@/lib/mascot-preference";
 
 function Brand() {
   return (
@@ -30,12 +36,17 @@ function Brand() {
 /** Sidebar en escritorio (lg) y barra inferior en móvil. */
 export function AppLayout() {
   const tilt = useCardTilt();
+  const { user } = useAuth();
+  const resting = useFocusRest(user?.id);
+  const mobileItems = navigationFor(user?.role).filter((item) => item.mobile);
   const { pathname } = useLocation();
   const currentPage =
     navItems.find((item) => item.to === pathname)?.label ??
     "Espacio de trabajo";
   const hasTimer = Boolean(useRunningEntry().data);
-  const [mascotVisible, setMascotVisible] = useState(() => !readMascotPreference().sleeping);
+  const [mascotVisible, setMascotVisible] = useState(
+    () => !readMascotPreference().sleeping,
+  );
   function toggleMascot() {
     const visible = !mascotVisible;
     setMascotVisible(visible);
@@ -49,6 +60,7 @@ export function AppLayout() {
       >
         Saltar al contenido
       </a>
+      <TimerAlerts />
       <LavaNav />
       <BackgroundLines />
 
@@ -65,7 +77,10 @@ export function AppLayout() {
           </span>
           <TimerChip />
           <ThemeToggle />
-          <UserMenu mascotVisible={mascotVisible} onToggleMascot={toggleMascot} />
+          <UserMenu
+            mascotVisible={mascotVisible}
+            onToggleMascot={toggleMascot}
+          />
         </div>
       </header>
 
@@ -86,32 +101,37 @@ export function AppLayout() {
       </main>
 
       <TimerBar />
-      <MascotCompanion hasTimer={hasTimer} visible={mascotVisible} />
+      <MascotCompanion
+        hasTimer={hasTimer}
+        visible={mascotVisible}
+        resting={resting}
+      />
 
       <nav
         aria-label="Principal móvil"
-        className="integrated-mobile-nav fixed inset-x-0 bottom-0 z-20 grid grid-cols-6 border-t border-border bg-surface pb-[env(safe-area-inset-bottom)] lg:hidden"
+        className="integrated-mobile-nav fixed inset-x-0 bottom-0 z-20 grid border-t border-border bg-surface pb-[env(safe-area-inset-bottom)] lg:hidden"
+        style={{
+          gridTemplateColumns: `repeat(${mobileItems.length}, minmax(0, 1fr))`,
+        }}
       >
-        {navItems
-          .filter((item) => item.mobile)
-          .map(({ to, label, icon: Icon }) => (
-            <NavLink
-              key={to}
-              to={to}
-              end={to === "/"}
-              className={({ isActive }) =>
-                cn(
-                  "relative flex flex-col items-center gap-0.5 py-2.5 text-xs font-medium transition-colors duration-150",
-                  isActive
-                    ? "font-semibold text-primary-text before:absolute before:inset-x-5 before:top-0 before:h-0.5 before:rounded-full before:bg-primary-solid"
-                    : "text-muted",
-                )
-              }
-            >
-              <Icon className="size-5" aria-hidden="true" />
-              {label}
-            </NavLink>
-          ))}
+        {mobileItems.map(({ to, label, icon: Icon }) => (
+          <NavLink
+            key={to}
+            to={to}
+            end={to === "/"}
+            className={({ isActive }) =>
+              cn(
+                "relative flex flex-col items-center gap-0.5 py-2.5 text-xs font-medium transition-colors duration-150",
+                isActive
+                  ? "font-semibold text-primary-text before:absolute before:inset-x-5 before:top-0 before:h-0.5 before:rounded-full before:bg-primary-solid"
+                  : "text-muted",
+              )
+            }
+          >
+            <Icon className="size-5" aria-hidden="true" />
+            {label}
+          </NavLink>
+        ))}
       </nav>
     </div>
   );

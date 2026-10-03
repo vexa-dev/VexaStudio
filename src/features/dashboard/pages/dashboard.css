@@ -1647,3 +1647,44 @@ main[data-view="inicio"] .studio-dashboard .dashboard-metrics .glass-card {
   background: var(--primary-soft);
   border-color: var(--metric-border);
 }
+
+/* The collaborator workspace uses only personal progress and assigned work. */
+.collaborator-dashboard .dashboard-metrics {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+.collaborator-dashboard .dashboard-personal-card {
+  gap: 18px;
+}
+.collaborator-task-stats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 14px;
+  font-size: 11px;
+  color: var(--muted);
+}
+.collaborator-task-stats strong {
+  color: var(--text);
+  font-weight: 600;
+}
+.collaborator-draft-count {
+  font-size: 30px;
+  margin-block: 16px 6px;
+  font-weight: 600;
+}
+.collaborator-draft-count > span {
+  font-size: 12px;
+  font-weight: 400;
+  color: var(--muted);
+}
+.collaborator-dashboard .dashboard-decisions-card .dashboard-text-link {
+  margin-top: 18px;
+}
+.collaborator-dashboard .dashboard-metrics .dashboard-personal-bottom {
+  flex-wrap: wrap;
+  gap: 14px;
+}
+@media (max-width: 1023px) {
+  .collaborator-dashboard .dashboard-metrics {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}

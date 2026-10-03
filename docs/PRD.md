@@ -21,10 +21,13 @@ La plataforma tiene éxito si registrar el trabajo cuesta segundos y nadie vuelv
 
 Tres roles cubren a los socios de hoy y a los colaboradores del futuro. Cada usuario tiene además un área (técnica, gestión y finanzas, comercial, diseño y marketing).
 
-| Acción | Admin (Gestión y finanzas) | Socio | Colaborador (fase 3) |
+| Acción | Admin (cualquier área) | Socio | Colaborador |
 | --- | --- | --- | --- |
-| Ver tareas y sprints | Todos | Todos | Solo proyectos asignados |
-| Crear y asignar tareas | Sí | Sí | No |
+| Ver tareas | Todas | Propias; tablero de proyectos con membresía | Propias; tablero de proyectos con membresía |
+| Crear proyectos y gestionar miembros | Sí | No | No |
+| Modificar tablero del proyecto | Sí | No; consulta | No; consulta |
+| Mover tareas propias en Mis tareas | Sí | Sí | Sí |
+| Crear y asignar tareas | Sí | No | No |
 | Registrar sus horas | Sí | Sí | Sí (sin puntos) |
 | Editar horas de otros | No | No | No |
 | Registrar gastos | Sí | Sí | No |
@@ -63,9 +66,9 @@ Cinco flujos concentran el uso diario; cada uno debe resolverse en 1 o 2 pantall
 **Trabajar una tarea**
 
 1. El socio abre "Mis tareas" y pulsa *Iniciar* en una tarea: arranca el temporizador y la tarea pasa a "En progreso".
-2. Pulsa *Detener*: se crea el registro de horas ligado a la tarea (editable durante 7 días).
-3. Si olvidó el temporizador, registra manualmente: tarea, horas, fecha.
-4. Al mover la tarea a "Hecho", puede enlazar el PR o entregable.
+2. Pausa/reanuda el reloj cuando lo necesita. Finalizar una sesión prepara un borrador en Horas, sin enviarlo automáticamente.
+3. Terminar una tarea prepara un borrador con el tiempo medido o su estimación editable. Selecciona varias en Horas y confirma un total distribuido entre ellas; se crea un único registro pendiente de revisión.
+4. Sin tarea o sin reloj, conserva el registro manual de actividad, fecha, horario y respaldo opcional.
 
 **Registrar un gasto**
 
@@ -245,3 +248,33 @@ No quedan pendientes para iniciar el desarrollo.
 Por solicitud del usuario, en el frontend mock se permite registrar actividad sin tarea: `taskId` nullable, proyecto opcional, descripción y evidencia por enlace. El registro manual captura inicio real y duración en Lima; temporizadores nuevos identifican su origen. Registros legacy conservan datos existentes, sin asumir que sus timestamps representan horarios reales.
 
 Revisión entre socios/admin: sin autoaprobación, con aprobador/fecha y solicitud de aclaración con motivo. Las correcciones de aprobaciones dentro de la ventana de edición vuelven a pendiente; una aclaración habilita corrección fuera de esa ventana. Pagados/anulados no se editan. Se auditan creación, edición, aclaración, aprobación y anulación. Solo horas aprobadas no pagadas generan puntos. Vista inicial Registro, Historial filtrable, Resumen mensual (días/horarios en Lima) y Revisión. Sin integración remota en esta etapa.
+
+
+### Ajuste autorizado: Mi día (02/10/2026)
+
+Mi día incorpora plan personal de hasta tres prioridades por fecha de Lima, con tareas asignadas o actividades libres; meta personal y acceso desde cada prioridad a Tareas, con el reloj allí y la confirmación de horas en Horas; resumen diario y daily local desplegable con autoguardado, historial y ayuda para redactar desde el trabajo registrado. El estado completado del plan no equivale a completar una tarea o aprobar horas. El foco de concentración es configurable y persistente por persona, separado del registro de trabajo. La comunicación compartida del daily y los bloqueos queda pendiente de la integración backend; no se envían notificaciones desde estos borradores.
+
+
+### Flujo autorizado de tareas, proyectos y horas (02/10/2026)
+
+Esta definición sustituye las reglas anteriores que permitían a todos los socios crear/asignar tareas o registrar automáticamente al detener el reloj.
+
+- Admin de cualquier área: crea proyectos y tareas, asigna responsables y mantiene membresías explícitas. Una tarea admite proyecto y sprint nulos. Ser responsable de una tarea no concede membresía del proyecto.
+- Personas sin rol admin: Mis tareas contiene solo sus asignaciones, con un kanban editable sincronizado con la misma tarea del proyecto. Proyectos muestra únicamente membresías explícitas; su tablero incluye las tareas del proyecto pero es de consulta, incluso para tareas propias. Las URL y las operaciones están verificadas en el servicio mock.
+- Finalizar tarea o reloj prepara un borrador propio. El tiempo estimado es una sugerencia; el tiempo medido se conserva con precisión. No hay aprobación automática, ni puntos, ni horas en resúmenes antes de confirmar. Reabrir/terminar una tarea no duplica su borrador. Sesiones adicionales se acumulan en el borrador pendiente.
+- Registro de Horas: selección múltiple de borradores, total editable distribuido por tarea, ajuste individual, fecha y texto adicional opcional. Confirma un solo registro con asignaciones de horas por tarea/proyecto; revisiones e historial muestran el detalle. Los lotes se verifican antes de modificar datos, impidiendo doble envío. Actividades sin tarea conservan el formulario manual.
+- Reloj centralizado en Tareas: inicio, pausa, continuar y finalizar; controles globales también disponibles. Usa fechas persistidas y segmentos de actividad; una pestaña oculta, congelada o cerrada no pierde tiempo y las pausas no se suman. No se pausa al cambiar de pestaña: trabajar fuera de la plataforma es válido. La coordinación de escrituras usa Web Locks cuando está disponible, con refresco por eventos de almacenamiento.
+- Aviso cada hora y sonido optativo activado por un gesto. Una pestaña ejecutándose puede reproducir sonido; una página congelada o un navegador cerrado no ejecuta JavaScript. Al regresar se muestra un solo aviso del umbral pendiente con acción de pausar. No se promete una alarma con el navegador cerrado ni se deduce cumplimiento del reloj. Web Push/validación remota quedan para la etapa Supabase.
+- Migración aditiva del mock, sin reiniciar historial. Se incorpora Alex, colaborador de demostración, con una tarea del proyecto miembro, una de otro proyecto sin membresía y una independiente. Los cuatro socios conservan sus perfiles y datos.
+
+Mi día sirve para organizar prioridades, definir una meta y concentrarse con pomodoro. El daily es un borrador de comunicación separado, plegado inicialmente; no registra horas ni modifica asignaciones. La integración compartida de daily permanece pendiente.
+
+
+## Ajuste aprobado: descripción y etiquetas (02/10/2026)
+
+- Task incorpora `description?: string` (Markdown opcional, máximo 20,000 caracteres) y etiquetas adjuntas. Solo admin crea/edita este contenido.
+- ProjectLabel: id, projectId, name (1–40 caracteres, sin duplicados por proyecto ignorando mayúsculas/espacios externos), color (hexadecimal de seis dígitos). Solo admin lista, crea y edita el catálogo dentro del proyecto.
+- Una tarea puede tener varias etiquetas de su propio proyecto; sin proyecto no admite etiquetas. Al cambiar de proyecto deben retirarse las etiquetas anteriores. El servicio valida pertenencia y usa nombre/color canónicos, ignorando valores falsificados en el cliente.
+- Colaborador ve descripción y etiquetas adjuntas en las tareas que puede consultar; no recibe acceso al catálogo ni al proyecto por una asignación puntual. Renombrar/recolorear una etiqueta actualiza las tarjetas existentes.
+- Mock persiste el catálogo sin reiniciar datos antiguos; la futura implementación remota debe aplicar estos mismos permisos mediante RLS y resolver etiquetas adjuntas sin exponer el catálogo al colaborador.
+- La UI usa Markdown seguro sin HTML y menús temáticos compartidos en todos los módulos.

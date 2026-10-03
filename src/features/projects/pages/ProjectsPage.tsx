@@ -1,31 +1,51 @@
-import { ArrowRight, FolderKanban } from 'lucide-react'
-import { Link } from 'react-router-dom'
-import { Badge } from '@/components/ui/Badge'
-import { Card } from '@/components/ui/Card'
-import { EmptyState } from '@/components/ui/EmptyState'
-import { ErrorState } from '@/components/ui/ErrorState'
-import { Meter } from '@/components/ui/Meter'
-import { PageHeader } from '@/components/ui/PageHeader'
-import { Skeleton } from '@/components/ui/Skeleton'
-import { formatIsoDate } from '@/lib/dates'
-import { formatHours } from '@/lib/format'
-import { projectStatusLabel, projectTypeLabel, taskStatusLabel } from '@/lib/labels'
-import { useFirstPlay } from '@/lib/useFirstPlay'
-import { stagger } from '@/lib/utils'
-import { useProjectSummaries, type ProjectSummary } from '../hooks/useProjectSummaries'
+import { useState } from "react";
+import type { Project } from "@/domain/types";
+import { useAuth } from "@/features/auth/hooks/useAuth";
+import { Button } from "@/components/ui/Button";
+import { ProjectFormSheet } from "../components/ProjectFormSheet";
+import { ArrowRight, FolderKanban, Plus } from "lucide-react";
+import { Link } from "react-router-dom";
+import { Badge } from "@/components/ui/Badge";
+import { Card } from "@/components/ui/Card";
+import { EmptyState } from "@/components/ui/EmptyState";
+import { ErrorState } from "@/components/ui/ErrorState";
+import { Meter } from "@/components/ui/Meter";
+import { PageHeader } from "@/components/ui/PageHeader";
+import { Skeleton } from "@/components/ui/Skeleton";
+import { formatIsoDate } from "@/lib/dates";
+import { formatHours } from "@/lib/format";
+import {
+  projectStatusLabel,
+  projectTypeLabel,
+  taskStatusLabel,
+} from "@/lib/labels";
+import { useFirstPlay } from "@/lib/useFirstPlay";
+import { stagger } from "@/lib/utils";
+import {
+  useProjectSummaries,
+  type ProjectSummary,
+} from "../hooks/useProjectSummaries";
 
-const STATUS_ORDER = ['todo', 'in_progress', 'review', 'done'] as const
+const STATUS_ORDER = ["todo", "in_progress", "review", "done"] as const;
 
-function ProjectCard({ summary, animate }: { summary: ProjectSummary; animate: boolean }) {
-  const { project, sprint, tasksByStatus, taskCount, monthHours } = summary
-  const done = tasksByStatus.done
+function ProjectCard({
+  summary,
+  animate,
+  onEdit,
+}: {
+  summary: ProjectSummary;
+  animate: boolean;
+  onEdit?: (project: Project) => void;
+}) {
+  const { project, sprint, tasksByStatus, taskCount, monthHours } = summary;
+  const done = tasksByStatus.done;
   return (
     <Card tone="raised" className="flex h-full flex-col gap-4">
       <div className="flex flex-col gap-2.5">
         <h2 className="text-lg font-semibold">{project.name}</h2>
         <div className="flex flex-wrap gap-2">
           <Badge>{projectTypeLabel[project.type]}</Badge>
-          <Badge tone={project.status === 'active' ? 'success' : 'warning'}>
+          <Badge tone={project.status === "active" ? "success" : "warning"}>
             {projectStatusLabel[project.status]}
           </Badge>
         </div>
@@ -36,65 +56,137 @@ function ProjectCard({ summary, animate }: { summary: ProjectSummary; animate: b
           <div className="flex flex-col gap-0.5">
             <p className="text-sm font-medium">{sprint.goal}</p>
             <p className="num text-xs text-muted">
-              Sprint activo · {formatIsoDate(sprint.startDate)} al {formatIsoDate(sprint.endDate)}
+              Sprint activo · {formatIsoDate(sprint.startDate)} al{" "}
+              {formatIsoDate(sprint.endDate)}
             </p>
           </div>
-          <Meter value={done} max={Math.max(taskCount, 1)} label={`${done} de ${taskCount} tareas hechas`} className="h-2" animate={animate} />
+          <Meter
+            value={done}
+            max={Math.max(taskCount, 1)}
+            label={`${done} de ${taskCount} tareas hechas`}
+            className="h-2"
+            animate={animate}
+          />
           <ul className="grid grid-cols-2 gap-x-3 gap-y-1 text-xs text-muted">
             {STATUS_ORDER.map((status) => (
               <li key={status} className="flex justify-between gap-2">
                 <span>{taskStatusLabel[status]}</span>
-                <span className="num font-semibold text-fg">{tasksByStatus[status]}</span>
+                <span className="num font-semibold text-fg">
+                  {tasksByStatus[status]}
+                </span>
               </li>
             ))}
           </ul>
         </div>
       ) : (
         <p className="text-sm text-muted">
-          {project.status === 'paused' ? 'Proyecto en pausa, sin sprint activo.' : 'Sin sprint activo por ahora.'}
+          {project.status === "paused"
+            ? "Proyecto en pausa, sin sprint activo."
+            : "Sin sprint activo por ahora."}
         </p>
       )}
 
+      {onEdit && (
+        <Button variant="ghost" onClick={() => onEdit(project)}>
+          Editar proyecto y miembros
+        </Button>
+      )}
       <p className="mt-auto border-t border-border pt-3 text-sm text-muted">
-        Horas del equipo este mes: <span className="num font-semibold text-fg">{formatHours(monthHours)}</span>
+        Horas del equipo este mes:{" "}
+        <span className="num font-semibold text-fg">
+          {formatHours(monthHours)}
+        </span>
       </p>
       <Link
         to={`/proyectos/${project.id}`}
         className="flex min-h-11 items-center justify-between rounded-lg bg-primary-soft px-3.5 text-sm font-semibold text-primary-text"
       >
-        {sprint ? 'Abrir tablero' : 'Ver proyecto'}
+        {sprint ? "Abrir tablero" : "Ver proyecto"}
         <ArrowRight className="size-4" aria-hidden="true" />
       </Link>
     </Card>
-  )
+  );
 }
 
 export default function ProjectsPage() {
-  const { data: summaries, isLoading, isError, refetch } = useProjectSummaries()
-  const animate = useFirstPlay('projects')
+  const {
+    data: summaries,
+    isLoading,
+    isError,
+    refetch,
+  } = useProjectSummaries();
+  const animate = useFirstPlay("projects");
+  const { user } = useAuth();
+  const [open, setOpen] = useState(false);
+  const [editing, setEditing] = useState<Project>();
+  const edit = (project: Project) => {
+    setEditing(project);
+    setOpen(true);
+  };
 
   return (
     <>
-      <PageHeader title="Proyectos" description="Dónde está el equipo trabajando y cómo va el sprint de cada uno." />
+      <PageHeader
+        actions={
+          user?.role === "admin" ? (
+            <Button
+              onClick={() => {
+                setEditing(undefined);
+                setOpen(true);
+              }}
+            >
+              <Plus size={16} /> Nuevo proyecto
+            </Button>
+          ) : undefined
+        }
+        title="Proyectos"
+        description="Dónde está el equipo trabajando y cómo va el sprint de cada uno."
+      />
       {isLoading ? (
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3" aria-busy="true">
+        <div
+          className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3"
+          aria-busy="true"
+        >
           {Array.from({ length: 3 }, (_, i) => (
             <Skeleton key={i} className="h-64" />
           ))}
         </div>
       ) : isError ? (
-        <ErrorState message="No se pudieron cargar los proyectos." onRetry={() => refetch()} />
+        <ErrorState
+          message="No se pudieron cargar los proyectos."
+          onRetry={() => refetch()}
+        />
       ) : summaries && summaries.length > 0 ? (
         <ul className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {summaries.map((summary, index) => (
-            <li key={summary.project.id} className="enter" style={stagger(index + 1)}>
-              <ProjectCard summary={summary} animate={animate} />
+            <li
+              key={summary.project.id}
+              className="enter"
+              style={stagger(index + 1)}
+            >
+              <ProjectCard
+                summary={summary}
+                animate={animate}
+                onEdit={user?.role === "admin" ? edit : undefined}
+              />
             </li>
           ))}
         </ul>
       ) : (
-        <EmptyState icon={FolderKanban} title="Aún no hay proyectos" description="Los proyectos del equipo aparecerán aquí." />
+        <EmptyState
+          icon={FolderKanban}
+          title="Aún no hay proyectos"
+          description="Los proyectos del equipo aparecerán aquí."
+        />
+      )}
+      {user?.role === "admin" && (
+        <ProjectFormSheet
+          key={editing?.id ?? "new"}
+          open={open}
+          project={editing}
+          onClose={() => setOpen(false)}
+        />
       )}
     </>
-  )
+  );
 }

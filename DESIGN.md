@@ -159,7 +159,7 @@ Jerarquía del resumen personal: las dos métricas principales usan un tinte só
 
 ## Horas: registro, historial y análisis
 
-Actualización autorizada el 02/10/2026. La navegación interna contiene Registro (vista inicial), Historial, Resumen mensual y Revisión (socios/admin). Las vistas se enlazan con `?vista=` y conservan navegación atrás/adelante. Registro muestra el temporizador por actividad y acceso al formulario manual, con registros recientes debajo. No se requiere tarea: proyecto y tarea son opcionales; la descripción es obligatoria y el respaldo admite un enlace HTTP/HTTPS.
+Actualización autorizada el 02/10/2026. La navegación interna contiene Registro (vista inicial), Historial, Resumen mensual y Revisión (socios/admin). Las vistas se enlazan con `?vista=` y conservan navegación atrás/adelante. Registro muestra tareas/sesiones pendientes de confirmar, selección múltiple y formulario manual de actividad libre, con registros recientes debajo. El reloj se concentra en Tareas. No se requiere tarea: proyecto y tarea son opcionales; la descripción es obligatoria y el respaldo admite un enlace HTTP/HTTPS.
 
 Historial presenta todos los registros propios, fechas de actividad y creación, hora de inicio/fin cuando existe, duración, estado, revisión, respaldo y anulación. Filtra por fechas, texto y estado. El resumen permite elegir mes; separa registradas/aprobadas/sin aprobar/días activos y muestra barras diarias y por hora de Lima, con tablas textuales desplegables. Los intervalos se distribuyen entre horas/días y se recortan al mes. Los registros anteriores sin horario fiable suman al total diario pero no al gráfico horario.
 
@@ -173,9 +173,79 @@ El campo de sesión comienza con dos líneas (64 px), no admite estiramiento man
 
 Las filas de Registro, Historial y Revisión distribuyen actividad, proyecto/persona, fecha/horario, estado y tiempo en columnas, con altura aproximada de 68 px en escritorio. Al abrir una fila se consulta el detalle completo en un modal: fechas de actividad/creación, origen, tarea, proyecto, respaldo y revisión. Solo queda Aprobar como acción en filas de revisión; Pedir aclaración y su formulario están dentro del detalle.
 
-Los selectores de proyecto, tarea, estado, fechas y mes en Horas usan menús propios con tokens del tema, cierre con Escape/clic exterior y devolución del foco al seleccionar. Los controles nativos restantes respetan `color-scheme`. En móvil, el botón + queda junto al título, la navegación Registro/Historial/Resumen/Revisión ocupa una fila y las acciones se integran a filas compactas. El detalle usa una superficie sólida para mantener legibilidad.
+Los selectores de proyecto, tarea, estado, fechas y mes en Horas usan menús propios con tokens del tema, cierre con Escape/clic exterior y devolución del foco al seleccionar. Los selectores de opciones se unificaron posteriormente en ChoicePicker para todos los módulos. En móvil, el botón + queda junto al título, la navegación Registro/Historial/Resumen/Revisión ocupa una fila y las acciones se integran a filas compactas. El detalle usa una superficie sólida para mantener legibilidad.
 
 El gráfico horario identifica el mes elegido y explica cuánto tiempo carece de horario cuando está vacío. Cambio comprobado entre septiembre (15–17 h) y octubre (9–11 h) usando datos aislados con horario conocido; no se atribuyen horarios a registros históricos. Verificados crecimiento del campo, registro manual con nuevos selectores, filtros y aprobación/aclaración desde modal. Pruebas: 71 aprobadas; producción/tipos sin errores y solo nueve advertencias previas de lint.
 
 Modales oscuros: todos los componentes Sheet comparten superficie sólida #171a1f, campos #22272d y bordes neutros #3b424b. Se elimina la línea luminosa interior y la transparencia del panel; divisores y contorno externo usan un 9 % de blanco. El foco y los errores conservan su señalización. El tema claro se mantiene. Los tokens se limitan al modal y sus menús.
 
+
+
+## Mi día: plan y jornada (02/10/2026)
+
+Desde 768 px se usan dos columnas independientes: plan y daily a la izquierda; resumen compacto y concentración a la derecha. En móvil se ordenan plan, resumen, daily y concentración. Las superficies reutilizan los tokens de ambos temas y los selectores de Horas.
+
+El plan admite hasta tres prioridades por persona y fecha de Lima, incluyendo tareas propias o actividades libres. Completar una prioridad es un estado personal y no cambia la tarea del tablero ni aprueba horas. Una tarea que ya está hecha aparece completada en el plan. Cada prioridad permite ir a Tareas o quitarla del día. Incluye una meta personal breve con guardado por persona/fecha.
+
+El reloj se concentra en Tareas; Horas confirma y revisa el tiempo. «Ir a tareas» abre el tablero, conservando el ID de la prioridad en la URL. Mi día no inicia relojes ni añade registros. El resumen muestra horas confirmadas, prioridades hechas y siguiente prioridad; excluye borradores, anulaciones y relojes abiertos.
+
+El daily se abre bajo «Contar mi avance» y permanece cerrado inicialmente para reducir formularios visibles. Conserva las claves existentes `vexa.daily-draft.{usuario}.{fecha}`. Autoguarda tras 450 ms y vacía cambios pendientes al salir, cambiar de fecha o usuario. Campos de dos líneas crecen al escribir. Permite consultar y editar borradores por fecha, sugerir trabajo del día sin reemplazar lo escrito, y señalar de quién se necesita ayuda. Es local y aún no se comparte con el equipo.
+
+Concentración usa una sesión separada por persona: bloques de 15/25/50 minutos o descansos de 5/10. Guarda un instante de finalización, por lo que conserva el tiempo al navegar o recargar. Pausa, reanuda, reinicia y permite pasar al descanso al terminar. No crea registros de horas.
+
+
+## Trabajo unificado: tableros y confirmación de horas (02/10/2026)
+
+Tareas usa cuatro columnas en escritorio y pestañas de columna en móvil. Cada tarjeta muestra responsable, contexto del proyecto, estimación y estado; las tareas sin proyecto participan igual. Admin tiene creación/asignación y filtro de tareas propias. Reloj propio en una superficie de acento compacta con cifra tabular, pausa/continuar, finalizar y sonido optativo; reloj global persistente en la cabecera/dock. Proyecto comparte datos y estados, pero el colaborador tiene tarjetas de consulta sin asas de arrastre, selector de estado ni reloj. El modal de proyecto permite administrar membresías explícitas con casillas.
+
+Horas da prioridad a «Pendientes de registrar»: filas compactas con selección, título, origen medido/estimado y horas individuales. La confirmación aparece solo al seleccionar y permite editar el total, repartido entre tareas, fecha y avance adicional. El resumen y revisión reciben un único registro; el modal desglosa las horas de cada tarea. No se suman estimaciones ni sesiones pendientes a los indicadores. El formulario libre se mantiene como acción secundaria.
+
+El reloj usa segmentos persistidos; los segundos visibles son una proyección, no la fuente de verdad. Los avisos no interrumpen el trabajo al cambiar de pestaña. Un aviso al volver permite pausar un reloj olvidado; no hay garantía de sonido con la página congelada o cerrada. Movimiento, superficies y modales respetan los tokens y ambos temas existentes.
+
+Comprobaciones finales: 81 pruebas en 10 archivos, tipos y build de producción aprobados; lint conserva nueve advertencias previas. Se verificó creación/asignación por admin, confirmación de total editable y aprobación por otra persona desde la UI. Dos pestañas conservaron un solo reloj; un aviso recuperado permitió pausarlo y no se repitió al recargar. El cálculo compartido recorta sesiones por mes y excluye pausas, borradores y relojes abiertos.
+
+Validación del flujo: membresía independiente de asignación, kanban de consulta, tres tareas con 4 h en un único registro, recuperación al cerrar pestaña y pausa conservada tras recarga. 40 combinaciones de pantalla/tema/ancho entre 320 y 1366 px sin desborde ni errores del navegador.
+
+
+## Descripciones, etiquetas y menús compartidos (02/10/2026)
+
+Las tareas admiten una descripción opcional con editor Escribir/Vista previa. Markdown renderiza títulos, listas, enlaces, negrita, código y tablas; no ejecuta HTML ni carga imágenes remotas. Las tarjetas muestran etiquetas compactas y un indicador de descripción; el detalle conserva el contenido completo.
+
+Etiquetas es una acción dentro del tablero del proyecto, disponible para administradores. El catálogo usa nombres de hasta 40 caracteres, ocho colores iniciales y hexadecimal personalizado. Las etiquetas siempre muestran nombre y el texto alterna negro/blanco según el contraste del fondo. Crear y editar mantiene la superficie sólida y bordes neutros de los modales oscuros. El formulario de tarea permite marcar varias etiquetas del proyecto elegido; cambiar de proyecto limpia esa selección.
+
+Todo selector de opciones reutiliza `ChoicePicker`, incluido estado en tarjetas, proyectos, responsables, Horas, Gastos y Equipo. No usar `<select>` nativo ni SelectField. Calendarios de Horas y sprints usan DatePicker temático. Los menús se renderizan fuera de tarjetas y dentro de la capa del modal cuando corresponde; comparten límites de pantalla/modal y corrigen coordenadas con animaciones. Admiten Escape, clic exterior y devolución del foco. ChoicePicker agrega flechas, Inicio/Fin y selección con teclado.
+
+Validación: 85 pruebas en 11 archivos; tipos, lint y build aprobados. Lint mantiene las nueve advertencias anteriores. Flujo de creación/asignación y consulta de tareas externas comprobado; Markdown no ejecutó HTML ni enlaces javascript. Tarjetas, detalle y desplegables comprobados en ambos temas a 320, 390, 768 y 1366 px. También se verificaron filtros de Gastos/Equipo/Horas, formulario de proyecto y calendario de sprint dentro del modal.
+
+
+### Modal de tarea: distribución adaptable (02/10/2026)
+
+Nueva tarea/Editar tarea usa un modal de hasta 960 px y dos columnas desde 1100 px: título y descripción a la izquierda; proyecto, responsable, etiquetas, estimación y enlace a la derecha. Tablet mantiene una columna y ancho máximo de 680 px; móvil ocupa el ancho disponible. El pie de acciones recorre ambas columnas en escritorio y sus botones comparten el ancho en móvil. El resto de modales conserva sus dimensiones.
+
+El editor de descripción tiene un único borde exterior, pestañas integradas y campo sin contorno/redondeado interno. El foco del campo se indica en el borde del editor. La ayuda se reduce a Admite Markdown y Guía de formato, que despliega ejemplos al solicitarlo. Campo y vista previa tienen altura mínima de 180 px (290 px en escritorio), máximo 420 px y crecimiento al escribir; se elimina el estiramiento manual.
+
+
+Selección de etiquetas: botones tipo píldora sin checkbox ni icono de check. Al inicio usan borde discontinuo, fondo tenuemente teñido y opacidad discreta; al seleccionarlos muestran su color sólido y texto con contraste calculado. La selección múltiple conserva `aria-pressed`, teclado y altura compacta de 30 px y relleno de 4 px × 11 px. Las etiquetas de tarjetas/detalles también adoptan extremos redondeados.
+
+
+### Paleta común de modales claros (02/10/2026)
+
+Todos los Sheet usan superficie sólida blanca (#ffffff), campos gris muy claro (#f7f8fa), superficie secundaria #f0f3f6, bordes de control #aab4bf y divisores #dce2e8. Se elimina la transparencia y el brillo interior del panel: el fondo oscurecido no altera su color. Los menús dentro del modal heredan estos tokens; los estados de foco/error mantienen su señalización. La paleta oscura conserva sus valores propios.
+
+
+### Tarjetas de tareas y controles (02/10/2026)
+
+Tarjetas de superficie sólida y contorno discreto, radio de 12 px y relleno de 14 px; eliminan el vidrio y brillo heredados. Títulos más compactos, avatares de 22 px y metadatos agrupados. Un divisor suave separa las acciones: selector de estado de fondo secundario y botón del reloj con tinte de acento, sin bordes contrastantes. Controles de 36 px en escritorio y 44 px con puntero táctil. Conservan foco visible, menús compartidos y señal del reloj activo. Se aplica tanto a Mis tareas como al kanban del proyecto.
+
+
+El tablero del proyecto incorpora Editar proyecto en las acciones de cabecera, solo para admin. Abre el formulario compartido con nombre, tipo, estado y miembros actuales. Las acciones se ajustan en varias filas en pantallas pequeñas. Guardar actualiza tablero, lista y dashboard; cancelar conserva los datos.
+
+
+### Concentración y descanso personal
+
+La tarjeta de Mi día alinea Foco/Descanso y la duración en una misma fila, con superficies suaves sin contornos fuertes, contador central y pie separado. La acción identifica el modo actual. En descanso, la mascota conserva su ilustración y suma un pliegue de capa extendido, una taza flotante con vapor y ojos relajados. La postura se sincroniza con la sesión personal por usuario y permanece al navegar o recargar; vuelve al foco al cambiar de modo o finalizar el descanso. Los movimientos usan los tokens de la mascota y se detienen con movimiento reducido o durante el arrastre. La sesión personal sigue sin registrar horas laborales.
+
+
+### Inicio y navegación del colaborador (02/10/2026)
+
+El colaborador tiene un inicio personal: horas registradas/aprobadas/en revisión del mes, avance de sus tareas, próximas tareas, borradores de horas por confirmar y proyectos de los que es miembro. Las tareas asignadas de otros proyectos siguen en su tablero personal sin habilitar el acceso al proyecto. No se muestran participación, gastos, resúmenes del equipo ni el selector Equipo/Mías. Los accesos de escritorio y móvil son Inicio, Mi día, Proyectos, Mis tareas y Horas; las rutas Gastos/Equipo redirigen al inicio. Los servicios mock rechazan lecturas financieras y resúmenes de socios para colaboradores. Socios y administradores conservan su experiencia.

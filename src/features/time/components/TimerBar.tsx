@@ -1,17 +1,22 @@
-import { Square, Clock3 } from "lucide-react";
+import { Square, Clock3, Pause, Play } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import "./timer.css";
 import { useTasks } from "@/features/tasks/hooks/useTasks";
 import { formatClock } from "@/lib/format";
 import { useElapsed } from "../hooks/useElapsed";
-import { useRunningEntry, useStopTimer } from "../hooks/useTime";
+import {
+  useRunningEntry,
+  useStopTimer,
+  usePauseTimer,
+  useResumeTimer,
+} from "../hooks/useTime";
 
 /** Datos del temporizador abierto, listos para mostrar en la barra (móvil) o el chip (escritorio). */
 function useRunningTimer() {
   const running = useRunningEntry();
   const tasks = useTasks();
   const entry = running.data ?? null;
-  const elapsed = useElapsed(entry?.startedAt);
+  const elapsed = useElapsed(entry);
   const task = entry
     ? tasks.data?.find((t) => t.id === entry.taskId)
     : undefined;
@@ -29,6 +34,8 @@ function useRunningTimer() {
 export function TimerBar() {
   const { entry, elapsed, title } = useRunningTimer();
   const stop = useStopTimer();
+  const pause = usePauseTimer();
+  const resume = useResumeTimer();
   if (!entry) return null;
   return (
     <div className="active-timer-mobile enter lg:hidden">
@@ -42,6 +49,23 @@ export function TimerBar() {
         </span>
         <span className="active-timer-title">{title}</span>
       </div>
+      <Button
+        variant="ghost"
+        aria-label={
+          entry.timerState === "paused"
+            ? "Continuar temporizador"
+            : "Pausar temporizador"
+        }
+        onClick={() =>
+          entry.timerState === "paused" ? resume.mutate() : pause.mutate()
+        }
+      >
+        {entry.timerState === "paused" ? (
+          <Play size={16} />
+        ) : (
+          <Pause size={16} />
+        )}
+      </Button>
       <button
         type="button"
         disabled={stop.isPending}
@@ -59,6 +83,8 @@ export function TimerBar() {
 export function TimerChip() {
   const { entry, elapsed, title } = useRunningTimer();
   const stop = useStopTimer();
+  const pause = usePauseTimer();
+  const resume = useResumeTimer();
   if (!entry) return null;
   return (
     <div className="active-timer-chip hidden lg:flex">
@@ -79,8 +105,25 @@ export function TimerChip() {
       </div>
       <Button
         variant="ghost"
+        aria-label={
+          entry.timerState === "paused"
+            ? "Continuar temporizador"
+            : "Pausar temporizador"
+        }
+        onClick={() =>
+          entry.timerState === "paused" ? resume.mutate() : pause.mutate()
+        }
+      >
+        {entry.timerState === "paused" ? (
+          <Play size={16} />
+        ) : (
+          <Pause size={16} />
+        )}
+      </Button>
+      <Button
+        variant="ghost"
         aria-label="Detener temporizador"
-        title="Detener y guardar"
+        title="Finalizar y preparar horas"
         className="active-timer-stop"
         disabled={stop.isPending}
         onClick={() => stop.mutate()}

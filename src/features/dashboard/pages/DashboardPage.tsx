@@ -22,9 +22,19 @@ import { useFirstPlay } from "@/lib/useFirstPlay";
 import { stagger } from "@/lib/utils";
 import { useMonthlySummary, usePoints } from "../hooks/useDashboard";
 import { DashboardOperations } from "./DashboardOperations";
+import { CollaboratorDashboard } from "./CollaboratorDashboard";
 import "./dashboard.css";
 
 export default function DashboardPage() {
+  const { user } = useAuth();
+  return user?.role === "collaborator" ? (
+    <CollaboratorDashboard user={user} />
+  ) : (
+    <PartnerDashboard />
+  );
+}
+
+function PartnerDashboard() {
   const { user } = useAuth();
   const [month] = useState(() => monthKey(new Date()));
   const members = useMembers();

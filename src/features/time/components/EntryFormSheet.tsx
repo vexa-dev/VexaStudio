@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/Button";
 import { Field, TextareaField } from "@/components/ui/Field";
 import { Sheet } from "@/components/ui/Sheet";
 import type { TimeEntry } from "@/domain/types";
+import { useAuth } from "@/features/auth/hooks/useAuth";
 import { useProjects } from "@/features/projects/hooks/useProjects";
 import { useTasks } from "@/features/tasks/hooks/useTasks";
 import { todayLima } from "@/lib/dates";
@@ -25,7 +26,8 @@ function EntryForm({
   entry?: TimeEntry;
   onClose: () => void;
 }) {
-  const tasks = useTasks();
+  const { user } = useAuth();
+  const tasks = useTasks({ assigneeId: user?.id });
   const projects = useProjects();
   const add = useAddManualEntry();
   const update = useUpdateEntry();
@@ -48,7 +50,7 @@ function EntryForm({
       },
     });
 
-  const projectName = (id: string) =>
+  const projectName = (id: string | null) =>
     projects.data?.find((p) => p.id === id)?.name ?? "";
   const options = tasks.data ?? [];
   const submit = handleSubmit(

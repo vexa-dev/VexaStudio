@@ -2,23 +2,22 @@ import {
   useId,
   type InputHTMLAttributes,
   type ReactNode,
-  type SelectHTMLAttributes,
   type TextareaHTMLAttributes,
-} from 'react'
-import { cn } from '@/lib/utils'
+} from "react";
+import { cn } from "@/lib/utils";
 
 interface FieldBaseProps {
-  label: string
-  error?: string
-  hint?: ReactNode
+  label: string;
+  error?: string;
+  hint?: ReactNode;
 }
 
 const controlClass = (error?: string, className?: string) =>
   cn(
-    'min-h-11 w-full rounded-lg border bg-[var(--input)] px-3 text-fg placeholder:text-muted disabled:opacity-60',
-    error ? 'border-danger' : 'border-[var(--control-border)]',
+    "min-h-11 w-full rounded-lg border bg-[var(--input)] px-3 text-fg placeholder:text-muted disabled:opacity-60",
+    error ? "border-danger" : "border-[var(--control-border)]",
     className,
-  )
+  );
 
 /** Etiqueta, ayuda y error accesibles alrededor de cualquier control de formulario. */
 function FieldShell({
@@ -44,11 +43,11 @@ function FieldShell({
         </p>
       ) : null}
     </div>
-  )
+  );
 }
 
 const describedBy = (id: string, error?: string, hint?: ReactNode) =>
-  error ? `${id}-error` : hint ? `${id}-hint` : undefined
+  error ? `${id}-error` : hint ? `${id}-hint` : undefined;
 
 export function Field({
   label,
@@ -58,8 +57,8 @@ export function Field({
   id,
   ...props
 }: FieldBaseProps & InputHTMLAttributes<HTMLInputElement>) {
-  const autoId = useId()
-  const inputId = id ?? autoId
+  const autoId = useId();
+  const inputId = id ?? autoId;
   return (
     <FieldShell id={inputId} label={label} error={error} hint={hint}>
       <input
@@ -70,33 +69,7 @@ export function Field({
         {...props}
       />
     </FieldShell>
-  )
-}
-
-export function SelectField({
-  label,
-  error,
-  hint,
-  className,
-  id,
-  children,
-  ...props
-}: FieldBaseProps & SelectHTMLAttributes<HTMLSelectElement>) {
-  const autoId = useId()
-  const selectId = id ?? autoId
-  return (
-    <FieldShell id={selectId} label={label} error={error} hint={hint}>
-      <select
-        id={selectId}
-        aria-invalid={error ? true : undefined}
-        aria-describedby={describedBy(selectId, error, hint)}
-        className={controlClass(error, className)}
-        {...props}
-      >
-        {children}
-      </select>
-    </FieldShell>
-  )
+  );
 }
 
 export function TextareaField({
@@ -107,17 +80,17 @@ export function TextareaField({
   id,
   ...props
 }: FieldBaseProps & TextareaHTMLAttributes<HTMLTextAreaElement>) {
-  const autoId = useId()
-  const areaId = id ?? autoId
+  const autoId = useId();
+  const areaId = id ?? autoId;
   return (
     <FieldShell id={areaId} label={label} error={error} hint={hint}>
       <textarea
         id={areaId}
         aria-invalid={error ? true : undefined}
         aria-describedby={describedBy(areaId, error, hint)}
-        className={controlClass(error, cn('min-h-24 py-2.5', className))}
+        className={controlClass(error, cn("min-h-24 py-2.5", className))}
         {...props}
       />
     </FieldShell>
-  )
+  );
 }

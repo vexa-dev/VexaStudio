@@ -1,7 +1,11 @@
-import { afterEach, describe, expect, it } from "vitest";
-import { getDb, resetMock } from "./db";
+import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { getDb, resetMock, setSessionUserId } from "./db";
 import { createMockServices } from "./index";
 
+beforeEach(() => {
+  resetMock();
+  setSessionUserId("u-jhony");
+});
 afterEach(resetMock);
 
 describe("lecturas compartidas de gastos", () => {

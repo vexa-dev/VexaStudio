@@ -2,8 +2,6 @@ import { useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import {
   Plus,
-  Play,
-  Square,
   Clock3,
   History,
   ChartNoAxesColumn,
@@ -31,17 +29,11 @@ import {
   formatDate,
   formatDateTime,
 } from "@/lib/dates";
-import { formatHours, formatClock } from "@/lib/format";
+import { formatHours } from "@/lib/format";
 import { EntryFormSheet } from "../components/EntryFormSheet";
 import { VoidEntrySheet } from "../components/VoidEntrySheet";
-import {
-  useActivityTimer,
-  useRunningEntry,
-  useStopTimer,
-  useTimeHistory,
-  useReviewTime,
-} from "../hooks/useTime";
-import { useElapsed } from "../hooks/useElapsed";
+import { useTimeHistory, useReviewTime } from "../hooks/useTime";
+import { CompletedHoursPanel } from "../components/CompletedHoursPanel";
 import { monthlyActivity } from "../analytics";
 import { ChoicePicker, DatePicker } from "../components/TimePickers";
 import "./time.css";
@@ -120,17 +112,11 @@ export default function TimePage() {
   const [detailId, setDetailId] = useState<string | null>(null);
   const [asking, setAsking] = useState(false);
   const [note, setNote] = useState("");
-  const [description, setDescription] = useState("");
-  const [project, setProject] = useState("");
   const history = useTimeHistory();
   const members = useMembers();
   const projects = useProjects();
   const tasks = useTasks();
   const settings = useSettings();
-  const running = useRunningEntry();
-  const elapsed = useElapsed(running.data?.startedAt);
-  const start = useActivityTimer();
-  const stop = useStopTimer();
   const review = useReviewTime();
   const mine = (history.data ?? [])
     .filter((e) => e.userId === user?.id)
@@ -221,7 +207,9 @@ export default function TimePage() {
                   ? "Temporizador"
                   : e.source === "manual"
                     ? "Manual"
-                    : "Registro anterior"}
+                    : e.allocations?.length
+                      ? "Tareas confirmadas"
+                      : "Registro anterior"}
                 {e.evidenceUrl ? " · Con respaldo" : ""}
               </small>
             </span>
@@ -332,81 +320,7 @@ export default function TimePage() {
           {selected === "registro" ? (
             <>
               <div className="hours-register-grid">
-                <Card
-                  className={`hours-timer-card ${running.data ? "is-running" : ""}`}
-                >
-                  <div className="hours-section-heading">
-                    <h2>Tu sesión de trabajo</h2>
-                    <Badge>
-                      {running.data ? "En curso" : "Lista para empezar"}
-                    </Badge>
-                  </div>
-                  {running.data ? (
-                    <>
-                      <p
-                        className="hours-timer-number num"
-                        role="timer"
-                        aria-label="Tiempo transcurrido"
-                      >
-                        {formatClock(elapsed)}
-                      </p>
-                      <p className="hours-timer-context">
-                        {title(running.data)}
-                      </p>
-                      <Button
-                        disabled={stop.isPending}
-                        onClick={() => stop.mutate()}
-                      >
-                        <Square size={15} aria-hidden="true" /> Terminar y
-                        guardar
-                      </Button>
-                    </>
-                  ) : (
-                    <form
-                      onSubmit={(e) => {
-                        e.preventDefault();
-                        start.mutate({
-                          description,
-                          projectId: project || null,
-                        });
-                      }}
-                    >
-                      <TextareaField
-                        label="¿En qué vas a trabajar?"
-                        rows={2}
-                        className="hours-auto-textarea"
-                        value={description}
-                        onChange={(e) => {
-                          setDescription(e.target.value);
-                          e.target.style.height = "auto";
-                          e.target.style.height = `${e.target.scrollHeight}px`;
-                        }}
-                        minLength={8}
-                        required
-                        placeholder="Ej. Preparar la propuesta del estudio"
-                      />
-                      <ChoicePicker
-                        label="Proyecto (opcional)"
-                        value={project}
-                        onChange={setProject}
-                        options={[
-                          { value: "", label: "Trabajo del estudio" },
-                          ...(projects.data ?? []).map((p) => ({
-                            value: p.id,
-                            label: p.name,
-                          })),
-                        ]}
-                      />
-                      <Button type="submit" disabled={start.isPending}>
-                        <Play size={15} aria-hidden="true" /> Iniciar
-                        temporizador
-                      </Button>
-                    </form>
-                  )}
-                  <p className="hours-help">
-                    Al terminar, las horas quedan pendientes de revisión.
-                  </p>
-                </Card>
+                <CompletedHoursPanel />
                 <Card className="hours-manual-card">
                   <div className="hours-manual-heading">
                     <span className="hours-manual-icon">
@@ -695,7 +609,9 @@ export default function TimePage() {
                     ? "Temporizador"
                     : detail.source === "manual"
                       ? "Manual"
-                      : "Registro anterior"}
+                      : detail.allocations?.length
+                        ? "Tareas confirmadas"
+                        : "Registro anterior"}
                 </dd>
               </div>
               <div>
@@ -721,9 +637,12 @@ export default function TimePage() {
                 <dd>{formatDateTime(detail.createdAt)}</dd>
               </div>
               <div>
-                <dt>Tarea</dt>
+                <dt>Tareas</dt>
                 <dd>
-                  {tasks.data?.find((t) => t.id === detail.taskId)?.title ??
+                  {detail.allocations
+                    ?.map((a) => `${a.title}: ${formatHours(a.hours)}`)
+                    .join(" / ") ??
+                    tasks.data?.find((t) => t.id === detail.taskId)?.title ??
                     "Sin tarea asignada"}
                 </dd>
               </div>

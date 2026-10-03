@@ -1,4 +1,4 @@
-import { ArrowUpRight, Filter, Receipt, Wallet } from "lucide-react";
+import { ArrowUpRight, Receipt, Wallet } from "lucide-react";
 import { useState } from "react";
 import { Card } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
@@ -13,6 +13,8 @@ import { formatDate } from "@/lib/dates";
 import type { Expense, ExpenseStatus } from "@/domain/types";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { PageHeader } from "@/components/ui/PageHeader";
+
+import { ChoicePicker } from "@/components/ui/ChoicePicker";
 
 export default function ExpensesPage() {
   const overview = useExpenseOverview();
@@ -122,24 +124,19 @@ export default function ExpensesPage() {
           <h2 className="flex items-center gap-2 text-lg font-semibold">
             <Receipt size={20} /> Movimientos del estudio
           </h2>
-          <label className="flex items-center gap-2 text-sm text-muted">
-            <Filter size={16} />{" "}
-            <span className="sr-only">Filtrar gastos por estado</span>
-            <select
-              value={filter}
-              onChange={(event) =>
-                setFilter(event.target.value as typeof filter)
-              }
-              className="min-h-11 border border-border px-3"
-            >
-              <option value="all">Todos los estados</option>
-              {Object.entries(labels).map(([value, label]) => (
-                <option key={value} value={value}>
-                  {label}
-                </option>
-              ))}
-            </select>
-          </label>
+          <ChoicePicker
+            label="Filtrar gastos por estado"
+            hideLabel
+            value={filter}
+            onChange={(value) => setFilter(value as typeof filter)}
+            options={[
+              { value: "all", label: "Todos los estados" },
+              ...Object.entries(labels).map(([value, label]) => ({
+                value,
+                label,
+              })),
+            ]}
+          />
         </div>
         {expenses.length === 0 ? (
           <EmptyState
