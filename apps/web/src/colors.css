@@ -1,0 +1,38 @@
+/* Reference palette. Semantic roles live in glass.css; logos retain the exact brand color. */
+:root {
+  --vexa-brand: #498974;
+  --vexa-50: oklch(from var(--vexa-brand) .98 .008 h);
+  --vexa-100: oklch(from var(--vexa-brand) .94 .022 h);
+  --vexa-200: oklch(from var(--vexa-brand) .87 .042 h);
+  --vexa-300: oklch(from var(--vexa-brand) .80 .060 h);
+  --vexa-400: oklch(from var(--vexa-brand) .73 .075 h);
+  --vexa-500: oklch(from var(--vexa-brand) .66 .075 h);
+  --vexa-600: var(--vexa-brand);
+  --vexa-700: oklch(from var(--vexa-brand) .48 .070 h);
+  --vexa-800: oklch(from var(--vexa-brand) .40 .055 h);
+  --vexa-900: oklch(from var(--vexa-brand) .30 .038 h);
+  --neutral-50: oklch(.985 .002 250);
+  --neutral-100: oklch(.96 .003 250);
+  --neutral-200: oklch(.90 .004 250);
+  --neutral-300: oklch(.82 .005 250);
+  --neutral-400: oklch(.69 .006 250);
+  --neutral-450: oklch(.65 .006 250);
+  --neutral-500: oklch(.57 .007 250);
+  --neutral-550: oklch(.52 .007 250);
+  --neutral-600: oklch(.48 .007 250);
+  --neutral-700: oklch(.35 .006 250);
+  --neutral-800: oklch(.24 .006 250);
+  --neutral-900: oklch(.18 .004 250);
+  --neutral-950: oklch(.11 .002 250);
+  --steel: #7b97ad;
+  --steel-200: oklch(.87 .025 245);
+  --steel-300: oklch(.80 .035 245);
+  --steel-700: oklch(.46 .045 245);
+  --steel-800: oklch(.40 .035 245);
+  --positive-ink: oklch(.45 .090 158);
+  --positive-light: oklch(.79 .085 158);
+  --amber-ink: oklch(.48 .095 75);
+  --amber-light: oklch(.83 .100 75);
+  --red-ink: oklch(.49 .150 27);
+  --red-light: oklch(.79 .110 27);
+}

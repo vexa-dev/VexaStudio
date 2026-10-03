@@ -1,0 +1,408 @@
+.task-labels {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.task-label {
+  display: inline-flex;
+  align-items: center;
+  min-height: 24px;
+  padding: 3px 9px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.4;
+  max-width: 100%;
+  overflow-wrap: anywhere;
+}
+.task-markdown {
+  font-size: 14px;
+  line-height: 1.65;
+  overflow-wrap: anywhere;
+}
+.task-markdown > * + * {
+  margin-top: 12px;
+}
+.task-markdown h1,
+.task-markdown h2,
+.task-markdown h3 {
+  font-weight: 650;
+  line-height: 1.35;
+}
+.task-markdown h1 {
+  font-size: 21px;
+}
+.task-markdown h2 {
+  font-size: 18px;
+}
+.task-markdown h3 {
+  font-size: 16px;
+}
+.task-markdown ul,
+.task-markdown ol {
+  padding-left: 22px;
+}
+.task-markdown ul {
+  list-style: disc;
+}
+.task-markdown ol {
+  list-style: decimal;
+}
+.task-markdown li + li {
+  margin-top: 4px;
+}
+.task-markdown a {
+  color: var(--primary-text);
+  text-decoration: underline;
+}
+.task-markdown blockquote {
+  border-left: 3px solid var(--border);
+  padding-left: 12px;
+  color: var(--muted);
+}
+.task-markdown pre {
+  overflow: auto;
+  padding: 12px;
+  border-radius: 8px;
+  background: var(--input);
+}
+.task-markdown code {
+  font-size: 0.9em;
+  background: var(--input);
+  padding: 1px 4px;
+  border-radius: 4px;
+}
+.task-markdown table {
+  display: block;
+  overflow: auto;
+  border-collapse: collapse;
+}
+.task-markdown th,
+.task-markdown td {
+  padding: 6px 10px;
+  border: 1px solid var(--border);
+}
+.task-markdown hr {
+  border-color: var(--border);
+  margin-block: 12px;
+}
+.task-description-editor {
+  border: 1px solid var(--control-border);
+  border-radius: 10px;
+  overflow: hidden;
+  background: var(--input);
+}
+.task-description-editor:has(textarea:focus-visible) {
+  border-color: var(--primary);
+}
+.task-description-editor nav {
+  display: flex;
+  gap: 4px;
+  padding: 4px;
+  border-bottom: 1px solid var(--border);
+  background: var(--surface);
+}
+.task-description-editor nav button {
+  min-height: 36px;
+  padding: 4px 12px;
+  border-radius: 6px;
+  font-size: 13px;
+  color: var(--muted);
+}
+.task-description-editor nav button[aria-pressed="true"] {
+  background: var(--primary-soft);
+  color: var(--primary-text);
+}
+.task-description-editor textarea {
+  display: block;
+  width: 100%;
+  min-height: 180px;
+  max-height: 420px;
+  resize: none;
+  padding: 14px 16px;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+  font-size: 14px;
+  line-height: 1.6;
+}
+.task-description-editor textarea:focus-visible {
+  outline: none;
+  outline-offset: 0;
+}
+.task-description-preview {
+  min-height: 180px;
+  max-height: 420px;
+  overflow: auto;
+  padding: 14px 16px;
+}
+.task-form {
+  display: grid;
+  gap: 20px;
+}
+.task-form-main,
+.task-form-meta {
+  display: grid;
+  align-content: start;
+  gap: 18px;
+  min-width: 0;
+}
+.task-form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  border-top: 1px solid var(--border);
+  padding-top: 16px;
+}
+.task-description-help {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: 12px;
+  color: var(--muted);
+}
+.task-description-help button {
+  min-height: 32px;
+  color: var(--primary-text);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.task-format-guide {
+  display: grid;
+  gap: 8px;
+  padding: 12px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  font-size: 12px;
+  color: var(--muted);
+}
+.task-format-guide span {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.task-format-guide code {
+  color: var(--fg);
+  font-size: 12px;
+}
+@media (min-width: 640px) {
+  .sheet.task-sheet {
+    max-width: min(680px, calc(100vw - 48px));
+  }
+}
+@media (min-width: 1100px) {
+  .sheet.task-sheet {
+    max-width: 960px;
+  }
+  .task-form {
+    grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr);
+    column-gap: 28px;
+  }
+  .task-form-meta {
+    border-left: 1px solid var(--border);
+    padding-left: 28px;
+  }
+  .task-form-meta > .grid.grid-cols-2 {
+    grid-template-columns: 1fr;
+  }
+  .task-form-actions {
+    grid-column: 1/-1;
+  }
+  .task-description-editor textarea,
+  .task-description-preview {
+    min-height: 290px;
+  }
+}
+@media (max-width: 639px) {
+  .task-form {
+    gap: 18px;
+  }
+  .task-form-main,
+  .task-form-meta {
+    gap: 16px;
+  }
+  .task-form-actions button {
+    flex: 1;
+  }
+  .task-description-editor nav button {
+    min-height: 40px;
+  }
+}
+.label-color-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.label-color-option {
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  display: grid;
+  place-items: center;
+  border: 2px solid transparent;
+}
+.label-color-option[aria-pressed="true"] {
+  outline: 2px solid var(--primary-text);
+  outline-offset: 2px;
+}
+
+.task-label-choice {
+  min-height: 30px;
+  max-width: 100%;
+  padding: 4px 11px;
+  border-radius: 999px;
+  border: 1px dashed color-mix(in oklab, var(--label-color) 55%, var(--muted));
+  background: color-mix(in oklab, var(--label-color) 6%, transparent);
+  color: var(--fg);
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 1.3;
+  overflow-wrap: anywhere;
+  opacity: 0.72;
+  transition:
+    background-color 140ms ease,
+    border-color 140ms ease,
+    opacity 140ms ease;
+}
+.task-label-choice[aria-pressed="true"] {
+  background: var(--label-color);
+  border-style: solid;
+  border-color: var(--label-color);
+  color: var(--label-ink);
+  opacity: 1;
+}
+.task-label-choice:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 3px;
+}
+@media (hover: hover) {
+  .task-label-choice:hover {
+    opacity: 1;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .task-label-choice {
+    transition: none;
+  }
+}
+
+/* Compact task surfaces and quiet controls; scoped to cards in both boards. */
+article.task-card {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 14px;
+  border: 1px solid var(--card-border);
+  border-radius: 12px;
+  background: var(--surface);
+  box-shadow: 0 2px 6px -4px rgb(15 20 28 / 0.16);
+  backdrop-filter: none;
+}
+.dark article.task-card {
+  background: #181c21;
+}
+article.task-card-active {
+  border-color: var(--primary);
+}
+article.task-card-dragging {
+  box-shadow: var(--sh-pop);
+}
+.task-card-title {
+  flex: 1;
+  min-width: 0;
+  min-height: 32px;
+  text-align: left;
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1.45;
+  overflow-wrap: anywhere;
+}
+.task-card-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 10px;
+  font-size: 12px;
+  color: var(--muted);
+}
+.task-card-meta .task-card-avatar {
+  width: 22px;
+  height: 22px;
+  font-size: 9px;
+}
+.task-card-meta .num {
+  white-space: nowrap;
+}
+.task-card-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border-top: 1px solid var(--border);
+  padding-top: 8px;
+  margin-top: 2px;
+}
+.task-card-actions .choice-picker {
+  flex: 1;
+  min-width: 0;
+}
+.task-card-actions .choice-picker-trigger {
+  min-height: 36px;
+  padding: 6px 9px;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  background: var(--surface-2);
+  font-size: 12px;
+  color: var(--muted);
+}
+.task-card-actions .task-card-timer {
+  height: 36px;
+  padding: 0 10px;
+  font-size: 12px;
+  gap: 6px;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  background: var(--primary-soft);
+  color: var(--primary-text);
+}
+.task-card-actions .task-card-timer:disabled {
+  opacity: 0.5;
+}
+.task-card-drag-handle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 22px;
+  min-height: 32px;
+  margin-left: -4px;
+  cursor: grab;
+  touch-action: none;
+  border-radius: 6px;
+  color: var(--muted);
+}
+.task-card-drag-handle:active {
+  cursor: grabbing;
+}
+@media (hover: hover) {
+  .task-card-actions .choice-picker-trigger:hover {
+    color: var(--fg);
+    background: var(--hover);
+  }
+  .task-card-actions .task-card-timer:hover {
+    background: color-mix(in oklab, var(--primary) 18%, var(--surface));
+  }
+}
+@media (pointer: coarse) {
+  .task-card-title,
+  .task-card-drag-handle {
+    min-height: 44px;
+  }
+  .task-card-actions .choice-picker-trigger,
+  .task-card-actions .task-card-timer {
+    min-height: 44px;
+    height: auto;
+  }
+}

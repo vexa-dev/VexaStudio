@@ -1,0 +1,942 @@
+.hours-workspace {
+  max-width: 1440px;
+  margin-inline: auto;
+}
+.hours-nav {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin-bottom: 24px;
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 10px;
+}
+.hours-nav button {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 44px;
+  padding: 10px 15px;
+  border-radius: 10px;
+  font-size: 13px;
+  color: var(--muted);
+}
+.hours-nav button[aria-current] {
+  background: var(--primary-soft);
+  color: var(--primary-text);
+  font-weight: 600;
+}
+.hours-nav button:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+}
+.hours-nav button span {
+  border-radius: 5px;
+  padding: 1px 6px;
+  background: var(--surface-2);
+  font-size: 11px;
+}
+.hours-register-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr);
+  gap: 18px;
+  margin-bottom: 24px;
+}
+.hours-workspace h2 {
+  font-family: var(--font-display);
+  font-size: 16px;
+  font-weight: 600;
+}
+.hours-section-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+.hours-timer-card form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.hours-timer-card form > button {
+  align-self: flex-start;
+}
+.hours-timer-number {
+  font-family: var(--font-display);
+  font-size: 48px;
+  margin: 24px 0 10px;
+}
+.hours-timer-card > button {
+  margin-top: 18px;
+}
+.hours-help {
+  font-size: 12px;
+  color: var(--muted);
+  line-height: 1.6;
+  margin: 10px 0;
+}
+.hours-manual-card {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 14px;
+}
+.hours-manual-card > svg {
+  color: var(--primary-text);
+}
+.hours-manual-card > p {
+  font-size: 13px;
+  color: var(--muted);
+  line-height: 1.7;
+  max-width: 36ch;
+}
+.hours-entry {
+  display: flex;
+  gap: 16px;
+  padding: 18px 0;
+  align-items: center;
+}
+.hours-entry + .hours-entry {
+  border-top: 1px solid var(--border);
+}
+.hours-entry:first-child {
+  padding-top: 0;
+}
+.hours-entry:last-child {
+  padding-bottom: 0;
+}
+.hours-entry-main {
+  flex: 1;
+  min-width: 0;
+}
+.hours-entry-heading {
+  display: flex;
+  gap: 16px;
+  justify-content: space-between;
+}
+.hours-entry-heading h3 {
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 1.6;
+  overflow-wrap: anywhere;
+}
+.hours-entry-heading > strong {
+  flex-shrink: 0;
+  font-size: 16px;
+  font-weight: 600;
+}
+.hours-entry-meta {
+  font-size: 11px;
+  line-height: 1.7;
+  color: var(--muted);
+  margin-top: 5px;
+}
+.hours-entry-tags {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 9px;
+  margin-top: 8px;
+}
+.hours-entry-tags > span:last-child {
+  font-size: 10px;
+  color: var(--muted);
+}
+.hours-entry-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.hours-evidence {
+  display: inline-block;
+  font-size: 12px;
+  color: var(--primary-text);
+  margin-top: 10px;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.hours-review-note {
+  font-size: 12px;
+  margin-top: 10px;
+  padding: 10px 12px;
+  background: var(--warning-soft);
+  border-radius: 8px;
+  color: var(--warning);
+  line-height: 1.6;
+}
+.hours-filters {
+  display: grid;
+  grid-template-columns: 2fr 1fr 1fr 1fr;
+  gap: 12px;
+}
+.hours-month-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 20px;
+}
+.hours-summary-stats {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 14px;
+  margin-bottom: 18px;
+}
+.hours-summary-stats .glass-card {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.hours-summary-stats span {
+  font-size: 12px;
+  color: var(--muted);
+}
+.hours-summary-stats strong {
+  font-size: 28px;
+  font-family: var(--font-display);
+  font-weight: 500;
+}
+.hours-charts-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px;
+}
+.hours-charts-grid > .glass-card {
+  min-width: 0;
+}
+.hours-chart {
+  display: flex;
+  gap: 4px;
+  height: 174px;
+  margin-top: 24px;
+}
+.hours-chart-column {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-width: 0;
+  gap: 8px;
+}
+.hours-chart-track {
+  height: 144px;
+  display: flex;
+  align-items: flex-end;
+  border-bottom: 1px solid var(--border);
+}
+.hours-chart-track > span {
+  width: 100%;
+  min-height: 0;
+  border-radius: 3px 3px 0 0;
+  background: var(--primary);
+}
+.hours-chart-column > span {
+  font-size: 9px;
+  color: var(--muted);
+  text-align: center;
+}
+.hours-chart-data {
+  margin-top: 14px;
+  font-size: 12px;
+  color: var(--muted);
+}
+.hours-chart-data summary {
+  cursor: pointer;
+  min-height: 44px;
+  align-content: center;
+}
+.hours-chart-data ul {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+@media (max-width: 900px) {
+  .hours-register-grid,
+  .hours-charts-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .hours-filters {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .hours-entry {
+    flex-wrap: wrap;
+  }
+  .hours-entry-actions {
+    flex-basis: 100%;
+  }
+}
+@media (max-width: 540px) {
+  .hours-summary-stats {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+  }
+  .hours-nav {
+    gap: 4px;
+  }
+  .hours-nav button {
+    padding: 9px 10px;
+    font-size: 12px;
+  }
+  .hours-nav button svg {
+    width: 14px;
+  }
+  .hours-month-heading {
+    flex-wrap: wrap;
+  }
+  .hours-filters {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .hours-chart {
+    gap: 2px;
+  }
+  .hours-chart-data ul {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+/* Compact workspace refinements. */
+.hours-page-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 20px;
+}
+.hours-page-header h1 {
+  font-family: var(--font-display);
+  font-size: 28px;
+  font-weight: 600;
+  letter-spacing: -0.04em;
+}
+.hours-page-header p {
+  font-size: 13px;
+  color: var(--muted);
+  margin-top: 5px;
+}
+.hours-nav {
+  flex-wrap: nowrap;
+  gap: 5px;
+}
+.hours-nav button {
+  white-space: nowrap;
+}
+.hours-register-grid {
+  align-items: start;
+  grid-template-columns: minmax(0, 1.55fr) minmax(0, 1fr);
+}
+.hours-auto-textarea {
+  resize: none;
+  min-height: 64px;
+  height: 64px;
+  overflow: hidden;
+  line-height: 21px;
+}
+.hours-manual-card {
+  justify-content: flex-start;
+  gap: 16px;
+  background: var(--metric-surface);
+  border-color: var(--metric-border);
+}
+.hours-manual-heading {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+.hours-manual-icon {
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  background: var(--primary-soft);
+  color: var(--primary-text);
+}
+.hours-eyebrow {
+  font-size: 10px;
+  color: var(--muted);
+  display: block;
+  margin-bottom: 4px;
+}
+.hours-manual-card h2 {
+  font-size: 15px;
+}
+.hours-manual-steps {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  font-size: 11px;
+  color: var(--muted);
+}
+.hours-manual-card > button {
+  align-self: stretch;
+  margin-top: 4px;
+  justify-content: space-between;
+}
+.hours-entry {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 128px;
+  gap: 12px;
+  padding: 12px 0;
+}
+.hours-entry-open {
+  display: grid;
+  grid-template-columns:
+    minmax(0, 2fr) minmax(0, 1.2fr) minmax(0, 1.25fr)
+    minmax(0, 0.9fr) 65px;
+  align-items: center;
+  gap: 16px;
+  text-align: left;
+  width: 100%;
+  min-height: 44px;
+  border-radius: 6px;
+}
+.hours-entry-open:hover .hours-row-title {
+  color: var(--primary-text);
+}
+.hours-entry-open:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 4px;
+}
+.hours-row-title {
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+.hours-entry-open small {
+  display: block;
+  font-size: 10px;
+  font-weight: 400;
+  color: var(--muted);
+  margin-top: 4px;
+  line-height: 1.4;
+}
+.hours-row-project,
+.hours-row-date {
+  font-size: 11px;
+  color: var(--muted);
+  line-height: 1.5;
+}
+.hours-row-project strong {
+  display: block;
+  font-weight: 500;
+  color: var(--fg);
+}
+.hours-row-status > span {
+  font-size: 10px;
+  padding: 3px 7px;
+}
+.hours-row-duration {
+  font-size: 14px;
+  font-weight: 600;
+  text-align: right;
+  white-space: nowrap;
+}
+.hours-entry-actions {
+  justify-content: flex-end;
+  gap: 0;
+  flex-wrap: nowrap;
+}
+.hours-entry-actions button {
+  font-size: 11px;
+  padding-inline: 8px;
+  min-height: 44px;
+}
+.hours-table-labels {
+  display: grid;
+  grid-template-columns:
+    minmax(0, 2fr) minmax(0, 1.2fr) minmax(0, 1.25fr)
+    minmax(0, 0.9fr) 65px 128px;
+  gap: 16px;
+  font-size: 10px;
+  color: var(--muted);
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 10px;
+  margin-bottom: 2px;
+}
+.hours-table-labels > span:nth-last-child(-n + 2) {
+  text-align: right;
+}
+.hours-chart-period {
+  font-size: 12px;
+  color: var(--primary-text);
+  margin-top: 5px;
+}
+.hours-charts-grid {
+  align-items: start;
+}
+.hours-detail {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+.hours-detail h3 {
+  font-family: var(--font-display);
+  font-size: 18px;
+  font-weight: 600;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+.hours-detail-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.hours-detail-heading > strong {
+  font-family: var(--font-display);
+  font-size: 28px;
+  font-weight: 500;
+}
+.hours-detail-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+.hours-detail-grid dt {
+  font-size: 11px;
+  color: var(--muted);
+  margin-bottom: 5px;
+}
+.hours-detail-grid dd {
+  font-size: 13px;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+.hours-detail-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  border-top: 1px solid var(--border);
+  padding-top: 16px;
+}
+.hours-clarify-form {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.hours-picker {
+  position: relative;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.hours-picker-label {
+  font-size: 13px;
+  font-weight: 500;
+}
+.hours-picker-trigger {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-height: 44px;
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid var(--control-border);
+  border-radius: 9px;
+  background: var(--input);
+  color: var(--fg);
+  font-size: 13px;
+  text-align: left;
+}
+.hours-picker-trigger > span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.hours-picker-trigger svg {
+  flex-shrink: 0;
+  color: var(--muted);
+}
+.hours-picker-trigger:focus-visible,
+.hours-picker-popup button:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+}
+.hours-picker-popup {
+  position: absolute;
+  z-index: 40;
+  top: calc(100% + 6px);
+  left: 0;
+  min-width: 100%;
+  width: max-content;
+  max-width: min(300px, calc(100vw - 48px));
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  box-shadow: var(--sh-pop);
+  padding: 8px;
+}
+.hours-choice-options {
+  display: flex;
+  flex-direction: column;
+  max-height: 260px;
+  overflow: auto;
+  min-width: 180px;
+}
+.hours-choice-options button {
+  text-align: left;
+  padding: 10px;
+  min-height: 44px;
+  font-size: 13px;
+  border-radius: 7px;
+}
+.hours-picker-popup button:hover {
+  background: var(--hover);
+}
+.hours-picker-popup button[aria-pressed="true"] {
+  background: var(--primary-soft);
+  color: var(--primary-text);
+  font-weight: 600;
+}
+.hours-picker-popup button:disabled {
+  opacity: 0.3;
+  cursor: default;
+}
+.hours-calendar {
+  width: 270px;
+  max-width: 100%;
+}
+.hours-calendar-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+  margin-bottom: 8px;
+}
+.hours-calendar-heading button {
+  width: 36px;
+  height: 36px;
+  display: grid;
+  place-items: center;
+  border-radius: 7px;
+}
+.hours-calendar-days {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 2px;
+}
+.hours-calendar-days > span {
+  font-size: 10px;
+  color: var(--muted);
+  text-align: center;
+  padding-block: 6px;
+}
+.hours-calendar-days button {
+  font-size: 12px;
+  min-height: 36px;
+  border-radius: 7px;
+}
+.hours-calendar-months {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 4px;
+}
+.hours-calendar-months button {
+  min-height: 44px;
+  padding: 6px 3px;
+  font-size: 11px;
+  border-radius: 7px;
+}
+.hours-calendar-footer {
+  display: flex;
+  justify-content: space-between;
+  border-top: 1px solid var(--border);
+  margin-top: 8px;
+  padding-top: 6px;
+}
+.hours-calendar-footer button {
+  min-height: 36px;
+  padding: 6px 10px;
+  font-size: 12px;
+  color: var(--primary-text);
+  border-radius: 7px;
+}
+.hours-month-heading .hours-picker-popup {
+  left: auto;
+  right: 0;
+}
+@media (max-width: 1100px) {
+  .hours-entry-open {
+    gap: 10px;
+    grid-template-columns:
+      minmax(0, 1.8fr) minmax(0, 1fr) minmax(0, 1.1fr)
+      85px 55px;
+  }
+  .hours-table-labels {
+    gap: 10px;
+    grid-template-columns:
+      minmax(0, 1.8fr) minmax(0, 1fr) minmax(0, 1.1fr)
+      85px 55px 110px;
+  }
+  .hours-entry {
+    grid-template-columns: minmax(0, 1fr) 110px;
+    gap: 10px;
+  }
+}
+@media (max-width: 900px) {
+  .hours-register-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .hours-manual-steps {
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 8px 16px;
+  }
+}
+@media (max-width: 767px) {
+  .hours-table-labels {
+    display: none;
+  }
+  .hours-entry {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 4px;
+    padding: 12px 0;
+  }
+  .hours-entry-open {
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 6px 12px;
+  }
+  .hours-row-title {
+    grid-column: 1;
+    grid-row: 1;
+  }
+  .hours-row-duration {
+    grid-column: 2;
+    grid-row: 1;
+  }
+  .hours-row-project {
+    grid-column: 1;
+    grid-row: 2;
+  }
+  .hours-row-project strong {
+    display: inline;
+    margin-right: 6px;
+  }
+  .hours-row-status {
+    grid-column: 2;
+    grid-row: 2;
+  }
+  .hours-row-date {
+    grid-column: 1 / -1;
+    grid-row: 3;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .hours-row-date small {
+    margin: 0;
+  }
+  .hours-entry-actions {
+    flex-basis: auto;
+    justify-content: flex-end;
+  }
+  .hours-row-title small {
+    display: none;
+  }
+  .hours-entry-actions button {
+    min-height: 36px;
+  }
+  .hours-page-header {
+    align-items: flex-start;
+    gap: 12px;
+  }
+  .hours-page-header > div {
+    flex: 1;
+  }
+  .hours-page-header > button {
+    width: 44px;
+    height: 44px;
+    padding: 0;
+    flex-shrink: 0;
+  }
+  .hours-page-header > button span {
+    display: none;
+  }
+  .hours-page-header h1 {
+    font-size: 26px;
+  }
+  .hours-nav {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 2px;
+    margin-bottom: 18px;
+  }
+  .hours-nav button {
+    justify-content: center;
+    padding: 9px 4px;
+    gap: 4px;
+    font-size: 11px;
+  }
+  .hours-nav button > svg {
+    display: none;
+  }
+  .hours-nav button span {
+    font-size: 9px;
+    padding: 0 4px;
+  }
+  .hours-section-heading {
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+  .hours-section-heading h2 {
+    font-size: 15px;
+  }
+  .hours-detail-actions > button {
+    flex: 1;
+  }
+  .hours-picker-popup {
+    max-width: calc(100vw - 48px);
+  }
+}
+
+.hours-timer-card.is-running {
+  background: var(--metric-surface);
+  border-color: var(--metric-border);
+}
+.hours-timer-context {
+  font-size: 13px;
+  color: var(--muted);
+  line-height: 1.6;
+}
+.hours-timer-card.is-running .hours-timer-number {
+  font-size: clamp(36px, 5vw, 52px);
+  letter-spacing: -0.04em;
+  margin-top: 18px;
+}
+@media (max-width: 767px) {
+  .hours-entry {
+    position: relative;
+    display: block;
+  }
+  .hours-entry-open {
+    gap: 4px 12px;
+  }
+  .hours-row-status {
+    grid-column: 1;
+    grid-row: 4;
+    justify-self: start;
+  }
+  .hours-row-date {
+    grid-column: 1;
+    grid-row: 3;
+    flex-wrap: wrap;
+    gap: 3px 7px;
+  }
+  .hours-entry-actions {
+    position: absolute;
+    right: 0;
+    bottom: 12px;
+  }
+  .hours-entry-actions button {
+    min-height: 44px;
+  }
+  .hours-row-title {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+}
+
+.hours-workspace .sheet {
+  background: var(--surface);
+}
+
+.hours-prepared-work {
+  padding: 10px 12px;
+  border-radius: 9px;
+  background: var(--primary-soft);
+  color: var(--primary-text);
+  font-size: 12px;
+  line-height: 1.6;
+}
+.hours-prepared-work a {
+  display: inline-flex;
+  margin-left: 6px;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.hours-prepared-task {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px;
+  font-size: 12px;
+  color: var(--muted);
+}
+.hours-prepared-project {
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.hours-completed-panel {
+  min-width: 0;
+}
+.hours-completed-panel > .border-dashed {
+  padding: 24px 16px;
+}
+.hours-completed-panel > form {
+  display: grid;
+  gap: 1rem;
+}
+.hours-draft-list {
+  display: grid;
+}
+.hours-draft-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 6rem;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.8rem 0;
+  border-bottom: 1px solid var(--color-border);
+}
+.hours-draft-row > label {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  min-width: 0;
+  min-height: 44px;
+}
+.hours-draft-row input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+  accent-color: var(--color-primary);
+}
+.hours-draft-row strong {
+  display: block;
+  font-size: 0.875rem;
+  overflow-wrap: anywhere;
+}
+.hours-draft-row small {
+  display: block;
+  color: var(--color-muted);
+  margin-top: 0.25rem;
+}
+.hours-draft-row > div > label {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+}
+.hours-draft-confirm {
+  display: grid;
+  gap: 1rem;
+  padding-top: 1rem;
+}
+.hours-draft-confirm textarea {
+  resize: none;
+}
+@media (max-width: 40rem) {
+  .hours-draft-row {
+    gap: 0.5rem;
+    grid-template-columns: minmax(0, 1fr) 5rem;
+  }
+}

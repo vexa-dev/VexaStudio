@@ -52,3 +52,6 @@ playwright-report/
 *.exe
 *.dll
 *.pdb
+
+# Capturas de revisión visual local
+design-preview/

@@ -1,14 +1,7 @@
-# VEXA Studio · Observatorio
+# VEXA Studio
 
-Demo interactiva local para el equipo VEXA: proyectos, sprints, tareas, horas y gastos. Interfaz liquid glass con un símbolo V tridimensional, temas oscuro/claro y movimiento adaptable.
-
-## Integración con la aplicación existente
-
-La resolución del PR #5 integra `main` sin sustituir sus flujos F1–F2. La aplicación principal conserva el acceso simulado de socios, los servicios mock, permisos, dashboard de participación, proyectos, tablero kanban, Mis tareas, horas, perfil y las pantallas previstas de gastos/equipo. Adopta los colores y tipografía Observatorio, navegación de cristal y núcleo 3D en el dashboard.
-
-La demo original de cuatro rutas se conserva en `/observatorio/`, con acceso desde la navegación de la aplicación. Sus datos (`vexa.observatorio.v1`) son independientes del mock principal: el reinicio de la demo no reemplaza los registros del equipo. Comparte la preferencia de tema con la aplicación; sus estilos se aíslan mediante `@scope` para evitar colisiones entre componentes. No se han incorporado las ramas F3/F4 que todavía no forman parte de `main`.
-
-`src/App.tsx` y `src/main.tsx` mantienen el router y los proveedores principales. `src/ObservatorioApp.tsx` contiene la demo; `src/index.css` define el sistema compartido y `src/observatorio.css` sus patrones propios. Se combinan las dependencias y las 63 pruebas de ambas líneas de trabajo.
+Interfaz del espacio de trabajo del equipo, con datos simulados y temas claro/oscuro.
+Usa los logos oficiales, paleta grafito/blanco hielo con acento azul acero, superficies de cristal, fondo lineal sutil, navegación líquida y la mascota robot v3.
 
 ## Desarrollo
 
@@ -16,62 +9,56 @@ Requiere Node.js 22.12 o superior y npm.
 
 ```powershell
 npm ci
-npm run dev
+npm run dev -- --host 127.0.0.1 --port 5173
 ```
 
 ```powershell
+npm run typecheck
 npm run lint
 npm test
 npm run build
 npm run preview
 ```
 
-## Qué puedes probar
+## Vistas
 
-- Resumen con progreso, horas y gastos calculados a partir de los registros.
-- Proyectos: crear, editar, buscar, filtrar y configurar el sprint; añadir tareas y cambiar su estado.
-- Horas: registro manual en minutos o un temporizador global con pausa, continuación y guardado. El temporizador sobrevive a navegación y recarga, y redondea al siguiente minuto al guardarse. Una sesión admite hasta 24 horas; puedes descartarla con confirmación y registrar sesiones manuales separadas.
-- Gastos: crear y editar registros por proyecto, fecha y categoría; importes en PEN con dos decimales.
-- Preferencias: alternar temas, reducir efectos y restaurar ejemplos o comenzar con un espacio vacío. Reiniciar reemplaza los datos locales y el temporizador, con confirmación previa.
-
-## Datos y límites
-
-**Es una demo.** Los ejemplos y tus cambios se guardan solo en este navegador bajo `vexa.observatorio.v1`; no hay cuentas, sincronización ni conexión a datos reales. Usa fechas de Perú (`America/Lima`). No abras la demo simultáneamente en varias pestañas para editar: cada pestaña mantiene su propia sesión y la última escritura puede reemplazar cambios de otra.
-
-Si localStorage está bloqueado o lleno, la interfaz avisa que los cambios durarán únicamente durante la sesión. Si los datos guardados tienen JSON inválido, una versión desconocida o referencias incompatibles, se cargan ejemplos con un aviso. Las preferencias se guardan por separado.
-
-Supabase se mantiene preparado en `src/lib/supabase.ts`. Su configuración es opcional para esta demo:
-
-```env
-VITE_SUPABASE_URL=https://your-project.supabase.co
-VITE_SUPABASE_ANON_KEY=your-supabase-anon-key
-```
-
-Usa `.env.local`, que Git excluye, y conserva `.env.example` como plantilla. No coloques claves privadas en variables `VITE_`: se incorporan al cliente.
+- Inicio: tareas por atender, gastos pendientes, proyectos activos, horas personales, participación y avance compacto del equipo.
+- Mi día: plan diario de hasta tres prioridades (tareas o actividades libres), meta diaria y acceso a Tareas, resumen del día, daily desplegable con autoguardado e historial local, y foco configurable que continúa entre pantallas.
+- Proyectos y tablero: organización de proyectos, sprints y tareas.
+- Tareas: kanban personal sincronizado, administración de asignaciones y reloj persistente con pausas. Horas: borradores de tareas terminadas, selección múltiple y confirmación de un total distribuido.
+- Gastos y Equipo: vistas interactivas con datos de ejemplo.
+- Perfil: información del socio que inició la sesión simulada.
 
 ## Arquitectura
 
-React 19, TypeScript, React Router, Vite y Tailwind. Formularios con React Hook Form y Zod; animación con Motion; geometría, material físico y reflejos locales con Three.js/React Three Fiber. Sora e IBM Plex Sans se sirven desde paquetes locales, sin peticiones a proveedores de fuentes.
+El repositorio usa npm workspaces y un único `package-lock.json`:
 
-- `src/domain.ts`: esquemas, datos de ejemplo, totales, tiempo y persistencia validada.
-- `src/demo.ts` y `src/store.tsx`: contexto, acciones y avisos de almacenamiento.
-- `src/pages/`: las cuatro pantallas; módulos de trabajo cargados por separado.
-- `src/components/`: formularios, diálogos, temporizador y núcleo 3D.
-- `src/index.css`: tokens, materiales, temas, estados y adaptación.
-- `PRODUCT.md` y `DESIGN.md`: contexto del producto y sistema visual compartidos.
+- `apps/web`: aplicación React/Vite, pantallas, estilos, PWA y adaptadores de navegador.
+- `packages/domain`: tipos, reglas, fechas de Lima, formatos, prioridad de tareas y lógica de foco.
+- `packages/services`: contratos asíncronos compartidos; las implementaciones actuales están en la web.
+- `apps/desktop` y `apps/mobile`: espacios reservados con instrucciones; todavía no son aplicaciones.
 
-El 3D se carga en un chunk separado. Ese chunk supera 500 kB minificado y Vite informa el aviso; su carga se difiere y la interfaz funciona antes de que termine. La PWA precarga recursos de aplicación y fuentes en producción. WebGL tiene alternativa SVG; reducir efectos sustituye el canvas por SVG. Las animaciones respetan la preferencia del sistema y el render se pausa fuera de vista o con la pestaña oculta.
+Los comandos de desarrollo, pruebas y build se ejecutan desde la raíz. Para revisar los límites usa `npm run check:boundaries`. Las decisiones, revisión de código y guía para añadir funcionalidades están en [docs/arquitectura.md](docs/arquitectura.md).
 
-La escena Three.js modifica objetos externos al estado de React: Oxlint desactiva `react/immutability` solo para ese componente. La tabla desplazable tiene foco de teclado: `no-noninteractive-tabindex` admite su sección solo en la página de registros.
+El alias `@/` apunta a `apps/web/src`; los paquetes se importan mediante `@vexa/domain/<módulo>` y `@vexa/services`. Los tokens visuales y componentes permanecen en la web hasta que exista una segunda interfaz que los comparta.
 
-## Git y herramientas locales
+La configuración opcional de Supabase está en `apps/web/src/lib/supabase.ts`. Crea `apps/web/.env.local` usando `apps/web/.env.example`; sus valores son públicos de cliente. La aplicación sigue usando datos simulados y no conecta datos remotos.
 
-Se comparten instrucciones/configuraciones de agentes, `PRODUCT.md`, `DESIGN.md`, `.impeccable/config.json` y `.impeccable/design.json`. Los paquetes de skills instaladas, configuraciones locales, cachés, binarios, capturas y reportes generados se excluyen sin borrarse del equipo.
+Vercel se configura con la **raíz del repositorio**, `npm ci`, `npm run build` y salida `apps/web/dist`, definidos en `vercel.json`. No cambiar la raíz de Vercel a `apps/web`, porque necesita acceder a los paquetes compartidos. `npm run preview` sirve esa misma compilación.
 
-## Validación
+## Diseño y acceso
 
-Vitest cubre esquemas, totales monetarios, progreso, datos inválidos, almacenamiento bloqueado y el cálculo del temporizador tras pausa/continuación/recarga. La revisión manual cubre creación de proyecto y tarea, edición de sprint y horas, cambios de estado, temporizador global, creación/edición de gastos, estados vacíos, reinicio y ambos temas en escritorio/móvil. También se comprobó reflujo a 720 px, nombres accesibles de la navegación compacta y la alternativa SVG al desactivar efectos. Las capturas de revisión quedan en `.impeccable/review/`, excluidas de Git.
+El sistema vigente se documenta en `DESIGN.md` y los compromisos de producto en `PRODUCT.md`.
+Solo se conserva la imagen activa de mascota en `apps/web/public/mascot/vexa-robot.png`.
+Para explorar la aplicación, entra desde uno de los cuatro perfiles de demo.
+El formulario de correo/contraseña y recuperación muestra avisos de conexión pendiente.
 
-Pendiente de comprobar en un navegador de escritorio real: zoom al 200 %, preferencia de movimiento reducido del sistema y WebGL deshabilitado. Sus mecanismos están implementados y revisados en código; esta sesión no simuló esas condiciones del entorno. La revisión visual independiente confirmó la composición tras corregir el encabezado del resumen.
+Horas incluye confirmación agrupada de tareas y registro sin tarea (actividad, proyecto y respaldo), historial con filtros, resumen mensual con gráficos en Lima y revisión por otro socio. Las correcciones reabren la revisión y se auditan. El historial previo permanece intacto; sus entradas sin horario fiable se excluyen del gráfico horario. Todo funciona en los servicios mock y localStorage.
 
-No hay despliegue realizado. Autenticación, RLS, adjuntos y sincronización Supabase pertenecen a la siguiente fase.
+
+Proyectos y tareas: creación y asignación solo por admin; la membresía de un proyecto es independiente de recibir una tarea. Los colaboradores consultan únicamente proyectos de los que son miembros y mueven sus tareas desde el tablero personal. El mock añade un perfil Alex para probar estos permisos sin modificar los cuatro socios existentes.
+
+El reloj vive en Tareas y persiste instantes/segmentos, recuperando el tiempo tras cerrar la página sin contar pausas. Sonido horario optativo mientras el navegador puede ejecutar JavaScript; al volver se informa una hora pendiente con opción de pausar. Una alarma con el navegador cerrado requiere infraestructura de notificaciones posterior. Finalizar reloj/tarea prepara un borrador; confirmar en Horas lo envía a revisión y entonces aparece en historial/resúmenes.
+
+
+Las tareas admiten descripciones Markdown con vista previa y etiquetas por proyecto. Admin gestiona nombre/color desde **Proyecto → Etiquetas** y marca etiquetas al crear o editar tareas. Colaboradores consultan contenido y etiquetas adjuntas, incluso en asignaciones de proyectos externos. Todos los selectores de opciones usan el menú temático compartido.

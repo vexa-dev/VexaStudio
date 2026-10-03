@@ -1,0 +1,383 @@
+@import "tailwindcss";
+
+/* El modo oscuro se activa con la clase `dark` en <html> (ver ThemeProvider). */
+@custom-variant dark (&:where(.dark, .dark *));
+
+/*
+ * Paleta definida en colors.css y glass.css: grafito, blanco hielo y azul acero.
+ * El modo claro es una derivación. Botones y texto de acento usan variantes que cumplen contraste AA (4.5:1).
+ */
+:root {
+  --bg: #edf1f5;
+  --surface: #f9fbfd;
+  --surface-2: #e5edf4;
+  --fg: #1b2a3b;
+  --muted: #526174;
+  --border: #d3dbe6;
+  --segment: #cbd5e1;
+  --primary: #9be7f2;
+  --primary-solid: #176278;
+  --primary-fg: #ffffff;
+  --primary-text: #176278;
+  --primary-soft: rgb(23 98 120 / 0.12);
+  --danger: #b91c1c;
+  --warning: #92400e;
+  --success: #166534;
+  --sh-card: 0 1px 2px rgb(15 23 42 / 0.06), 0 1px 1px rgb(15 23 42 / 0.04);
+  --sh-pop:
+    0 12px 28px -10px rgb(15 23 42 / 0.28), 0 2px 6px rgb(15 23 42 / 0.08);
+  color-scheme: light;
+}
+
+.dark {
+  --bg: #0c1017;
+  --surface: #141b26;
+  --surface-2: #1d2838;
+  --fg: #e8edf4;
+  --muted: #9aa9bc;
+  --border: rgb(255 255 255 / 0.1);
+  --segment: rgb(255 255 255 / 0.16);
+  --primary: #9be7f2;
+  --primary-solid: #9be7f2;
+  --primary-fg: #0c1017;
+  --primary-text: #9be7f2;
+  --primary-soft: rgb(155 231 242 / 0.15);
+  --danger: #f87171;
+  --warning: #fbbf24;
+  --success: #4ade80;
+  --sh-card: 0 0 0 0 transparent;
+  --sh-pop:
+    0 16px 36px -12px rgb(0 0 0 / 0.7), 0 0 0 1px rgb(255 255 255 / 0.06);
+  color-scheme: dark;
+}
+
+/* Curvas de movimiento (skill animate): ease-out fuerte para entradas y respuestas. */
+:root {
+  --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+  --ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);
+  --ease-drawer: cubic-bezier(0.32, 0.72, 0, 1);
+}
+
+@theme inline {
+  --font-sans: "IBM Plex Sans", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Sora Variable", sans-serif;
+  --color-bg: var(--bg);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-fg: var(--fg);
+  --color-muted: var(--muted);
+  --color-border: var(--border);
+  --color-segment: var(--segment);
+  --color-primary: var(--primary);
+  --color-primary-solid: var(--primary-solid);
+  --color-primary-fg: var(--primary-fg);
+  --color-primary-text: var(--primary-text);
+  --color-primary-soft: var(--primary-soft);
+  --color-danger: var(--danger);
+  --color-warning: var(--warning);
+  --color-success: var(--success);
+  --shadow-card: var(--sh-card);
+  --shadow-pop: var(--sh-pop);
+}
+
+@layer base {
+  html {
+    background: var(--bg);
+    -webkit-tap-highlight-color: transparent;
+    -webkit-text-size-adjust: 100%;
+    overscroll-behavior: none;
+    accent-color: var(--primary);
+    scrollbar-color: var(--segment) transparent;
+  }
+  body {
+    min-width: 320px;
+    min-height: 100dvh;
+    background: var(--bg);
+    color: var(--fg);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+    text-wrap: pretty;
+  }
+  h1,
+  h2,
+  h3 {
+    font-family: var(--font-display);
+    text-wrap: balance;
+  }
+  ::selection {
+    background: var(--primary-soft);
+    color: var(--fg);
+  }
+  input,
+  textarea,
+  select {
+    font-size: 16px;
+    caret-color: var(--primary);
+  }
+  button,
+  a,
+  [role="button"] {
+    touch-action: manipulation;
+  }
+  /* El texto de los controles no se selecciona al mantener pulsado; el contenido sí. */
+  button,
+  [role="button"] {
+    user-select: none;
+    -webkit-user-select: none;
+    -webkit-touch-callout: none;
+  }
+  /* Respuesta inmediata al pulsar (100–160 ms, ease-out). */
+  button:not(:disabled),
+  a[role="button"] {
+    transition-property:
+      transform, background-color, border-color, color, opacity;
+    transition-duration: 140ms;
+    transition-timing-function: var(--ease-out);
+  }
+  button:not(:disabled):active,
+  a[role="button"]:active {
+    transform: scale(0.97);
+  }
+  :focus-visible {
+    outline: 2px solid var(--primary);
+    outline-offset: 2px;
+  }
+}
+
+@layer utilities {
+  /* Cifras de datos: alineadas en columnas y sin saltos al animar. */
+  .num {
+    font-family: var(--font-sans);
+    font-variant-numeric: tabular-nums;
+    font-feature-settings: "tnum", "cv11";
+    letter-spacing: -0.02em;
+  }
+}
+
+/* Entrada escalonada de secciones (60 ms entre elementos). Solo opacity + transform. */
+@keyframes enter {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+}
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+}
+@keyframes pop-in {
+  from {
+    opacity: 0;
+    transform: scale(0.96) translateY(-4px);
+  }
+}
+
+/* Hoja modal: sube desde abajo en el celular y aparece en su sitio en escritorio. */
+@keyframes sheet-up {
+  from {
+    opacity: 0;
+    transform: translateY(24px);
+  }
+}
+@keyframes sheet-in {
+  from {
+    opacity: 0;
+    transform: scale(0.97);
+  }
+}
+@keyframes backdrop-in {
+  from {
+    opacity: 0;
+  }
+}
+.sheet[open] {
+  animation: sheet-up 260ms var(--ease-drawer) both;
+}
+.sheet[open]::backdrop {
+  animation: backdrop-in 200ms ease both;
+}
+@media (min-width: 40rem) {
+  .sheet[open] {
+    animation: sheet-in 200ms var(--ease-out) both;
+  }
+}
+
+.enter {
+  animation: enter 360ms var(--ease-out) both;
+  animation-delay: calc(var(--i, 0) * 60ms);
+}
+.pop-in {
+  transform-origin: top right;
+  animation: pop-in 160ms var(--ease-out) both;
+}
+
+/* Movimiento reducido: se conserva el cambio de estado (opacidad), se quita el desplazamiento. */
+@media (prefers-reduced-motion: reduce) {
+  .enter,
+  .pop-in,
+  .sheet[open] {
+    animation: fade-in 200ms ease both;
+    animation-delay: 0ms;
+  }
+  button:not(:disabled):active,
+  a[role="button"]:active {
+    transform: none;
+  }
+}
+
+/* Variables de superficies y controles; el tema actual se define en glass.css. */
+:root {
+  --text: var(--fg);
+  --accent: var(--primary-solid);
+  --accent-ink: var(--primary-fg);
+  --raised: var(--surface-2);
+  --line: var(--border);
+  --hover: #dfeaf0;
+  --input: #fff;
+  --glass: rgba(249, 252, 255, 0.76);
+  --shadow: 0 18px 55px -20px rgba(37, 69, 95, 0.22);
+}
+.dark {
+  --hover: #203041;
+  --input: #111924;
+  --glass: rgba(22, 31, 44, 0.72);
+  --shadow: 0 18px 55px -20px rgba(0, 0, 0, 0.62);
+}
+.integrated-shell {
+  padding-left: 270px;
+}
+.integrated-sidebar {
+  inset: 20px auto 20px 20px;
+  width: 220px;
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  background: var(--glass);
+  backdrop-filter: blur(22px) saturate(125%);
+  box-shadow:
+    var(--shadow),
+    inset 0 1px 0 rgba(255, 255, 255, 0.06);
+}
+.integrated-topbar {
+  margin: 0 30px;
+  background: var(--glass);
+  backdrop-filter: blur(22px);
+}
+.workspace-hero {
+  position: relative;
+  display: flex;
+  align-items: center;
+  min-height: 290px;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 32px;
+  margin-bottom: 28px;
+  background:
+    radial-gradient(
+      ellipse at 76% 52%,
+      rgba(73, 137, 116, 0.12),
+      transparent 50%
+    ),
+    linear-gradient(110deg, var(--surface-2), var(--surface));
+  box-shadow: var(--shadow);
+}
+.workspace-hero h2 {
+  margin: 0 0 14px;
+  font-size: clamp(28px, 3.3vw, 46px);
+  font-weight: 500;
+  line-height: 1.2;
+  letter-spacing: -0.03em;
+}
+.workspace-hero h2 span {
+  color: var(--primary-text);
+}
+.workspace-hero p {
+  color: var(--muted);
+  margin-bottom: 24px;
+}
+.workspace-hero > div:first-child {
+  position: relative;
+  z-index: 1;
+  width: 62%;
+}
+.workspace-core {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 40%;
+  height: 270px;
+}
+.workspace-core .core-canvas,
+.workspace-core .static-core {
+  width: 100%;
+  height: 100%;
+}
+.workspace-action {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 16px;
+  border-radius: 9px;
+  background: var(--primary-solid);
+  color: var(--primary-fg);
+  font-size: 13px;
+  font-weight: 500;
+}
+.workspace-effects {
+  position: absolute;
+  z-index: 2;
+  right: 18px;
+  bottom: 12px;
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  font-size: 12px;
+  color: var(--muted);
+  min-height: 36px;
+}
+@media (max-width: 1023px) {
+  .integrated-shell {
+    padding-left: 0;
+  }
+  .integrated-topbar {
+    margin: 0;
+  }
+  .integrated-mobile-nav {
+    inset: auto 12px 12px;
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    background: var(--glass);
+    backdrop-filter: blur(22px);
+    box-shadow: var(--shadow);
+  }
+}
+@media (max-width: 640px) {
+  .workspace-hero {
+    min-height: 365px;
+    align-items: flex-start;
+    padding: 24px;
+  }
+  .workspace-hero > div:first-child {
+    width: 100%;
+  }
+  .workspace-hero h2 {
+    font-size: 30px;
+  }
+  .workspace-core {
+    top: 145px;
+    width: 180px;
+    height: 175px;
+  }
+  .workspace-hero p {
+    max-width: 23ch;
+  }
+  .workspace-action {
+    margin-top: 64px;
+    font-size: 12px;
+    padding: 12px;
+  }
+  .workspace-effects {
+    bottom: 7px;
+  }
+}
