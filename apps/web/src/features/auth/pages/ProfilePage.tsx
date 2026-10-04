@@ -2,6 +2,7 @@ import { Avatar } from '@/components/ui/Avatar'
 import { Badge } from '@/components/ui/Badge'
 import { Card } from '@/components/ui/Card'
 import { PageHeader } from '@/components/ui/PageHeader'
+import { MyActivity } from '@/features/activity/components/MyActivity'
 import { areaLabel, roleLabel } from '@/lib/labels'
 import { useAuth } from '../hooks/useAuth'
 
@@ -23,6 +24,7 @@ export default function ProfilePage() {
           </div>
         </div>
       </Card>
+      <MyActivity userId={user.id} />
     </>
   )
 }
