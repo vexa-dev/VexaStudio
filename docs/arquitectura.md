@@ -103,3 +103,25 @@ También se quitaron cinco dependencias sin referencias en la aplicación: `@rea
 ## Registro de actividad y Supabase (03/10/2026)
 
 `AuditService` es solo de lectura y vive junto a los demás contratos en `packages/services`; los tipos y el diff de campos son puros y están en `packages/domain/src/audit.ts`. El mock escribe el registro dentro de cada operación de servicio (un `requestId` por operación); Supabase lo hará con triggers. El backend se desarrolla primero en local y el mock sigue siendo la fuente por defecto.
+
+## Conexión web -> Supabase local (Fase D)
+
+**Selección de fuente.** `VITE_DATA_SOURCE` (`mock` por defecto, `supabase`) decide en `apps/web/src/services/index.ts` qué implementación de `Services` se usa. La interfaz no cambia: la UI solo consulta hooks y servicios, y el cliente (`apps/web/src/lib/supabase.ts`) solo lo importan los módulos de `services/`. El flag lo lee un único helper, `services/supabase/data-source.ts`.
+
+**Módulos** (`apps/web/src/services/supabase/`): un adaptador por servicio (`auth`, `members` con `settings`, `projects`, `sprints`, `tasks`, `time`, `dashboard`, `expenses`, `audit`), compuestos en `index.ts` (`createSupabaseServices`). Cada fábrica recibe el cliente, lo que permite probar con un cliente falso (`fake-client.ts`) o con varias sesiones a la vez. `mappers.ts` traduce filas snake_case al dominio (puro y probado), `errors.ts` traduce errores de Postgres a los mensajes que ya mostraba el mock y `database.types.ts` se genera con `supabase gen types typescript --local`. Los permisos los aplica RLS; el adaptador solo reproduce los mensajes del mock.
+
+**Cabeceras del registro de actividad.** El cliente agrega a cada llamada REST `x-request-id` (agrupa las entradas de una operación; las operaciones de varias llamadas comparten el mismo), `x-client` (`web/<versión>`) y `x-client-at` (hora del cliente, informativa). La hora oficial `occurred_at` es la del servidor.
+
+**Acceso.** Por invitación: no hay registro público. Con Supabase el formulario de correo y contraseña autentica de verdad (`CredentialsAuthService`, que amplía `AuthService`); el selector de perfiles de demostración es solo del mock. La recuperación de contraseña sigue siendo un aviso (no hay pantalla para fijar la nueva contraseña).
+
+**Tiempo real.** `ActivityPage` se suscribe a `postgres_changes` de `audit_log` (Realtime respeta RLS) y recarga la actividad al llegar eventos; solo con la fuente `supabase`.
+
+**Diferencias conocidas con el mock.**
+- `tasks.list()` sin filtro de proyecto se recorta en el adaptador a las tareas asignadas a la persona (el administrador ve todas), porque RLS devuelve además las de sus proyectos.
+- Los ids son uuid (el mock usaba texto).
+- Si un administrador finaliza la tarea de otra persona, `timer.stopped` queda con el administrador como actor.
+- Gastos y la actualización de sprints aún no generan eventos de actividad.
+- `member_monthly_summary` solo lista meses desde la primera actividad: el dashboard usa `monthly_summary(p_month)`.
+- Acciones del sistema (sin actor) llegan con `actorId` `system`; el contrato de dominio exige un actor.
+- `move_task` no falla si RLS deja el UPDATE sin filas (tarea ajena): el adaptador lo detecta y lanza el mensaje del mock.
+- `daily.list` devuelve vacío (no hay tabla de dailies); daily escrituras, comentarios, anuncios, reuniones, notificaciones y cerrar sprint siguen sin implementar en ambas fuentes.

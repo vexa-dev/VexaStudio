@@ -149,3 +149,13 @@ Admin de cualquier área crea proyectos y tareas, asigna responsables y gestiona
 ## Estructura multiplataforma autorizada (03/10/2026)
 
 La web vive en `apps/web`; dominio y contratos en `packages`. Mantener los comandos desde la raíz y un solo lockfile. Escritorio/móvil están reservados, sin runtime nativo. `npm run lint` incluye el control de límites. El mock y localStorage son adaptadores de web; no trasladarlos a los paquetes compartidos. Equipo consulta servicios/hooks; DailyService.list ya lee datos persistidos, las escrituras daily siguen pendientes.
+
+
+## Supabase local (Fase D, 03/10/2026)
+
+- Flujo: `npm run db:start`, `npm run db:reset` (migraciones + seed), `npm run db:test` (pgTAP). Claves con `supabase status -o env` (`API_URL`, `ANON_KEY`); solo la clave pública va al cliente, nunca `service_role`. Crea `apps/web/.env.local` con `VITE_DATA_SOURCE=supabase`, `VITE_SUPABASE_URL` y `VITE_SUPABASE_ANON_KEY` (plantilla: `.env.example` de la raíz).
+- Cuentas del seed (solo local): jhony@, rober@, jose@, diego@, alex@ `vexa.test`, contraseña `vexa-local-dev`. Acceso por invitación: no hay registro público.
+- Código: `apps/web/src/services/supabase/` (un adaptador por servicio, `index.ts` los compone; `mappers.ts`, `errors.ts`, `database.types.ts` generado con `supabase gen types typescript --local`). Los adaptadores reciben el cliente; `fake-client.ts` sirve para pruebas unitarias e `integration.test.ts` (`npm run test:integration`, con `SUPABASE_URL` y `SUPABASE_ANON_KEY`) corre contra el stack local y se omite sin esas variables.
+- Cabeceras que envía el cliente en cada llamada REST: `x-request-id`, `x-client` (`web/<versión>`), `x-client-at`. La hora oficial es la del servidor.
+- Pendiente en ambas fuentes: daily (escrituras), comentarios, anuncios, reuniones, notificaciones y cerrar sprint. Gastos y sprints no generan eventos de actividad aún. `tasks.list()` sin proyecto se filtra a las asignadas en el adaptador.
+- Despliegue (checklist para después, sin verificar): crear el proyecto en la nube, aplicar migraciones, desactivar el registro público, invitar a los 4 socios, definir en Vercel `VITE_DATA_SOURCE=supabase`, `VITE_SUPABASE_URL` y `VITE_SUPABASE_ANON_KEY` y habilitar Realtime para `audit_log`.

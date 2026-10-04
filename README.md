@@ -42,7 +42,18 @@ Los comandos de desarrollo, pruebas y build se ejecutan desde la raíz. Para rev
 
 El alias `@/` apunta a `apps/web/src`; los paquetes se importan mediante `@vexa/domain/<módulo>` y `@vexa/services`. Los tokens visuales y componentes permanecen en la web hasta que exista una segunda interfaz que los comparta.
 
-La configuración opcional de Supabase está en `apps/web/src/lib/supabase.ts`. Crea `apps/web/.env.local` usando `apps/web/.env.example`; sus valores son públicos de cliente. La aplicación sigue usando datos simulados y no conecta datos remotos.
+### Datos: mock o Supabase local
+
+Por defecto la aplicación usa datos simulados (`VITE_DATA_SOURCE=mock`). Para usar el backend local (requiere Docker y la CLI de Supabase):
+
+```bash
+npm run db:start      # levanta Supabase local (si tu Docker lo pide: supabase start -x edge-runtime,vector,logflare)
+npm run db:reset      # aplica migraciones y seed
+npm run db:test       # pruebas pgTAP
+supabase status -o env   # API_URL y ANON_KEY (clave pública)
+```
+
+Crea `apps/web/.env.local` (ignorado por git; plantilla en `.env.example`) con `VITE_DATA_SOURCE=supabase`, `VITE_SUPABASE_URL` y `VITE_SUPABASE_ANON_KEY`. Usa solo la clave pública, nunca la `service_role`. Cuentas del seed, solo para desarrollo local: `jhony@`, `rober@`, `jose@`, `diego@` y `alex@vexa.test`, todas con la contraseña `vexa-local-dev`. La prueba de integración contra el stack local se ejecuta con `SUPABASE_URL` y `SUPABASE_ANON_KEY` en el entorno: `npm run test:integration`. Detalles en [docs/arquitectura.md](docs/arquitectura.md).
 
 Vercel se configura con la **raíz del repositorio**, `npm ci`, `npm run build` y salida `apps/web/dist`, definidos en `vercel.json`. No cambiar la raíz de Vercel a `apps/web`, porque necesita acceder a los paquetes compartidos. `npm run preview` sirve esa misma compilación.
 
@@ -50,8 +61,7 @@ Vercel se configura con la **raíz del repositorio**, `npm ci`, `npm run build` 
 
 El sistema vigente se documenta en `DESIGN.md` y los compromisos de producto en `PRODUCT.md`.
 Solo se conserva la imagen activa de mascota en `apps/web/public/mascot/vexa-robot.png`.
-Para explorar la aplicación, entra desde uno de los cuatro perfiles de demo.
-El formulario de correo/contraseña y recuperación muestra avisos de conexión pendiente.
+Con datos simulados, entra desde uno de los perfiles de demo; el formulario de correo/contraseña muestra un aviso de conexión pendiente. Con `VITE_DATA_SOURCE=supabase`, el formulario autentica con las cuentas invitadas y no hay perfiles de demo.
 
 Horas incluye confirmación agrupada de tareas y registro sin tarea (actividad, proyecto y respaldo), historial con filtros, resumen mensual con gráficos en Lima y revisión por otro socio. Las correcciones reabren la revisión y se auditan. El historial previo permanece intacto; sus entradas sin horario fiable se excluyen del gráfico horario. Todo funciona en los servicios mock y localStorage.
 
