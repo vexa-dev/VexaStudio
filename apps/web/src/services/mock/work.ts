@@ -511,6 +511,7 @@ const timeImplementation: TimeService = scoped<TimeService>({
       (e) => e.userId === user.id && !e.endedAt && !e.voidedAt,
     );
     if (!entry || entry.timerState === "paused") return delay(entry ?? null);
+    const before = { ...entry };
     const now = new Date().toISOString();
     entry.segments ??= [];
     entry.segments.push({
@@ -523,6 +524,13 @@ const timeImplementation: TimeService = scoped<TimeService>({
     );
     entry.segmentStartedAt = null;
     entry.timerState = "paused";
+    recordAudit({
+      eventType: "timer.paused",
+      table: "time_entries",
+      actorId: user.id,
+      before,
+      after: entry,
+    });
     save();
     return delay(entry);
   },
@@ -532,8 +540,16 @@ const timeImplementation: TimeService = scoped<TimeService>({
       (e) => e.userId === user.id && !e.endedAt && !e.voidedAt,
     );
     if (!entry || entry.timerState !== "paused") return delay(entry ?? null);
+    const before = { ...entry };
     entry.timerState = "running";
     entry.segmentStartedAt = new Date().toISOString();
+    recordAudit({
+      eventType: "timer.resumed",
+      table: "time_entries",
+      actorId: user.id,
+      before,
+      after: entry,
+    });
     save();
     return delay(entry);
   },
