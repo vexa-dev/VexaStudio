@@ -1,5 +1,5 @@
 import { canEditEntry } from "@vexa/domain/rules";
-import { taskEventType, type AuditTable } from "@vexa/domain/audit";
+import { diffFields, taskEventType, type AuditTable } from "@vexa/domain/audit";
 import type { Id, Profile, Sprint, Task, TimeEntry } from "@vexa/domain/types";
 import { todayLima } from "@vexa/domain/dates";
 import type {
@@ -161,7 +161,13 @@ export const projects: ProjectService = scoped<ProjectService>({
     };
     getDb().projectLabels ??= [];
     getDb().projectLabels!.push(label);
-    audit("project_labels", label.id, "create", null, label, user.id);
+    recordAudit({
+      eventType: "project_label.created",
+      table: "project_labels",
+      actorId: user.id,
+      before: null,
+      after: label,
+    });
     save();
     return delay(label);
   },
@@ -174,7 +180,13 @@ export const projects: ProjectService = scoped<ProjectService>({
     Object.assign(label, fields);
     for (const task of getDb().tasks)
       task.labels = task.labels?.map((l) => (l.id === id ? { ...label } : l));
-    audit("project_labels", id, "update", before, label, user.id);
+    recordAudit({
+      eventType: "project_label.updated",
+      table: "project_labels",
+      actorId: user.id,
+      before,
+      after: label,
+    });
     save();
     return delay(label);
   },
@@ -206,7 +218,13 @@ export const projects: ProjectService = scoped<ProjectService>({
       id: newId("p"),
     };
     getDb().projects.push(project);
-    audit("projects", project.id, "create", null, project, user.id);
+    recordAudit({
+      eventType: "project.created",
+      table: "projects",
+      actorId: user.id,
+      before: null,
+      after: project,
+    });
     save();
     return delay(project);
   },
@@ -223,7 +241,17 @@ export const projects: ProjectService = scoped<ProjectService>({
       throw new Error("Miembro no válido");
     const before = { ...project };
     Object.assign(project, patch);
-    audit("projects", id, "update", before, project, user.id);
+    const changed = diffFields(before, project).map((c) => c.field);
+    recordAudit({
+      eventType:
+        changed.length === 1 && changed[0] === "memberIds"
+          ? "project.members_changed"
+          : "project.updated",
+      table: "projects",
+      actorId: user.id,
+      before,
+      after: project,
+    });
     save();
     return delay(project);
   },
@@ -430,7 +458,13 @@ export const tasks: TaskService = scoped<TaskService>({
       status: input.status ?? "todo",
     };
     db.tasks.push(task);
-    audit("tasks", task.id, "create", null, task, user.id);
+    recordAudit({
+      eventType: "task.created",
+      table: "tasks",
+      actorId: user.id,
+      before: null,
+      after: task,
+    });
     save();
     return delay(task);
   },
@@ -457,7 +491,13 @@ export const tasks: TaskService = scoped<TaskService>({
       ...getDb().projectLabels!.find((stored) => stored.id === l.id)!,
     }));
     if (task.status === "done") prepareHours(task);
-    audit("tasks", task.id, "update", before, task, user.id);
+    recordAudit({
+      eventType: taskEventType(before, task),
+      table: "tasks",
+      actorId: user.id,
+      before,
+      after: task,
+    });
     save();
     return delay(task);
   },
@@ -471,7 +511,13 @@ export const tasks: TaskService = scoped<TaskService>({
     const before = { ...task };
     task.status = status;
     if (task.status === "done") prepareHours(task);
-    audit("tasks", task.id, "update", before, task, user.id);
+    recordAudit({
+      eventType: "task.moved",
+      table: "tasks",
+      actorId: user.id,
+      before,
+      after: task,
+    });
     save();
     return delay(task);
   },
@@ -671,7 +717,13 @@ const timeImplementation: TimeService = scoped<TimeService>({
     if (task?.status === "todo") {
       const before = { ...task };
       task.status = "in_progress";
-      audit("tasks", task.id, "update", before, task, user.id);
+      recordAudit({
+        eventType: "task.moved",
+        table: "tasks",
+        actorId: user.id,
+        before,
+        after: task,
+      });
     }
     save();
     return delay(entry);
