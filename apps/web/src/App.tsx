@@ -17,6 +17,9 @@ const ExpensesPage = lazy(
 const ProjectsPage = lazy(
   () => import("@/features/projects/pages/ProjectsPage"),
 );
+const ActivityPage = lazy(
+  () => import("@/features/activity/pages/ActivityPage"),
+);
 const BoardPage = lazy(() => import("@/features/tasks/pages/BoardPage"));
 const TasksPage = lazy(() => import("@/features/tasks/pages/TasksPage"));
 const TeamPage = lazy(() => import("@/features/team/pages/TeamPage"));
@@ -60,6 +63,7 @@ export default function App() {
           <Route element={<StudioGuard />}>
             <Route path="gastos" element={<ExpensesPage />} />
             <Route path="equipo" element={<TeamPage />} />
+            <Route path="actividad" element={<ActivityPage />} />
           </Route>
           <Route path="perfil" element={<ProfilePage />} />
         </Route>

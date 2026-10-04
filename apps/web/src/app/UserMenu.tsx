@@ -1,4 +1,12 @@
-import { Check, Users, LogOut, UserRound, Eye, EyeOff } from "lucide-react";
+import {
+  Check,
+  Users,
+  History,
+  LogOut,
+  UserRound,
+  Eye,
+  EyeOff,
+} from "lucide-react";
 import {
   useCallback,
   useEffect,
@@ -7,6 +15,7 @@ import {
   type KeyboardEvent,
 } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { canAccessStudio } from "@vexa/domain/access";
 import { Avatar } from "@/components/ui/Avatar";
 import { Badge } from "@/components/ui/Badge";
 import { useAuth } from "@/features/auth/hooks/useAuth";
@@ -120,6 +129,16 @@ export function UserMenu({
           >
             <Users className="size-4" aria-hidden="true" /> Equipo
           </Link>
+          {canAccessStudio(user.role) ? (
+            <Link
+              role="menuitem"
+              to="/actividad"
+              className={`${itemClass} lg:hidden`}
+              onClick={() => close(false)}
+            >
+              <History className="size-4" aria-hidden="true" /> Actividad
+            </Link>
+          ) : null}
           <button
             type="button"
             role="menuitem"
