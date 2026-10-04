@@ -1,4 +1,9 @@
 import type {
+  AuditEntity,
+  AuditEventType,
+  AuditLogEntry,
+} from "@vexa/domain/audit";
+import type {
   HoursDraft,
   ProjectLabel,
   Announcement,
@@ -222,6 +227,38 @@ export interface NotificationService {
   list(): Promise<Notification[]>;
   markRead(id: Id): Promise<void>;
   markAllRead(): Promise<void>;
+}
+
+export interface AuditFilter {
+  actorId?: Id;
+  projectId?: Id;
+  entityTable?: AuditEntity["table"];
+  entityId?: Id;
+  eventTypes?: AuditEventType[];
+  /** Rango de `occurredAt`, ambos extremos incluidos. */
+  from?: IsoDateTime;
+  to?: IsoDateTime;
+}
+
+export interface AuditPage {
+  items: AuditLogEntry[];
+  /** `seq` desde el cual pedir la siguiente página; `null` si ya no hay más. */
+  nextCursor: number | null;
+}
+
+/**
+ * Registro de actividad, solo lectura: las escrituras son internas (mock) o por trigger (Supabase).
+ * Visibilidad: admin ve todo; socio ve sus proyectos y sus acciones; colaborador solo las suyas.
+ */
+export interface AuditService {
+  /** Más recientes primero, paginado por `seq`: con `cursor` devuelve entradas con `seq` menor. */
+  list(
+    filter?: AuditFilter,
+    cursor?: number | null,
+    limit?: number,
+  ): Promise<AuditPage>;
+  /** Historial de un registro, más reciente primero. */
+  timeline(entity: Pick<AuditEntity, "table" | "id">): Promise<AuditLogEntry[]>;
 }
 
 export interface Services {
