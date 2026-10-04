@@ -167,36 +167,44 @@ export function UserMenu({
             <LogOut className="size-4" aria-hidden="true" /> Cerrar sesión
           </button>
 
-          <hr className="my-2 border-border" />
-          <div className="flex items-center justify-between px-3 pb-1 pt-1.5">
-            <p className="text-xs font-medium text-muted">Cambiar de usuario</p>
-            <Badge tone="warning">Modo de pruebas</Badge>
-          </div>
-          {profiles?.map((p) => (
-            <button
-              key={p.id}
-              type="button"
-              role="menuitemradio"
-              aria-checked={p.id === user.id}
-              className={itemClass}
-              onClick={async () => {
-                await signIn(p.id);
-                close(true);
-              }}
-            >
-              <Avatar name={p.name} size="sm" />
-              <span className="flex min-w-0 flex-1 flex-col">
-                <span className="truncate">{p.name}</span>
-                <span className="text-xs text-muted">{areaLabel[p.area]}</span>
-              </span>
-              {p.id === user.id ? (
-                <Check
-                  className="size-4 text-primary-text"
-                  aria-hidden="true"
-                />
-              ) : null}
-            </button>
-          ))}
+          {profiles?.length ? (
+            <>
+              <hr className="my-2 border-border" />
+              <div className="flex items-center justify-between px-3 pb-1 pt-1.5">
+                <p className="text-xs font-medium text-muted">
+                  Cambiar de usuario
+                </p>
+                <Badge tone="warning">Modo de pruebas</Badge>
+              </div>
+              {profiles.map((p) => (
+                <button
+                  key={p.id}
+                  type="button"
+                  role="menuitemradio"
+                  aria-checked={p.id === user.id}
+                  className={itemClass}
+                  onClick={async () => {
+                    await signIn(p.id);
+                    close(true);
+                  }}
+                >
+                  <Avatar name={p.name} size="sm" />
+                  <span className="flex min-w-0 flex-1 flex-col">
+                    <span className="truncate">{p.name}</span>
+                    <span className="text-xs text-muted">
+                      {areaLabel[p.area]}
+                    </span>
+                  </span>
+                  {p.id === user.id ? (
+                    <Check
+                      className="size-4 text-primary-text"
+                      aria-hidden="true"
+                    />
+                  ) : null}
+                </button>
+              ))}
+            </>
+          ) : null}
         </div>
       ) : null}
     </div>

@@ -5,7 +5,11 @@ interface AuthContextValue {
   /** Usuario de la sesión; `null` si no hay sesión. */
   user: Profile | null
   isLoading: boolean
+  /** Acceso simulado: elegir un perfil (solo mock). */
   signIn: (userId: string) => Promise<void>
+  /** `true` cuando la fuente de datos autentica con correo y contraseña (Supabase). */
+  supportsPassword: boolean
+  signInWithPassword: (email: string, password: string) => Promise<void>
   signOut: () => Promise<void>
 }
 
