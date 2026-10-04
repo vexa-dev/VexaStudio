@@ -276,4 +276,5 @@ export interface Services {
   announcements: AnnouncementService;
   meetings: MeetingService;
   notifications: NotificationService;
+  audit: AuditService;
 }
