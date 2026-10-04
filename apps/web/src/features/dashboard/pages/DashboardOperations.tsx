@@ -18,6 +18,7 @@ import { useMembers } from "@/features/team/hooks/useMembers";
 import { formatIsoDate, todayLima } from "@vexa/domain/dates";
 import { formatMoney } from "@vexa/domain/format";
 import { taskStatusLabel } from "@/lib/labels";
+import { isSupabaseSource } from "@/services/supabase/data-source";
 import { attentionTasks } from "@vexa/domain/task-attention";
 
 export function DashboardOperations({
@@ -297,8 +298,9 @@ export function DashboardOperations({
                 </Link>
               )}
               <p className="dashboard-local-note">
-                La demo permite consultar los gastos; la votación aún no está
-                habilitada.
+                {isSupabaseSource()
+                  ? "Por ahora solo se pueden consultar los gastos; la votación aún no está habilitada."
+                  : "La demo permite consultar los gastos; la votación aún no está habilitada."}
               </p>
             </Card>
           </section>
