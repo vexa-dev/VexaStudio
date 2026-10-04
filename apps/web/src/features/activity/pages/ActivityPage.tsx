@@ -11,6 +11,7 @@ import { ActivityDetailSheet } from "../components/ActivityDetailSheet";
 import { ActivityFilters } from "../components/ActivityFilters";
 import { ActivityTimeline } from "../components/ActivityTimeline";
 import { useActivityFeed } from "../hooks/useActivity";
+import { useActivityRealtime } from "../hooks/useActivityRealtime";
 import {
   EMPTY_FILTERS,
   toAuditFilter,
@@ -23,6 +24,7 @@ export default function ActivityPage() {
   const [touched, setTouched] = useState(false);
   const [selected, setSelected] = useState<AuditLogEntry | null>(null);
   const firstVisit = useFirstPlay("activity");
+  useActivityRealtime();
   const feed = useActivityFeed(useMemo(() => toAuditFilter(filters), [filters]));
   const entries = feed.data?.pages.flatMap((page) => page.items) ?? [];
 

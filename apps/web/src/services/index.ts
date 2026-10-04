@@ -1,12 +1,14 @@
 import { createMockServices } from './mock'
+import { createSupabaseServices } from './supabase'
+import { getDataSource } from './supabase/data-source'
 import type { Services } from '@vexa/services'
 
+/** `VITE_DATA_SOURCE`: `mock` (por defecto) o `supabase`. */
 function createServices(): Services {
-  const source = import.meta.env.VITE_DATA_SOURCE ?? 'mock'
+  const source = getDataSource()
   if (source === 'mock') return createMockServices()
-  throw new Error(
-    `VITE_DATA_SOURCE="${source}" no está disponible en esta etapa. Usa "mock" hasta la integración con Supabase.`,
-  )
+  if (source === 'supabase') return createSupabaseServices()
+  throw new Error(`VITE_DATA_SOURCE="${source}" no es válido. Usa "mock" o "supabase".`)
 }
 
 export const services: Services = createServices()
