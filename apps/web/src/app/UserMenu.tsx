@@ -1,4 +1,12 @@
-import { Check, Users, LogOut, UserRound, Eye, EyeOff } from "lucide-react";
+import {
+  Check,
+  Users,
+  History,
+  LogOut,
+  UserRound,
+  Eye,
+  EyeOff,
+} from "lucide-react";
 import {
   useCallback,
   useEffect,
@@ -7,6 +15,7 @@ import {
   type KeyboardEvent,
 } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { canAccessStudio } from "@vexa/domain/access";
 import { Avatar } from "@/components/ui/Avatar";
 import { Badge } from "@/components/ui/Badge";
 import { useAuth } from "@/features/auth/hooks/useAuth";
@@ -120,6 +129,16 @@ export function UserMenu({
           >
             <Users className="size-4" aria-hidden="true" /> Equipo
           </Link>
+          {canAccessStudio(user.role) ? (
+            <Link
+              role="menuitem"
+              to="/actividad"
+              className={`${itemClass} lg:hidden`}
+              onClick={() => close(false)}
+            >
+              <History className="size-4" aria-hidden="true" /> Actividad
+            </Link>
+          ) : null}
           <button
             type="button"
             role="menuitem"
@@ -148,36 +167,44 @@ export function UserMenu({
             <LogOut className="size-4" aria-hidden="true" /> Cerrar sesión
           </button>
 
-          <hr className="my-2 border-border" />
-          <div className="flex items-center justify-between px-3 pb-1 pt-1.5">
-            <p className="text-xs font-medium text-muted">Cambiar de usuario</p>
-            <Badge tone="warning">Modo de pruebas</Badge>
-          </div>
-          {profiles?.map((p) => (
-            <button
-              key={p.id}
-              type="button"
-              role="menuitemradio"
-              aria-checked={p.id === user.id}
-              className={itemClass}
-              onClick={async () => {
-                await signIn(p.id);
-                close(true);
-              }}
-            >
-              <Avatar name={p.name} size="sm" />
-              <span className="flex min-w-0 flex-1 flex-col">
-                <span className="truncate">{p.name}</span>
-                <span className="text-xs text-muted">{areaLabel[p.area]}</span>
-              </span>
-              {p.id === user.id ? (
-                <Check
-                  className="size-4 text-primary-text"
-                  aria-hidden="true"
-                />
-              ) : null}
-            </button>
-          ))}
+          {profiles?.length ? (
+            <>
+              <hr className="my-2 border-border" />
+              <div className="flex items-center justify-between px-3 pb-1 pt-1.5">
+                <p className="text-xs font-medium text-muted">
+                  Cambiar de usuario
+                </p>
+                <Badge tone="warning">Modo de pruebas</Badge>
+              </div>
+              {profiles.map((p) => (
+                <button
+                  key={p.id}
+                  type="button"
+                  role="menuitemradio"
+                  aria-checked={p.id === user.id}
+                  className={itemClass}
+                  onClick={async () => {
+                    await signIn(p.id);
+                    close(true);
+                  }}
+                >
+                  <Avatar name={p.name} size="sm" />
+                  <span className="flex min-w-0 flex-1 flex-col">
+                    <span className="truncate">{p.name}</span>
+                    <span className="text-xs text-muted">
+                      {areaLabel[p.area]}
+                    </span>
+                  </span>
+                  {p.id === user.id ? (
+                    <Check
+                      className="size-4 text-primary-text"
+                      aria-hidden="true"
+                    />
+                  ) : null}
+                </button>
+              ))}
+            </>
+          ) : null}
         </div>
       ) : null}
     </div>

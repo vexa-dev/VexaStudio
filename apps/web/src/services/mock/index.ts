@@ -10,6 +10,7 @@ import type {
   Services,
   SettingsService,
 } from "@vexa/services";
+import { auditService } from "./audit";
 import { getDb, getSessionUserId, setSessionUserId } from "./db";
 import { requireStudioAccess } from "./studio-access";
 import { dashboard } from "./dashboard";
@@ -103,6 +104,7 @@ export function createMockServices(): Services {
     announcements: notImplemented<AnnouncementService>("AnnouncementService"),
     meetings: notImplemented<MeetingService>("MeetingService"),
     notifications: notImplemented<NotificationService>("NotificationService"),
+    audit: auditService,
   };
 }
 

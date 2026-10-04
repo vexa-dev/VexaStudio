@@ -1,3 +1,6 @@
+import { tz } from '@date-fns/tz'
+import { format } from 'date-fns'
+import { LIMA_TZ } from './dates'
 import type { Currency } from './types'
 
 const numberFormat = new Intl.NumberFormat('en-US', {
@@ -39,4 +42,9 @@ export function formatClock(ms: number): string {
   const minutes = String(Math.floor((total % 3600) / 60)).padStart(2, '0')
   const seconds = String(total % 60).padStart(2, '0')
   return `${hours}:${minutes}:${seconds}`
+}
+
+/** `dd/mm/yyyy HH:mm:ss` en hora de Lima: precisión de segundos para el registro de actividad. */
+export function formatDateTimeSeconds(value: Date | string): string {
+  return format(value, 'dd/MM/yyyy HH:mm:ss', { in: tz(LIMA_TZ) })
 }

@@ -32,6 +32,7 @@ import {
 import { formatHours } from "@vexa/domain/format";
 import { EntryFormSheet } from "../components/EntryFormSheet";
 import { VoidEntrySheet } from "../components/VoidEntrySheet";
+import { EntityHistoryToggle } from "@/features/activity/components/EntityHistory";
 import { useTimeHistory, useReviewTime } from "../hooks/useTime";
 import { CompletedHoursPanel } from "../components/CompletedHoursPanel";
 import { monthlyActivity } from "../analytics";
@@ -675,6 +676,7 @@ export default function TimePage() {
                 Motivo de anulación: {detail.voidReason}
               </p>
             ) : null}
+            <EntityHistoryToggle table="time_entries" id={detail.id} />
             {detail.userId !== user?.id &&
             user?.role !== "collaborator" &&
             detail.endedAt &&

@@ -20,4 +20,19 @@ describe("role navigation", () => {
         expect.arrayContaining(["/gastos", "/equipo"]),
       );
   });
+  it("limits activity to studio roles and keeps it out of the bottom bar", () => {
+    for (const role of ["admin", "partner"] as const)
+      expect(navigationFor(role).map((item) => item.to)).toContain(
+        "/actividad",
+      );
+    expect(navigationFor("collaborator").map((item) => item.to)).not.toContain(
+      "/actividad",
+    );
+    expect(navigationFor(undefined).map((item) => item.to)).not.toContain(
+      "/actividad",
+    );
+    expect(
+      navigationFor("admin").find((item) => item.to === "/actividad")?.mobile,
+    ).toBe(false);
+  });
 });

@@ -278,3 +278,11 @@ Mi día sirve para organizar prioridades, definir una meta y concentrarse con po
 - Colaborador ve descripción y etiquetas adjuntas en las tareas que puede consultar; no recibe acceso al catálogo ni al proyecto por una asignación puntual. Renombrar/recolorear una etiqueta actualiza las tarjetas existentes.
 - Mock persiste el catálogo sin reiniciar datos antiguos; la futura implementación remota debe aplicar estos mismos permisos mediante RLS y resolver etiquetas adjuntas sin exponer el catálogo al colaborador.
 - La UI usa Markdown seguro sin HTML y menús temáticos compartidos en todos los módulos.
+
+
+## Ajuste autorizado: registro de actividad y backend Supabase (03/10/2026)
+
+- Se autoriza un registro de actividad inmutable: quién creó, editó, movió, aprobó o anuló qué, con hora exacta del servidor (Lima, con segundos), cambios campo a campo, motivo y rol del actor en ese momento. Solo se agrega; nadie edita ni borra entradas.
+- Visibilidad: admin ve todo; socio ve los proyectos de los que es miembro y sus propias acciones; colaborador solo las suyas.
+- En el mock el registro lo escribe la capa de servicios; en Supabase lo escribirá un trigger sobre `audit_log`. La UI solo lee.
+- Se autoriza el backend Supabase para todo lo que hoy implementa el mock, primero en local (CLI + Docker) y con la nube al final. El mock sigue siendo la fuente por defecto.

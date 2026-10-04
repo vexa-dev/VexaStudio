@@ -1,12 +1,6 @@
 import { canEditEntry } from "@vexa/domain/rules";
-import type {
-  AuditAction,
-  Id,
-  Profile,
-  Sprint,
-  Task,
-  TimeEntry,
-} from "@vexa/domain/types";
+import { diffFields, taskEventType } from "@vexa/domain/audit";
+import type { Id, Profile, Sprint, Task, TimeEntry } from "@vexa/domain/types";
 import { todayLima } from "@vexa/domain/dates";
 import type {
   ProjectService,
@@ -14,6 +8,7 @@ import type {
   TaskService,
   TimeService,
 } from "@vexa/services";
+import { recordAudit, scoped } from "./audit";
 import { getDb, getSessionUserId, save } from "./db";
 import { delay, pending } from "./utils";
 /**
@@ -148,7 +143,7 @@ function labelFields(
     throw new Error("Ya existe una etiqueta con ese nombre");
   return { name, color: input.color.toLowerCase() };
 }
-export const projects: ProjectService = {
+export const projects: ProjectService = scoped<ProjectService>({
   async listLabels(projectId) {
     currentAdmin();
     projectAccess(projectId);
@@ -166,7 +161,13 @@ export const projects: ProjectService = {
     };
     getDb().projectLabels ??= [];
     getDb().projectLabels!.push(label);
-    audit("project_labels", label.id, "create", null, label, user.id);
+    recordAudit({
+      eventType: "project_label.created",
+      table: "project_labels",
+      actorId: user.id,
+      before: null,
+      after: label,
+    });
     save();
     return delay(label);
   },
@@ -179,7 +180,13 @@ export const projects: ProjectService = {
     Object.assign(label, fields);
     for (const task of getDb().tasks)
       task.labels = task.labels?.map((l) => (l.id === id ? { ...label } : l));
-    audit("project_labels", id, "update", before, label, user.id);
+    recordAudit({
+      eventType: "project_label.updated",
+      table: "project_labels",
+      actorId: user.id,
+      before,
+      after: label,
+    });
     save();
     return delay(label);
   },
@@ -211,7 +218,13 @@ export const projects: ProjectService = {
       id: newId("p"),
     };
     getDb().projects.push(project);
-    audit("projects", project.id, "create", null, project, user.id);
+    recordAudit({
+      eventType: "project.created",
+      table: "projects",
+      actorId: user.id,
+      before: null,
+      after: project,
+    });
     save();
     return delay(project);
   },
@@ -228,33 +241,23 @@ export const projects: ProjectService = {
       throw new Error("Miembro no válido");
     const before = { ...project };
     Object.assign(project, patch);
-    audit("projects", id, "update", before, project, user.id);
+    const changed = diffFields(before, project).map((c) => c.field);
+    recordAudit({
+      eventType:
+        changed.length === 1 && changed[0] === "memberIds"
+          ? "project.members_changed"
+          : "project.updated",
+      table: "projects",
+      actorId: user.id,
+      before,
+      after: project,
+    });
     save();
     return delay(project);
   },
-};
+});
 function newId(prefix: string): Id {
   return `${prefix}-${Date.now().toString(36)}${Math.random().toString(36).slice(2, 6)}`;
-}
-
-function audit(
-  table: string,
-  recordId: Id,
-  action: AuditAction,
-  before: unknown,
-  after: unknown,
-  userId: Id,
-) {
-  getDb().auditLog.push({
-    id: newId("au"),
-    table,
-    recordId,
-    action,
-    before: before === null ? null : structuredClone(before),
-    after: after === null ? null : structuredClone(after),
-    userId,
-    createdAt: new Date().toISOString(),
-  });
 }
 
 function findTask(id: Id): Task {
@@ -341,7 +344,13 @@ function closeEntry(entry: TimeEntry, now: Date, userId: Id) {
   draft.measured = true;
   draft.hours += entry.hours;
   draft.entryIds.push(entry.id);
-  audit("time_entries", entry.id, "update", before, entry, userId);
+  recordAudit({
+    eventType: "timer.stopped",
+    table: "time_entries",
+    actorId: userId,
+    before: before,
+    after: entry,
+  });
 }
 
 function ownEntry(id: Id, userId: Id): TimeEntry {
@@ -352,7 +361,7 @@ function ownEntry(id: Id, userId: Id): TimeEntry {
   return entry;
 }
 
-export const sprints: SprintService = {
+export const sprints: SprintService = scoped<SprintService>({
   async listByProject(projectId) {
     projectAccess(projectId);
     return delay(getDb().sprints.filter((s) => s.projectId === projectId));
@@ -383,13 +392,19 @@ export const sprints: SprintService = {
       status: hasActive ? "planned" : "active",
     };
     db.sprints.push(sprint);
-    audit("sprints", sprint.id, "create", null, sprint, user.id);
+    recordAudit({
+      eventType: "sprint.created",
+      table: "sprints",
+      actorId: user.id,
+      before: null,
+      after: sprint,
+    });
     save();
     return delay(sprint);
   },
   close: pending("SprintService.close"),
-};
-export const tasks: TaskService = {
+});
+export const tasks: TaskService = scoped<TaskService>({
   async list(filter = {}) {
     const user = currentUser();
     const projectBoard = Boolean(filter.projectId);
@@ -425,7 +440,13 @@ export const tasks: TaskService = {
       status: input.status ?? "todo",
     };
     db.tasks.push(task);
-    audit("tasks", task.id, "create", null, task, user.id);
+    recordAudit({
+      eventType: "task.created",
+      table: "tasks",
+      actorId: user.id,
+      before: null,
+      after: task,
+    });
     save();
     return delay(task);
   },
@@ -452,7 +473,13 @@ export const tasks: TaskService = {
       ...getDb().projectLabels!.find((stored) => stored.id === l.id)!,
     }));
     if (task.status === "done") prepareHours(task);
-    audit("tasks", task.id, "update", before, task, user.id);
+    recordAudit({
+      eventType: taskEventType(before, task),
+      table: "tasks",
+      actorId: user.id,
+      before,
+      after: task,
+    });
     save();
     return delay(task);
   },
@@ -466,18 +493,25 @@ export const tasks: TaskService = {
     const before = { ...task };
     task.status = status;
     if (task.status === "done") prepareHours(task);
-    audit("tasks", task.id, "update", before, task, user.id);
+    recordAudit({
+      eventType: "task.moved",
+      table: "tasks",
+      actorId: user.id,
+      before,
+      after: task,
+    });
     save();
     return delay(task);
   },
-};
-const timeImplementation: TimeService = {
+});
+const timeImplementation: TimeService = scoped<TimeService>({
   async pause() {
     const user = currentUser();
     const entry = getDb().timeEntries.find(
       (e) => e.userId === user.id && !e.endedAt && !e.voidedAt,
     );
     if (!entry || entry.timerState === "paused") return delay(entry ?? null);
+    const before = { ...entry };
     const now = new Date().toISOString();
     entry.segments ??= [];
     entry.segments.push({
@@ -490,6 +524,13 @@ const timeImplementation: TimeService = {
     );
     entry.segmentStartedAt = null;
     entry.timerState = "paused";
+    recordAudit({
+      eventType: "timer.paused",
+      table: "time_entries",
+      actorId: user.id,
+      before,
+      after: entry,
+    });
     save();
     return delay(entry);
   },
@@ -499,8 +540,16 @@ const timeImplementation: TimeService = {
       (e) => e.userId === user.id && !e.endedAt && !e.voidedAt,
     );
     if (!entry || entry.timerState !== "paused") return delay(entry ?? null);
+    const before = { ...entry };
     entry.timerState = "running";
     entry.segmentStartedAt = new Date().toISOString();
+    recordAudit({
+      eventType: "timer.resumed",
+      table: "time_entries",
+      actorId: user.id,
+      before,
+      after: entry,
+    });
     save();
     return delay(entry);
   },
@@ -593,7 +642,13 @@ const timeImplementation: TimeService = {
     }
     db.timeEntries.push(entry);
     for (const { draft } of drafts) draft.submittedAt = now;
-    audit("time_entries", entry.id, "create", null, entry, user.id);
+    recordAudit({
+      eventType: "hours.confirmed",
+      table: "time_entries",
+      actorId: user.id,
+      before: null,
+      after: entry,
+    });
     save();
     return delay(entry);
   },
@@ -661,12 +716,24 @@ const timeImplementation: TimeService = {
       voidReason: null,
     };
     db.timeEntries.push(entry);
-    audit("time_entries", entry.id, "create", null, entry, user.id);
+    recordAudit({
+      eventType: "timer.started",
+      table: "time_entries",
+      actorId: user.id,
+      before: null,
+      after: entry,
+    });
     // Al iniciar el temporizador, la tarea pasa a "En progreso".
     if (task?.status === "todo") {
       const before = { ...task };
       task.status = "in_progress";
-      audit("tasks", task.id, "update", before, task, user.id);
+      recordAudit({
+        eventType: "task.moved",
+        table: "tasks",
+        actorId: user.id,
+        before,
+        after: task,
+      });
     }
     save();
     return delay(entry);
@@ -743,7 +810,13 @@ const timeImplementation: TimeService = {
         )
           draft.submittedAt = now;
       }
-    audit("time_entries", entry.id, "create", null, entry, user.id);
+    recordAudit({
+      eventType: "hours.created",
+      table: "time_entries",
+      actorId: user.id,
+      before: null,
+      after: entry,
+    });
     save();
     return delay(entry);
   },
@@ -798,7 +871,13 @@ const timeImplementation: TimeService = {
         new Date(startedAt).getTime() + hours * HOUR_MS,
       ).toISOString(),
     });
-    audit("time_entries", entry.id, "update", before, entry, user.id);
+    recordAudit({
+      eventType: "hours.edited",
+      table: "time_entries",
+      actorId: user.id,
+      before: before,
+      after: entry,
+    });
     save();
     return delay(entry);
   },
@@ -813,7 +892,14 @@ const timeImplementation: TimeService = {
     const before = { ...entry };
     entry.voidedAt = new Date().toISOString();
     entry.voidReason = reason.trim();
-    audit("time_entries", entry.id, "void", before, entry, user.id);
+    recordAudit({
+      eventType: "hours.voided",
+      table: "time_entries",
+      actorId: user.id,
+      before: before,
+      after: entry,
+      reason: entry.voidReason,
+    });
     save();
     return delay(entry);
   },
@@ -843,7 +929,13 @@ const timeImplementation: TimeService = {
         reviewNote: null,
         reviewedBy: user.id,
       });
-      audit("time_entries", entry.id, "update", before, entry, user.id);
+      recordAudit({
+        eventType: "hours.approved",
+        table: "time_entries",
+        actorId: user.id,
+        before: before,
+        after: entry,
+      });
     }
     save();
     return delay(entries);
@@ -865,11 +957,18 @@ const timeImplementation: TimeService = {
     const before = { ...entry };
     entry.reviewNote = note.trim();
     entry.reviewedBy = user.id;
-    audit("time_entries", id, "update", before, entry, user.id);
+    recordAudit({
+      eventType: "hours.clarification_requested",
+      table: "time_entries",
+      actorId: user.id,
+      before: before,
+      after: entry,
+      reason: entry.reviewNote,
+    });
     save();
     return delay(entry);
   },
-};
+});
 async function timerLock<T>(operation: () => Promise<T>): Promise<T> {
   if (typeof navigator !== "undefined" && navigator.locks)
     return navigator.locks.request("vexa.timer.write", operation);

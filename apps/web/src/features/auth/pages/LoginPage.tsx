@@ -28,7 +28,7 @@ function readLastUser(): string | null {
 }
 
 export default function LoginPage() {
-  const { user, signIn } = useAuth()
+  const { user, signIn, supportsPassword, signInWithPassword } = useAuth()
   const { data, isLoading, isError, refetch } = useLoginProfiles()
   const navigate = useNavigate()
   const location = useLocation()
@@ -39,6 +39,8 @@ export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false)
   const [recovering, setRecovering] = useState(false)
   const [formNotice, setFormNotice] = useState<string | null>(null)
+  const [submitting, setSubmitting] = useState(false)
+  const [credentialsError, setCredentialsError] = useState<string | null>(null)
   const reduced = useReducedMotion()
   const [scope, animate] = useAnimate()
   const from = (location.state as { from?: string } | null)?.from ?? '/'
@@ -107,10 +109,26 @@ export default function LoginPage() {
             <h2 id="access-title">{recovering ? 'Recupera tu acceso' : 'Inicia sesión'}</h2>
             {recovering && <p>Indica el correo de tu cuenta.</p>}
           </div>
-          <form className="access-form" onSubmit={event => {
+          <form className="access-form" onSubmit={async event => {
             event.preventDefault()
+            if (supportsPassword && !recovering) {
+              const data = new FormData(event.currentTarget)
+              setCredentialsError(null)
+              setSubmitting(true)
+              try {
+                await signInWithPassword(String(data.get('email') ?? ''), String(data.get('password') ?? ''))
+                navigate(from, { replace: true })
+              } catch (reason) {
+                setCredentialsError(reason instanceof Error ? reason.message : 'No pudimos entrar. Inténtalo de nuevo.')
+              } finally {
+                setSubmitting(false)
+              }
+              return
+            }
             setFormNotice(recovering
-              ? 'La recuperación estará disponible al conectar las cuentas. Por ahora puedes entrar a la demo de abajo.'
+              ? (supportsPassword
+                ? 'Para recuperar tu acceso, pide a un administrador de VEXA que te envíe una invitación nueva.'
+                : 'La recuperación estará disponible al conectar las cuentas. Por ahora puedes entrar a la demo de abajo.')
               : 'El acceso con correo y contraseña estará disponible al conectar las cuentas. Por ahora puedes entrar a la demo de abajo.')
           }}>
             <label htmlFor="login-email">Correo electrónico</label>
@@ -126,15 +144,17 @@ export default function LoginPage() {
                 </button>
               </div>
             </>}
-            <motion.button type="submit" className="access-submit" disabled={pendingId !== null}
+            <motion.button type="submit" className="access-submit" disabled={pendingId !== null || submitting}
               whileHover={reduced ? undefined : { y: -motionTokens.login.hoverPx }}
               whileTap={reduced ? undefined : { scale: motionTokens.scale.press }}
               transition={{ duration: motionTokens.duration.fast }}>
-              {recovering ? 'Enviar enlace de recuperación' : 'Iniciar sesión'}<ArrowUpRight size={17} aria-hidden="true" />
+              {recovering ? (supportsPassword ? 'Ver cómo recuperarla' : 'Enviar enlace de recuperación') : submitting ? 'Entrando…' : 'Iniciar sesión'}<ArrowUpRight size={17} aria-hidden="true" />
             </motion.button>
             {recovering && <button type="button" className="access-text-button access-back" onClick={() => { setRecovering(false); setFormNotice(null) }}>Volver al inicio de sesión</button>}
+            {credentialsError && <p role="alert" className="access-error">{credentialsError}</p>}
             {formNotice && <motion.output className="access-form-notice" aria-live="polite" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: motionTokens.duration.fast }}>{formNotice}</motion.output>}
           </form>
+          {!supportsPassword && <>
           <div className="access-demo-divider"><span>O explora la demo</span></div>
           {error && <p role="alert" className="access-error">{error}</p>}
       {isError ? (
@@ -170,6 +190,7 @@ export default function LoginPage() {
         </ul>
       )}
           <p className="access-note">Perfiles de prueba · Sin contraseña</p>
+          </>}
           <output className="sr-only" aria-live="polite">{pendingId ? 'Entrando al estudio…' : ''}</output>
         </section>
       </div>

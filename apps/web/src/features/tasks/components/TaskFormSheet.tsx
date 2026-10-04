@@ -12,6 +12,7 @@ import { useProjectLabels } from "@/features/projects/hooks/useProjects";
 import { Sheet } from "@/components/ui/Sheet";
 import type { Task } from "@vexa/domain/types";
 import { useAuth } from "@/features/auth/hooks/useAuth";
+import { EntityHistoryToggle } from "@/features/activity/components/EntityHistory";
 import { useMembers } from "@/features/team/hooks/useMembers";
 import { useCreateTask, useUpdateTask } from "../hooks/useTasks";
 import { taskFormSchema, type TaskFormValues } from "../schemas";
@@ -290,6 +291,7 @@ function TaskForm({
             {...register("link")}
           />
         </div>
+        {task ? <EntityHistoryToggle table="tasks" id={task.id} /> : null}
       </aside>
       <div className="task-form-actions">
         <Button variant="secondary" onClick={onClose}>
