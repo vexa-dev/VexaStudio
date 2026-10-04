@@ -199,18 +199,6 @@ export interface Notification {
   createdAt: IsoDateTime;
 }
 
-export type AuditAction = "create" | "update" | "void";
-export interface AuditLogEntry {
-  id: Id;
-  table: string;
-  recordId: Id;
-  action: AuditAction;
-  before: unknown;
-  after: unknown;
-  userId: Id;
-  createdAt: IsoDateTime;
-}
-
 export type MeetingStatus = "polling" | "confirmed" | "held" | "cancelled";
 export interface Meeting {
   id: Id;

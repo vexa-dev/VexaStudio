@@ -62,7 +62,7 @@ describe("registro manual", () => {
     });
     expect(
       getDb().auditLog.some(
-        (a) => a.recordId === entry.id && a.action === "create",
+        (a) => a.entity.id === entry.id && a.eventType === "hours.created",
       ),
     ).toBe(true);
   });
@@ -104,7 +104,7 @@ describe("edición y anulación", () => {
     expect(voided.voidedAt).not.toBeNull();
     expect(
       getDb().auditLog.some(
-        (a) => a.recordId === voided.id && a.action === "void",
+        (a) => a.entity.id === voided.id && a.eventType === "hours.voided",
       ),
     ).toBe(true);
   });
@@ -190,7 +190,9 @@ describe("actividades y revisión de horas", () => {
     const [approved] = await time.validate([e.id]);
     expect(approved.validated).toBe(true);
     expect(approved.validatedBy).toBe(DIEGO);
-    expect(getDb().auditLog.filter((a) => a.recordId === e.id)).toHaveLength(2);
+    expect(getDb().auditLog.filter((a) => a.entity.id === e.id)).toHaveLength(
+      2,
+    );
   });
   it("pide aclaración con motivo y permite corregir volviendo a revisión", async () => {
     const e = await time.addManual(input());

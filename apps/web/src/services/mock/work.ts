@@ -1,12 +1,6 @@
 import { canEditEntry } from "@vexa/domain/rules";
-import type {
-  AuditAction,
-  Id,
-  Profile,
-  Sprint,
-  Task,
-  TimeEntry,
-} from "@vexa/domain/types";
+import { taskEventType, type AuditTable } from "@vexa/domain/audit";
+import type { Id, Profile, Sprint, Task, TimeEntry } from "@vexa/domain/types";
 import { todayLima } from "@vexa/domain/dates";
 import type {
   ProjectService,
@@ -14,6 +8,7 @@ import type {
   TaskService,
   TimeService,
 } from "@vexa/services";
+import { recordAudit, scoped } from "./audit";
 import { getDb, getSessionUserId, save } from "./db";
 import { delay, pending } from "./utils";
 /**
@@ -148,7 +143,7 @@ function labelFields(
     throw new Error("Ya existe una etiqueta con ese nombre");
   return { name, color: input.color.toLowerCase() };
 }
-export const projects: ProjectService = {
+export const projects: ProjectService = scoped<ProjectService>({
   async listLabels(projectId) {
     currentAdmin();
     projectAccess(projectId);
@@ -232,29 +227,39 @@ export const projects: ProjectService = {
     save();
     return delay(project);
   },
-};
+});
 function newId(prefix: string): Id {
   return `${prefix}-${Date.now().toString(36)}${Math.random().toString(36).slice(2, 6)}`;
 }
 
+/** Adaptador transitorio: C06 y C07 lo reemplazan por eventos semánticos en cada llamada. */
 function audit(
-  table: string,
-  recordId: Id,
-  action: AuditAction,
-  before: unknown,
-  after: unknown,
+  table: AuditTable,
+  _recordId: Id,
+  action: "create" | "update" | "void",
+  before: object | null,
+  after: object,
   userId: Id,
 ) {
-  getDb().auditLog.push({
-    id: newId("au"),
-    table,
-    recordId,
-    action,
-    before: before === null ? null : structuredClone(before),
-    after: after === null ? null : structuredClone(after),
-    userId,
-    createdAt: new Date().toISOString(),
-  });
+  const eventType =
+    table === "tasks"
+      ? taskEventType(before, after)
+      : table === "time_entries"
+        ? action === "create"
+          ? "hours.created"
+          : action === "void"
+            ? "hours.voided"
+            : "hours.edited"
+        : table === "project_labels"
+          ? action === "create"
+            ? "project_label.created"
+            : "project_label.updated"
+          : table === "projects"
+            ? action === "create"
+              ? "project.created"
+              : "project.updated"
+            : "sprint.created";
+  recordAudit({ eventType, table, actorId: userId, before, after });
 }
 
 function findTask(id: Id): Task {
@@ -352,7 +357,7 @@ function ownEntry(id: Id, userId: Id): TimeEntry {
   return entry;
 }
 
-export const sprints: SprintService = {
+export const sprints: SprintService = scoped<SprintService>({
   async listByProject(projectId) {
     projectAccess(projectId);
     return delay(getDb().sprints.filter((s) => s.projectId === projectId));
@@ -388,8 +393,8 @@ export const sprints: SprintService = {
     return delay(sprint);
   },
   close: pending("SprintService.close"),
-};
-export const tasks: TaskService = {
+});
+export const tasks: TaskService = scoped<TaskService>({
   async list(filter = {}) {
     const user = currentUser();
     const projectBoard = Boolean(filter.projectId);
@@ -470,8 +475,8 @@ export const tasks: TaskService = {
     save();
     return delay(task);
   },
-};
-const timeImplementation: TimeService = {
+});
+const timeImplementation: TimeService = scoped<TimeService>({
   async pause() {
     const user = currentUser();
     const entry = getDb().timeEntries.find(
@@ -869,7 +874,7 @@ const timeImplementation: TimeService = {
     save();
     return delay(entry);
   },
-};
+});
 async function timerLock<T>(operation: () => Promise<T>): Promise<T> {
   if (typeof navigator !== "undefined" && navigator.locks)
     return navigator.locks.request("vexa.timer.write", operation);

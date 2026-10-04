@@ -3,7 +3,6 @@ import type {
   HoursDraft,
   Absence,
   Announcement,
-  AuditLogEntry,
   Comment,
   DailyUpdate,
   Expense,
@@ -21,6 +20,16 @@ import type {
   Task,
   TimeEntry,
 } from "@vexa/domain/types";
+import {
+  diffFields,
+  entityLabel,
+  entityProjectId,
+  taskEventType,
+  type AuditEventType,
+  type AuditLogEntry,
+  type AuditSnapshot,
+  type AuditTable,
+} from "@vexa/domain/audit";
 import { buildSeed } from "./seed";
 
 /** Base de datos simulada en memoria; una colección por tabla del modelo del PRD. */
@@ -93,7 +102,97 @@ function load(): MockDb {
   return db;
 }
 
+/** Entrada del formato anterior al registro de actividad (tabla, acción, antes, después). */
+interface LegacyAuditEntry {
+  id: Id;
+  table: string;
+  recordId: Id;
+  action: "create" | "update" | "void";
+  before: AuditSnapshot | null;
+  after: AuditSnapshot | null;
+  userId: Id;
+  createdAt: string;
+}
+
+const LEGACY_TABLES: AuditTable[] = [
+  "tasks",
+  "projects",
+  "project_labels",
+  "sprints",
+  "time_entries",
+];
+
+function legacyEventType(
+  table: AuditTable,
+  action: LegacyAuditEntry["action"],
+  before: AuditSnapshot | null,
+  after: AuditSnapshot | null,
+): AuditEventType {
+  if (table === "tasks" && after) return taskEventType(before, after);
+  if (table === "time_entries") {
+    if (action === "create") return "hours.created";
+    if (action === "void") return "hours.voided";
+    if (after?.validated && !before?.validated) return "hours.approved";
+    if (after?.reviewNote && !before?.reviewNote)
+      return "hours.clarification_requested";
+    return "hours.edited";
+  }
+  const base =
+    table === "project_labels" ? "project_label" : table.slice(0, -1);
+  return `${base}.${action === "create" ? "created" : "updated"}` as AuditEventType;
+}
+
+/** Convierte lo guardado con el formato anterior; el orden original define `seq`. */
+export function migrateAuditLog(
+  entries: (AuditLogEntry | LegacyAuditEntry)[],
+  profiles: Pick<MockDb["profiles"][number], "id" | "role">[],
+): AuditLogEntry[] {
+  const migrated: AuditLogEntry[] = [];
+  for (const entry of entries) {
+    if ("eventType" in entry) {
+      migrated.push(entry);
+      continue;
+    }
+    const table = entry.table as AuditTable;
+    const record = entry.after ?? entry.before;
+    if (!LEGACY_TABLES.includes(table) || !record) continue;
+    migrated.push({
+      id: entry.id,
+      seq: migrated.length + 1,
+      occurredAt: entry.createdAt,
+      clientAt: null,
+      actorId: entry.userId,
+      actorRole:
+        profiles.find((p) => p.id === entry.userId)?.role ?? "collaborator",
+      eventType: legacyEventType(
+        table,
+        entry.action,
+        entry.before,
+        entry.after,
+      ),
+      entity: {
+        table,
+        id: entry.recordId,
+        projectId: entityProjectId(table, record),
+        label: entityLabel(table, record),
+      },
+      changes: diffFields(entry.before, entry.after),
+      before: entry.before,
+      after: entry.after,
+      reason:
+        entry.action === "void" && typeof entry.after?.voidReason === "string"
+          ? entry.after.voidReason
+          : null,
+      requestId: `r-legacy-${entry.id}`,
+      sessionId: "s-legacy",
+      client: { platform: "web", appVersion: "legacy" },
+    });
+  }
+  return migrated;
+}
+
 function migrate(db: MockDb): MockDb {
+  db.auditLog = migrateAuditLog(db.auditLog ?? [], db.profiles);
   db.hoursDrafts ??= [];
   db.projectLabels ??= [];
   // Add a dedicated demo collaborator without changing existing profiles or work.
