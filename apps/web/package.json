@@ -21,6 +21,8 @@
     "@tanstack/react-query": "^5.104.0",
     "@vexa/domain": "*",
     "@vexa/services": "*",
+    "emoji-picker-element": "^1.29.1",
+    "emoji-picker-element-data": "^1.8.0",
     "lucide-react": "^1.49.0",
     "motion": "^13.5.0",
     "react": "^19.2.8",
