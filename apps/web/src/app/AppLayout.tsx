@@ -14,20 +14,18 @@ import { isSupabaseSource } from "@/services/supabase/data-source";
 import { navItems, navigationFor } from "./nav";
 import { ThemeToggle } from "./ThemeToggle";
 import { UserMenu } from "./UserMenu";
+import { NotificationMenu } from "@/features/notifications/NotificationMenu";
 import { useCardTilt } from "@/lib/useCardTilt";
 import { useAuth } from "@/features/auth/hooks/useAuth";
 import { useFocusRest } from "@/features/day/useFocusRest";
 import { MascotCompanion } from "@/components/MascotCompanion";
-import {
-  readMascotPreference,
-  saveMascotPreference,
-} from "@/lib/mascot-preference";
+import { readMascotPreference } from "@/lib/mascot-preference";
 
 function Brand() {
   return (
     <span className="flex items-center gap-2.5">
       <BrandLogo className="size-10" decorative />
-      <span className="whitespace-nowrap font-display text-sm font-bold sm:text-lg">
+      <span className="hidden whitespace-nowrap font-display text-sm font-bold min-[420px]:inline sm:text-lg">
         VEXA Studio
       </span>
     </span>
@@ -45,14 +43,8 @@ export function AppLayout() {
     navItems.find((item) => item.to === pathname)?.label ??
     "Espacio de trabajo";
   const hasTimer = Boolean(useRunningEntry().data);
-  const [mascotVisible, setMascotVisible] = useState(
-    () => !readMascotPreference().sleeping,
-  );
-  function toggleMascot() {
-    const visible = !mascotVisible;
-    setMascotVisible(visible);
-    saveMascotPreference({ sleeping: !visible });
-  }
+  const [mascotVisible] = useState(() => !readMascotPreference().sleeping);
+
   return (
     <div className="integrated-shell min-h-dvh lg:pl-60" {...tilt}>
       <a
@@ -80,10 +72,8 @@ export function AppLayout() {
           )}
           <TimerChip />
           <ThemeToggle />
-          <UserMenu
-            mascotVisible={mascotVisible}
-            onToggleMascot={toggleMascot}
-          />
+          {user && <NotificationMenu key={user.id} user={user} />}
+          <UserMenu />
         </div>
       </header>
 
