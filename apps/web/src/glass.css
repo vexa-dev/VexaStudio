@@ -210,7 +210,7 @@ button:not(:disabled) {
   height: 84px;
   border-bottom-color: var(--border);
   background: transparent;
-  margin: 0 32px;
+  margin: 0;
 }
 .topbar-context {
   flex-direction: column;
@@ -1168,6 +1168,11 @@ select:focus-visible {
 
 /* Liquid space: transparent foreground over a moving, dimensional backdrop. */
 .integrated-shell { isolation: isolate; }
+/* Todas las vistas de trabajo comparten el ancho disponible; Inicio conserva su distribución. */
+.integrated-shell main:not([data-view="inicio"]) { max-width: none; margin-inline: 0; }
+@media (min-width: 1024px) {
+  .integrated-shell main:not([data-view="inicio"]) { padding-inline: 32px 48px; }
+}
 .background-lines { position: fixed; inset: 0; z-index: -1; pointer-events: none; overflow: hidden; color: var(--line-art); opacity: .1; }
 .background-lines svg { display: block; width: 100%; height: 100%; }
 .dark .background-lines { color: var(--line-art); opacity: .13; }
@@ -1177,6 +1182,8 @@ select:focus-visible {
 .lava-nav { display: none; }
 @media (min-width: 1024px) {
   .integrated-shell { padding-left: 110px; }
+  /* El contenido deja 110 px, pero el menú ocupa 80 px: la cabecera cubre esos 30 px. */
+  .integrated-topbar { margin-inline-start: -30px; padding-inline: 54px 24px; }
   .lava-nav { display: flex; position: fixed; top: 12px; bottom: 12px; left: 12px; width: 76px; z-index: 30; align-items: center; flex-direction: column; padding: 16px 0; }
   .lava-brand { margin-bottom: 35px; border-radius: 50%; transition: transform .2s; }
   .lava-brand:hover { transform: rotate(-10deg) scale(1.08); }

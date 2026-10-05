@@ -3,6 +3,10 @@
 /* El modo oscuro se activa con la clase `dark` en <html> (ver ThemeProvider). */
 @custom-variant dark (&:where(.dark, .dark *));
 
+/* Scroll remains available with the wheel, touch and keyboard. */
+* { scrollbar-width: none; }
+*::-webkit-scrollbar { display: none; width: 0; height: 0; }
+
 /*
  * Paleta definida en colors.css y glass.css: grafito, blanco hielo y azul acero.
  * El modo claro es una derivación. Botones y texto de acento usan variantes que cumplen contraste AA (4.5:1).
@@ -259,7 +263,7 @@
     inset 0 1px 0 rgba(255, 255, 255, 0.06);
 }
 .integrated-topbar {
-  margin: 0 30px;
+  margin: 0;
   background: var(--glass);
   backdrop-filter: blur(22px);
 }
