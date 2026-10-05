@@ -4,6 +4,7 @@ export const motionTokens = {
   distance: { sm: 8, md: 16, lg: 24 },
   scale: { press: 0.97, pop: 1.015 },
   tilt: { maxDegrees: 1.1 },
+  notification: { ringDegrees: 16 },
   login: { staggerSeconds: 0.08, hoverPx: 2 },
   mascot: {
     headFollowX: 1.5,

@@ -183,6 +183,8 @@ export interface Absence {
 }
 
 export type NotificationType =
+  | "project_added"
+  | "task_assigned"
   | "daily_pending"
   | "hours_missing"
   | "expense_vote"
