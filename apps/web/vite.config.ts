@@ -22,6 +22,16 @@ export default defineConfig({
         ],
         // SPA: cualquier ruta sin archivo se sirve desde el index.html precacheado.
         navigateFallback: "/index.html",
+        // The fallback must never answer API-like paths (Supabase proxies, future functions).
+        navigateFallbackDenylist: [
+          /^\/rest\//,
+          /^\/auth\//,
+          /^\/storage\//,
+          /^\/realtime\//,
+          /^\/functions\//,
+          /^\/api\//,
+        ],
+        // No runtimeCaching on purpose: API and Storage responses are never cached by the service worker.
       },
       manifest: {
         name: "VEXA Studio",

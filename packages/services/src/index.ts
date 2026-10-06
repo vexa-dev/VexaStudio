@@ -4,6 +4,14 @@ import type {
   AuditLogEntry,
 } from "@vexa/domain/audit";
 import type {
+  ChatAttachment,
+  ChatEvent,
+  ChatMemberStatus,
+  ChatMessage,
+  ChatSettings,
+  ChatThread,
+} from "@vexa/domain/chat";
+import type {
   HoursDraft,
   ProjectLabel,
   Announcement,
@@ -41,6 +49,15 @@ export interface AuthService {
   getSession(): Promise<Profile | null>;
   signIn(userId: Id): Promise<Profile>;
   signOut(): Promise<void>;
+  /**
+   * Guarda foto y/o banner del usuario con sesión. `undefined` deja el campo igual; `null` lo quita.
+   * Los bytes de la imagen nunca entran en la cadena de auditoría. El mock no registra nada;
+   * en Supabase solo se guarda la ruta del archivo (evento `member.updated`).
+   */
+  updateProfileMedia(patch: {
+    avatarUrl?: string | null;
+    bannerUrl?: string | null;
+  }): Promise<Profile>;
 }
 
 export interface SettingsService {
@@ -261,6 +278,70 @@ export interface AuditService {
   timeline(entity: Pick<AuditEntity, "table" | "id">): Promise<AuditLogEntry[]>;
 }
 
+/**
+ * Chat: conversaciones, mensajes, reacciones, lecturas, ajustes, estado y presencia.
+ * Las reglas (acceso, límites, quién edita o anula) viven en cada implementación y fallan con
+ * mensajes en español. Las marcas de tiempo son milisegundos; los adaptadores convierten.
+ */
+export interface ChatService {
+  /** Conversaciones a las que la persona puede entrar, con integrantes, lecturas y mensajes recientes. */
+  listThreads(): Promise<ChatThread[]>;
+  /** Hasta `limit` mensajes anteriores a `beforeSentAt`, del más antiguo al más reciente. */
+  loadOlder(
+    threadId: Id,
+    beforeSentAt: number,
+    limit?: number,
+  ): Promise<ChatMessage[]>;
+  /** Conversación directa con otra persona; una sola por pareja (la segunda llamada devuelve la misma). */
+  directThread(otherId: Id): Promise<Id>;
+  /** Crea o edita un grupo (con `id`). Solo administradores; el creador siempre es integrante. */
+  saveGroup(input: {
+    id?: Id;
+    name: string;
+    description: string;
+    members: Id[];
+  }): Promise<Id>;
+  /** Elimina un grupo y sus mensajes. Solo administradores. */
+  deleteGroup(id: Id): Promise<void>;
+  /** Envía texto y/o adjunto; actualiza la lectura de quien envía. */
+  sendMessage(
+    threadId: Id,
+    input: { text: string; attachment?: ChatAttachment; replyTo?: Id },
+  ): Promise<ChatMessage>;
+  /** Solo el autor edita; el texto no puede quedar vacío. */
+  editMessage(threadId: Id, messageId: Id, text: string): Promise<void>;
+  /** Anula (borrado suave): el autor, o un administrador en un grupo. */
+  deleteMessage(threadId: Id, messageId: Id): Promise<void>;
+  /** Un emoji por persona y mensaje: repetirlo lo quita, otro lo reemplaza. */
+  reactToMessage(threadId: Id, messageId: Id, emoji: string): Promise<void>;
+  /** Reenvía como "Reenviado: <texto>" (solo con texto), copia el adjunto y no conserva la respuesta. */
+  forwardMessage(
+    fromThreadId: Id,
+    messageId: Id,
+    toThreadId: Id,
+  ): Promise<ChatMessage>;
+  /** Marca la conversación como leída hasta ahora (sin efecto si ya está al día). */
+  markRead(threadId: Id): Promise<void>;
+  getSettings(): Promise<ChatSettings>;
+  /** Un parche conserva el resto de ajustes; el estado se recorta a 80 caracteres. */
+  updateSettings(patch: Partial<ChatSettings>): Promise<ChatSettings>;
+  /** Estado público de cada integrante del estudio (estado, presencia activada, proyecto fijado). */
+  listMemberStatus(): Promise<Record<Id, ChatMemberStatus>>;
+  /** Imagen de fondo propia como data URL, o `null`. */
+  getWallpaperImage(): Promise<string | null>;
+  /** Guarda la imagen de fondo; falla si no es una imagen válida o es demasiado pesada. */
+  saveWallpaperImage(dataUrl: string): Promise<void>;
+  removeWallpaperImage(): Promise<void>;
+  /** Mensajes con adjunto o enlace de toda la conversación, para la vista de archivos compartidos. */
+  listSharedMessages(threadId: Id): Promise<ChatMessage[]>;
+  /** Avisa de cambios para invalidar caches; devuelve la función para cancelar. */
+  subscribe(listener: (event: ChatEvent) => void): () => void;
+  /** Activa o desactiva la presencia propia (pestaña visible y presencia permitida). */
+  trackPresence(enabled: boolean): void;
+  /** Personas en línea (`userId -> última señal en ms`); devuelve la función para cancelar. */
+  subscribePresence(callback: (online: Record<Id, number>) => void): () => void;
+}
+
 export interface Services {
   auth: AuthService;
   settings: SettingsService;
@@ -277,4 +358,5 @@ export interface Services {
   meetings: MeetingService;
   notifications: NotificationService;
   audit: AuditService;
+  chat: ChatService;
 }

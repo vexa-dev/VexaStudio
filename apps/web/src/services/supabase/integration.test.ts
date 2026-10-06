@@ -216,4 +216,58 @@ describe.skipIf(!url || !key)("Supabase local (integración)", () => {
     const denied = await rober.client.rpc("verify_audit_chain");
     expect(denied.error).not.toBeNull();
   });
+  it("guarda la foto en Storage, la sirve firmada a otro miembro y la quita", async () => {
+    // PNG de 1x1: solo importa que sea una imagen valida, no su contenido.
+    const png =
+      "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==";
+    try {
+      const profile = await alex.services.auth.updateProfileMedia({ avatarUrl: png });
+      expect(profile.avatarUrl).toMatch(/^https?:\/\/.+\/storage\/v1\/object\/sign\/avatars\//);
+      const response = await fetch(profile.avatarUrl!);
+      expect(response.status).toBe(200);
+      expect(response.headers.get("content-type")).toMatch(/^image\//);
+
+      // Otro miembro del estudio la ve en el equipo.
+      const seenByRober = (await rober.services.members.list()).find((m) => m.id === ALEX);
+      expect(seenByRober?.avatarUrl).toMatch(/\/storage\/v1\/object\/sign\/avatars\//);
+      expect((await fetch(seenByRober!.avatarUrl!)).status).toBe(200);
+    } finally {
+      const cleared = await alex.services.auth.updateProfileMedia({ avatarUrl: null });
+      expect(cleared.avatarUrl ?? null).toBeNull();
+    }
+    const after = (await rober.services.members.list()).find((m) => m.id === ALEX);
+    expect(after?.avatarUrl ?? null).toBeNull();
+  });
+
+  it("avisa una tarea asignada, la marca como leída y no la muestra a otra persona", async () => {
+    const title = `Aviso de integración ${Date.now()}`;
+    await admin.services.tasks.create({
+      sprintId: null,
+      projectId: "10000000-0000-4000-8000-000000000001",
+      title,
+      assigneeId: ROBER,
+      estimateHours: null,
+      link: null,
+    });
+    const own = await rober.services.notifications.list();
+    const notice = own.find((n) => n.payload.taskName === title);
+    expect(notice).toMatchObject({
+      userId: ROBER,
+      type: "task_assigned",
+      read: false,
+      payload: { actorName: "Jhony Rivera", taskName: title },
+    });
+
+    await rober.services.notifications.markRead(notice!.id);
+    const afterOne = await rober.services.notifications.list();
+    expect(afterOne.find((n) => n.id === notice!.id)?.read).toBe(true);
+
+    await rober.services.notifications.markAllRead();
+    const afterAll = await rober.services.notifications.list();
+    expect(afterAll.some((n) => !n.read)).toBe(false);
+
+    // Alex no ve el aviso de Rober.
+    const others = await alex.services.notifications.list();
+    expect(others.some((n) => n.payload.taskName === title)).toBe(false);
+  });
 });

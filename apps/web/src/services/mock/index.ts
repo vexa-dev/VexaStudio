@@ -11,30 +11,40 @@ import type {
   SettingsService,
 } from "@vexa/services";
 import { auditService } from "./audit";
+import { chatService } from "./chat";
 import { getDb, getSessionUserId, setSessionUserId } from "./db";
 import { requireStudioAccess } from "./studio-access";
 import { dashboard } from "./dashboard";
 import { projects, sprints, tasks, time } from "./work";
 import { delay, notImplemented } from "./utils";
+import {
+  resetProfileMedia,
+  updateProfileMedia,
+  withMedia,
+  withMediaAll,
+} from "./profile-media";
 
 const auth: AuthService = {
   async listLoginProfiles() {
-    return delay(getDb().profiles.filter((p) => p.active));
+    return delay(withMediaAll(getDb().profiles.filter((p) => p.active)));
   },
   async getSession() {
     const id = getSessionUserId();
     const profile = getDb().profiles.find((p) => p.id === id && p.active);
-    return delay(profile ?? null);
+    return delay(profile ? withMedia(profile) : null);
   },
   async signIn(userId) {
     const profile = getDb().profiles.find((p) => p.id === userId && p.active);
     if (!profile) throw new Error("Usuario no encontrado o inactivo");
     setSessionUserId(profile.id);
-    return delay(profile);
+    return delay(withMedia(profile));
   },
   async signOut() {
     setSessionUserId(null);
     return delay(undefined);
+  },
+  async updateProfileMedia(patch) {
+    return delay(updateProfileMedia(patch));
   },
 };
 
@@ -46,10 +56,11 @@ const settings: SettingsService = {
 
 const members: MemberService = {
   async list() {
-    return delay(getDb().profiles);
+    return delay(withMediaAll(getDb().profiles));
   },
   async get(id) {
-    return delay(getDb().profiles.find((p) => p.id === id) ?? null);
+    const profile = getDb().profiles.find((p) => p.id === id);
+    return delay(profile ? withMedia(profile) : null);
   },
 };
 
@@ -105,7 +116,14 @@ export function createMockServices(): Services {
     meetings: notImplemented<MeetingService>("MeetingService"),
     notifications: notImplemented<NotificationService>("NotificationService"),
     audit: auditService,
+    chat: chatService,
   };
 }
 
-export { resetMock } from "./db";
+import { resetMock as resetDb } from "./db";
+
+/** Borra datos, sesión y fotos/banners simulados. */
+export function resetMock(): void {
+  resetDb();
+  resetProfileMedia();
+}

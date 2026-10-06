@@ -4,10 +4,10 @@ Plataforma interna de VEXA (4 socios): tablero de sprints y tareas, registro de 
 
 **Fuente de verdad:** `docs/PRD.md`. Ante cualquier duda de alcance o reglas, léelo antes de implementar. Si algo no está en el PRD, pregunta; no lo inventes.
 
-## Etapa actual: frontend con datos simulados y backend Supabase en local
+## Etapa actual: frontend con dos fuentes de datos y backend Supabase listo en local
 
-- El frontend sigue funcionando con datos simulados: `VITE_DATA_SOURCE=mock` es el valor por defecto.
-- Autorizado el 03/10/2026: registro de actividad (auditoría) y backend Supabase, primero en local (CLI + Docker); el proyecto en la nube se conecta al final. Las migraciones SQL viven en `supabase/` y nunca llevan la clave `service_role` a un cliente.
+- El frontend funciona con datos simulados (`VITE_DATA_SOURCE=mock`, valor por defecto) o con Supabase (`VITE_DATA_SOURCE=supabase`). Perfil con foto y banner, notificaciones y chat existen en las dos fuentes detrás de la capa de servicios.
+- Autorizado el 03/10/2026: registro de actividad (auditoría) y backend Supabase, primero en local (CLI + Docker). Las migraciones SQL viven en `supabase/` y nunca llevan la clave `service_role` a un cliente. Hasta el 06/10/2026 hay 14 migraciones aplicadas en local y 14 archivos pgTAP; las migraciones nuevas (`20261005000000` en adelante) NO están aplicadas en la nube: el orden de despliegue está en la descripción del PR de entrega.
 - `apps/web/src/lib/supabase.ts` sigue como cliente opcional; la UI solo cambia de fuente mediante `VITE_DATA_SOURCE`.
 - Las pantallas **nunca** importan datos simulados directamente: siempre pasan por la capa de servicios (ver "Capa de datos"). Así, en la etapa 2 solo se agrega la implementación de Supabase sin tocar la UI.
 
@@ -32,6 +32,10 @@ npm run typecheck    # tipos de todos los workspaces
 npm run test         # Vitest (una pasada)
 npm run test:watch   # Vitest en modo watch
 npm run preview      # sirve el build de producción
+npm run preview:headers   # sirve el build con las cabeceras de vercel.json (para revisar la CSP)
+npm run db:start | db:reset | db:test   # Supabase local (Docker): migraciones + seed y pruebas pgTAP
+npm run db:types     # regenera database.types.ts (se commitea sin formatear)
+npm run test:integration   # contra el Supabase local, con SUPABASE_URL y SUPABASE_ANON_KEY en el entorno
 ```
 
 Antes de dar una tarea por terminada: `npm run typecheck && npm run lint && npm run test && npm run build` sin errores.
@@ -64,7 +68,7 @@ Los imports `@vexa/domain/<módulo>` y `@vexa/services` identifican código comp
 - Cada módulo tiene una interfaz en `packages/services/src/index.ts` con métodos asíncronos (devuelven `Promise`), como si hablaran con una API real.
 - `apps/web/src/services/mock/` implementa esas interfaces con datos en memoria, persistidos en `localStorage` para que sobrevivan al recargar, y con un pequeño retraso artificial (150–300 ms) para probar estados de carga.
 - `apps/web/src/services/index.ts` exporta la implementación según `VITE_DATA_SOURCE` (`mock` por defecto; `supabase` cuando se integre).
-- Estado del mock: implementados Auth, Settings, Members, Projects, Dashboard (resumen mensual y puntos, con `packages/domain/src/rules.ts`) y, en `mock/work.ts`, Sprints (listar, activo, crear), Tasks (listar, crear, editar, mover) y Time (temporizador único por tarea/actividad, registro manual sin tarea, historial, revisión con aprobación/aclaración, editar y anular con motivo), con permisos y `auditLog`. Gastos tiene lecturas de movimientos, votos y recurrentes compartidas con el dashboard; crear, votar y anular gastos siguen pendientes. Falta cerrar sprint (F3) y el resto de servicios: fallan con un mensaje claro (`pending`/`notImplemented` en `mock/utils.ts`) hasta su bloque F3–F4.
+- Estado del mock: implementados Auth, Settings, Members, Projects, Dashboard (resumen mensual y puntos, con `packages/domain/src/rules.ts`) y, en `mock/work.ts`, Sprints (listar, activo, crear), Tasks (listar, crear, editar, mover) y Time (temporizador único por tarea/actividad, registro manual sin tarea, historial, revisión con aprobación/aclaración, editar y anular con motivo), con permisos y `auditLog`. Gastos tiene lecturas de movimientos, votos y recurrentes compartidas con el dashboard; crear, votar y anular gastos siguen pendientes. Perfil (foto y banner), Notificaciones y Chat también están implementados en el mock (`mock/profile-media.ts`, `mock/chat.ts`). Falta cerrar sprint (F3) y el resto de servicios: fallan con un mensaje claro (`pending`/`notImplemented` en `mock/utils.ts`) hasta su bloque F3–F4.
 - Los hooks de `features/*/hooks` usan TanStack Query sobre los servicios. Los componentes solo usan hooks.
 - Los cálculos de equity y cumplimiento viven en `packages/domain/src/rules.ts`. El mock los usa para generar el resumen; en la etapa 2 el cálculo pasa a vistas SQL y el frontend solo lo lee, con el mismo tipo de resultado.
 - Los permisos (quién puede editar qué) se aplican en el servicio mock igual que lo hará RLS después; la UI además oculta lo que no corresponde.
@@ -157,5 +161,7 @@ La web vive en `apps/web`; dominio y contratos en `packages`. Mantener los coman
 - Cuentas del seed (solo local): jhony@, rober@, jose@, diego@, alex@ `vexa.test`, contraseña `vexa-local-dev`. Acceso por invitación: no hay registro público.
 - Código: `apps/web/src/services/supabase/` (un adaptador por servicio, `index.ts` los compone; `mappers.ts`, `errors.ts`, `database.types.ts` generado con `supabase gen types typescript --local`). Los adaptadores reciben el cliente; `fake-client.ts` sirve para pruebas unitarias e `integration.test.ts` (`npm run test:integration`, con `SUPABASE_URL` y `SUPABASE_ANON_KEY`) corre contra el stack local y se omite sin esas variables.
 - Cabeceras que envía el cliente en cada llamada REST: `x-request-id`, `x-client` (`web/<versión>`), `x-client-at`. La hora oficial es la del servidor.
-- Pendiente en ambas fuentes: daily (escrituras), comentarios, anuncios, reuniones, notificaciones y cerrar sprint. Gastos y sprints no generan eventos de actividad aún. `tasks.list()` sin proyecto se filtra a las asignadas en el adaptador.
-- Despliegue (checklist para después, sin verificar): crear el proyecto en la nube, aplicar migraciones, desactivar el registro público, invitar a los 4 socios, definir en Vercel `VITE_DATA_SOURCE=supabase`, `VITE_SUPABASE_URL` y `VITE_SUPABASE_ANON_KEY` y habilitar Realtime para `audit_log`.
+- Implementado en ambas fuentes: perfil con foto y banner (Storage privado con URLs firmadas), notificaciones (creadas solo por triggers; Realtime) y chat (conversaciones, mensajes, reacciones, lecturas, estado, preferencias, fondo, adjuntos de hasta 25 MiB en Supabase y 3 MiB en el mock, presencia por canal privado). Los tipos de notificación que necesitan un reloj (`daily_pending`, `hours_missing`, `renewal`, `expense_result`) y los de comentarios y reuniones siguen diferidos.
+- Pendiente en ambas fuentes: daily (escrituras), comentarios, anuncios, reuniones y cerrar sprint. Gastos y sprints no generan eventos de actividad aún. `tasks.list()` sin proyecto se filtra a las asignadas en el adaptador.
+- Despliegue en la nube (proyecto ya creado con las 7 primeras migraciones y los 4 socios): antes de fusionar un PR que despliegue el frontend, copia de seguridad, `supabase db push` de las migraciones nuevas, ajustes de Auth a mano (contraseña mínima de 12 con mayúsculas, minúsculas y dígitos; Site URL y Redirect URLs de producción; dejar los dos `enable_signup` como están: el de `[auth.email]` en `false` desactiva el login por correo), Realtime con acceso público desactivado y los buckets `avatars`, `banners`, `chat-wallpapers` y `chat-attachments`. Variables de Vercel: `VITE_DATA_SOURCE=supabase`, `VITE_SUPABASE_URL` y `VITE_SUPABASE_ANON_KEY`.
+- Seguridad por defecto (B2): toda función nueva exige `grant` explícito (el revoke a `PUBLIC` es global); toda tabla pública nueva sube el contador de `06_barrido_rls`; las funciones `security definer` públicas solo pueden ser auxiliares de permisos (lista blanca en `06`). Después de usar la app o la integración contra la base local, corre `npm run db:reset` antes de `npm run db:test`.

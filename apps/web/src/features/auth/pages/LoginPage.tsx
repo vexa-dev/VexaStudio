@@ -178,7 +178,7 @@ export default function LoginPage() {
                     whileTap={reduced ? undefined : { scale: motionTokens.scale.press }}
                     transition={{ duration: motionTokens.duration.fast }}
                   >
-                    <Avatar name={profile.name} size="sm" />
+                    <Avatar name={profile.name} src={profile.avatarUrl} size="sm" />
                     <span className="flex min-w-0 flex-1 flex-col">
                       <span className="truncate font-medium">{profile.name.split(' ')[0]}</span>
                       {profile.id === lastUserId ? <span className="text-xs text-muted">Último acceso</span> : null}

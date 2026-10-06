@@ -14,6 +14,7 @@
     "dev": "npm run dev --workspace @vexa/web --",
     "build": "npm run build --workspace @vexa/web",
     "preview": "npm run preview --workspace @vexa/web --",
+    "preview:headers": "node scripts/preview-with-headers.mjs",
     "typecheck": "tsc -p tsconfig.tools.json && npm run typecheck --workspaces --if-present",
     "lint": "node scripts/check-boundaries.mjs && oxlint apps/web/src packages apps/web/vite.config.ts vitest.config.ts scripts",
     "test": "vitest run",
@@ -23,7 +24,8 @@
     "db:start": "supabase start",
     "db:stop": "supabase stop",
     "db:reset": "supabase db reset",
-    "db:test": "supabase test db"
+    "db:test": "supabase test db",
+    "db:types": "node scripts/gen-db-types.mjs"
   },
   "devDependencies": {
     "@types/node": "^24.13.3",

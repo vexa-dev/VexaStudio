@@ -8,11 +8,17 @@ export function SidePanel({
   onClose,
   children,
   className = "",
+  header,
+  minimized = false,
 }: {
   title: string;
   onClose: () => void;
   children: ReactNode;
   className?: string;
+  /** Replaces the visible heading; the title stays as the accessible name. */
+  header?: ReactNode;
+  /** Hides the modal layer without closing or unmounting; the page stays usable. */
+  minimized?: boolean;
 }) {
   const dialogRef = useRef<HTMLDialogElement>(null);
   const closeRef = useRef(onClose);
@@ -22,7 +28,7 @@ export function SidePanel({
   const titleId = useId();
   useEffect(() => {
     const dialog = dialogRef.current;
-    if (!dialog) return;
+    if (!dialog || minimized) return;
     const previousFocus =
       document.activeElement instanceof HTMLElement
         ? document.activeElement
@@ -41,7 +47,7 @@ export function SidePanel({
       root.style.overflow = previousOverflow;
       previousFocus?.focus();
     };
-  }, []);
+  }, [minimized]);
   return createPortal(
     <dialog
       className={`user-drawer ${className}`}
@@ -53,8 +59,19 @@ export function SidePanel({
       }}
     >
       <div className="user-drawer-body">
-        <header className="notification-panel-heading">
-          <h2 id={titleId}>{title}</h2>
+        <header
+          className={`notification-panel-heading${header ? " side-panel-custom-heading" : ""}`}
+        >
+          {header ? (
+            <>
+              <h2 id={titleId} className="sr-only">
+                {title}
+              </h2>
+              {header}
+            </>
+          ) : (
+            <h2 id={titleId}>{title}</h2>
+          )}
           <Button
             variant="ghost"
             className="w-11 px-0"

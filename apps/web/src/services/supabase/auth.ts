@@ -1,8 +1,17 @@
 import type { Profile } from "@vexa/domain/types";
 import type { AuthService } from "@vexa/services";
 import type { VexaSupabase } from "@/lib/supabase";
+import type { Tables } from "./database.types";
 import { toServiceError, unwrapMaybe } from "./errors";
-import { mapProfile } from "./mappers";
+import {
+  clearProfileImage,
+  createSignedUrlResolver,
+  dataUrlToBlob,
+  uploadProfileImage,
+  withSignedMedia,
+  type SignedUrlResolver,
+} from "./profile-media";
+import { requireUserId } from "./session";
 
 /**
  * Acceso por invitación: la cuenta la crea un administrador y la persona entra con correo y
@@ -39,13 +48,16 @@ export function toAuthError(error: AuthErrorLike): Error {
   return toServiceError(error);
 }
 
-export function createAuthService(client: VexaSupabase): CredentialsAuthService {
-  /** Perfil activo; RLS no devuelve los inactivos. */
+export function createAuthService(
+  client: VexaSupabase,
+  resolver: SignedUrlResolver = createSignedUrlResolver(client),
+): CredentialsAuthService {
+  /** Perfil activo con su foto y banner firmados; RLS no devuelve los inactivos. */
   async function fetchProfile(id: string): Promise<Profile | null> {
     const row = unwrapMaybe(
       await client.from("profiles").select("*").eq("id", id).maybeSingle(),
     );
-    return row ? mapProfile(row) : null;
+    return row ? ((await withSignedMedia(resolver, [row]))[0] ?? null) : null;
   }
 
   return {
@@ -81,8 +93,32 @@ export function createAuthService(client: VexaSupabase): CredentialsAuthService 
       return profile;
     },
     async signOut() {
+      resolver.clear();
       const { error } = await client.auth.signOut({ scope: "local" });
       if (error) throw toAuthError(error);
+    },
+    async updateProfileMedia(patch) {
+      const userId = await requireUserId(client);
+      // Se valida todo antes de subir nada: una imagen mala no deja la otra a medias.
+      for (const value of [patch.avatarUrl, patch.bannerUrl])
+        if (typeof value === "string") dataUrlToBlob(value);
+      const targets = [
+        { kind: "avatar", value: patch.avatarUrl },
+        { kind: "banner", value: patch.bannerUrl },
+      ] as const;
+      let latest: Tables<"profiles"> | null = null;
+      for (const { kind, value } of targets) {
+        if (typeof value === "string")
+          latest = await uploadProfileImage(client, { userId, kind, dataUrl: value });
+        else if (value === null)
+          latest = await clearProfileImage(client, { userId, kind });
+      }
+      // La última fila de la RPC ya trae ambas rutas; sin cambios se lee el perfil.
+      const profile = latest
+        ? ((await withSignedMedia(resolver, [latest]))[0] ?? null)
+        : await fetchProfile(userId);
+      if (!profile) throw new Error("Inicia sesión para continuar");
+      return profile;
     },
     onSessionChange(listener) {
       const { data } = client.auth.onAuthStateChange((event, session) => {

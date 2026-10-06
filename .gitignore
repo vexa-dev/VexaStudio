@@ -61,3 +61,6 @@ playwright-report/
 
 # Capturas de revisión visual local
 design-preview/
+
+# Capturas y evidencias locales de revisión
+outputs/

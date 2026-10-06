@@ -27,6 +27,9 @@ declare n int;
 begin execute p_sql; get diagnostics n = row_count; return n; end $$;
 
 -- ---------------------------------------------------------------- anon: nada
+-- Los ayudantes temporales pierden el EXECUTE de PUBLIC por la migración de privilegios por defecto.
+grant execute on all functions in schema pg_temp to public;
+
 select pg_temp.as_anon();
 select throws_like('select * from public.profiles', 'permission denied%', 'anon no lee perfiles');
 select throws_like('select * from public.tasks', 'permission denied%', 'anon no lee tareas');

@@ -1,10 +1,18 @@
 import type { MemberService, SettingsService } from "@vexa/services";
 import type { VexaSupabase } from "@/lib/supabase";
 import { unwrap, unwrapMaybe } from "./errors";
-import { mapProfile, mapSettings } from "./mappers";
+import { mapSettings } from "./mappers";
+import {
+  createSignedUrlResolver,
+  withSignedMedia,
+  type SignedUrlResolver,
+} from "./profile-media";
 
 /** Equipo: cualquier usuario activo lo ve (RLS); solo un administrador lo modifica. */
-export function createMemberService(client: VexaSupabase): MemberService {
+export function createMemberService(
+  client: VexaSupabase,
+  resolver: SignedUrlResolver = createSignedUrlResolver(client),
+): MemberService {
   return {
     async list() {
       const rows = unwrap(
@@ -14,13 +22,13 @@ export function createMemberService(client: VexaSupabase): MemberService {
           .order("created_at")
           .order("id"),
       );
-      return rows.map(mapProfile);
+      return withSignedMedia(resolver, rows);
     },
     async get(id) {
       const row = unwrapMaybe(
         await client.from("profiles").select("*").eq("id", id).maybeSingle(),
       );
-      return row ? mapProfile(row) : null;
+      return row ? ((await withSignedMedia(resolver, [row]))[0] ?? null) : null;
     },
   };
 }

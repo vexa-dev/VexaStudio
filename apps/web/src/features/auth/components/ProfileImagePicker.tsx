@@ -7,7 +7,41 @@ import {
   type ProfileImageKind,
   type ProfileImageSelection,
 } from "./profile-image-catalog";
+import { encodeWithinLimit, outputSize } from "./profile-image-output";
 import "./profile-image-picker.css";
+
+const KIND_COPY = {
+  photo: {
+    aspect: 1,
+    title: "Elige tu foto de perfil",
+    upload: "Subir mi foto",
+    apply: "Aplicar foto",
+    maxMb: 5,
+  },
+  banner: {
+    aspect: 5,
+    title: "Elige tu banner",
+    upload: "Subir mi banner",
+    apply: "Aplicar banner",
+    maxMb: 10,
+  },
+  wallpaper: {
+    aspect: 9 / 16,
+    title: "Elige el fondo del chat",
+    upload: "Subir mi imagen",
+    apply: "Aplicar fondo",
+    maxMb: 10,
+  },
+} as const satisfies Record<
+  ProfileImageKind,
+  {
+    aspect: number;
+    title: string;
+    upload: string;
+    apply: string;
+    maxMb: number;
+  }
+>;
 
 export function ProfileImagePicker({
   kind,
@@ -21,7 +55,7 @@ export function ProfileImagePicker({
   onApply: (image: ProfileImageSelection) => void;
 }) {
   const [src, setSrc] = useState(
-    current?.original ?? profileImageCatalog[kind][0].src,
+    current?.original ?? profileImageCatalog[kind][0]?.src ?? "",
   );
   const [zoom, setZoom] = useState(current?.zoom ?? 1);
   const [x, setX] = useState(current?.x ?? 50);
@@ -38,7 +72,8 @@ export function ProfileImagePicker({
     startY: number;
   } | null>(null);
   const readRequest = useRef(0);
-  const aspect = kind === "photo" ? 1 : 5;
+  const copy = KIND_COPY[kind];
+  const aspect = copy.aspect;
   const ratio = dimensions.width / (dimensions.height || 1);
   const width = Math.max(1, ratio / aspect) * zoom;
   const height = Math.max(1, aspect / (ratio || aspect)) * zoom;
@@ -87,8 +122,9 @@ export function ProfileImagePicker({
     setBusy(true);
     try {
       const canvas = document.createElement("canvas");
-      canvas.width = kind === "photo" ? 512 : 1800;
-      canvas.height = kind === "photo" ? 512 : 360;
+      const target = outputSize(kind);
+      canvas.width = target.width;
+      canvas.height = target.height;
       const context = canvas.getContext("2d");
       if (!context) throw new Error("No se pudo preparar la imagen.");
       const cropWidth = dimensions.width / width;
@@ -104,9 +140,13 @@ export function ProfileImagePicker({
         canvas.width,
         canvas.height,
       );
+      const preview = encodeWithinLimit((type, quality) =>
+        canvas.toDataURL(type, quality),
+      );
+      if (!preview) throw new Error("La imagen es demasiado pesada.");
       onApply({
         original: src,
-        preview: canvas.toDataURL("image/png"),
+        preview,
         zoom,
         x,
         y,
@@ -122,32 +162,38 @@ export function ProfileImagePicker({
     <Sheet
       open
       onClose={onClose}
-      title={kind === "photo" ? "Elige tu foto de perfil" : "Elige tu banner"}
+      title={copy.title}
       description="Elige una imagen del estudio o sube la tuya y ajusta el encuadre."
       className="profile-image-sheet"
     >
       <div className="image-picker-layout">
         <div className="image-picker-gallery">
-          <h3>Galería VEXA</h3>
-          <div className={`image-picker-options image-picker-options-${kind}`}>
-            {profileImageCatalog[kind].map((item) => (
-              <button
-                key={item.src}
-                type="button"
-                aria-pressed={src === item.src}
-                onClick={() => select(item.src)}
+          {profileImageCatalog[kind].length > 0 && (
+            <>
+              <h3>Galería VEXA</h3>
+              <div
+                className={`image-picker-options image-picker-options-${kind}`}
               >
-                <img src={item.src} alt="" />
-                <span>{item.name}</span>
-                {src === item.src && <Check size={16} aria-hidden="true" />}
-              </button>
-            ))}
-          </div>
+                {profileImageCatalog[kind].map((item) => (
+                  <button
+                    key={item.src}
+                    type="button"
+                    aria-pressed={src === item.src}
+                    onClick={() => select(item.src)}
+                  >
+                    <img src={item.src} alt="" />
+                    <span>{item.name}</span>
+                    {src === item.src && <Check size={16} aria-hidden="true" />}
+                  </button>
+                ))}
+              </div>
+            </>
+          )}
           <Button variant="secondary" onClick={() => input.current?.click()}>
             <Upload size={16} aria-hidden="true" />
-            Subir mi {kind === "photo" ? "foto" : "banner"}
+            {copy.upload}
           </Button>
-          <p>JPG, PNG o WebP · hasta {kind === "photo" ? "5" : "10"} MB</p>
+          <p>JPG, PNG o WebP · hasta {copy.maxMb} MB</p>
           <input
             ref={input}
             type="file"
@@ -163,7 +209,7 @@ export function ProfileImagePicker({
                 !["image/jpeg", "image/png", "image/webp"].includes(
                   file.type,
                 ) ||
-                file.size > (kind === "photo" ? 5 : 10) * 1024 * 1024
+                file.size > copy.maxMb * 1024 * 1024
               ) {
                 setError(
                   "Elige una imagen JPG, PNG o WebP dentro del tamaño permitido.",
@@ -209,29 +255,31 @@ export function ProfileImagePicker({
               drag.current = null;
             }}
           >
-            <img
-              key={src}
-              ref={image}
-              src={src}
-              alt="Previsualización del encuadre"
-              draggable={false}
-              onLoad={(event) =>
-                setDimensions({
-                  width: event.currentTarget.naturalWidth,
-                  height: event.currentTarget.naturalHeight,
-                })
-              }
-              onError={() => {
-                setDimensions({ width: 0, height: 0 });
-                setError("No se pudo abrir esta imagen. Selecciona otra.");
-              }}
-              style={{
-                width: `${width * 100}%`,
-                height: `${height * 100}%`,
-                left: `${-(width - 1) * x}%`,
-                top: `${-(height - 1) * y}%`,
-              }}
-            />
+            {src && (
+              <img
+                key={src}
+                ref={image}
+                src={src}
+                alt="Previsualización del encuadre"
+                draggable={false}
+                onLoad={(event) =>
+                  setDimensions({
+                    width: event.currentTarget.naturalWidth,
+                    height: event.currentTarget.naturalHeight,
+                  })
+                }
+                onError={() => {
+                  setDimensions({ width: 0, height: 0 });
+                  setError("No se pudo abrir esta imagen. Selecciona otra.");
+                }}
+                style={{
+                  width: `${width * 100}%`,
+                  height: `${height * 100}%`,
+                  left: `${-(width - 1) * x}%`,
+                  top: `${-(height - 1) * y}%`,
+                }}
+              />
+            )}
           </div>
           <p className="image-picker-drag-hint">
             <Move size={14} aria-hidden="true" />
@@ -282,12 +330,12 @@ export function ProfileImagePicker({
         </p>
       )}
       <div className="image-picker-footer">
-        <p>Vista previa; todavía no se guarda en tu cuenta.</p>
+        <p>Se guarda en tu perfil al aplicar.</p>
         <Button variant="secondary" onClick={onClose}>
           Cancelar
         </Button>
         <Button disabled={!dimensions.width || busy} onClick={apply}>
-          Aplicar {kind === "photo" ? "foto" : "banner"}
+          {copy.apply}
         </Button>
       </div>
     </Sheet>

@@ -11,6 +11,32 @@ export interface ErrorLike {
 
 /** Mensajes canónicos, con acentos. La comparación ignora acentos y mayúsculas. */
 const CANONICAL_MESSAGES = [
+  "No tienes acceso a esta conversación.",
+  "Solo puedes enviar mensajes como tú mismo.",
+  "El mensaje puede tener hasta 4000 caracteres.",
+  "Escribe un mensaje o adjunta un archivo.",
+  "El mensaje original ya no está disponible.",
+  "El mensaje ya no está disponible.",
+  "Solo puedes editar o eliminar tus mensajes.",
+  "Escribe un mensaje de hasta 4000 caracteres.",
+  "Selecciona a otra persona.",
+  "La persona seleccionada no está disponible.",
+  "Solo los administradores pueden gestionar grupos.",
+  "Escribe el nombre del grupo.",
+  "El nombre del grupo puede tener hasta 60 caracteres.",
+  "La descripción puede tener hasta 240 caracteres.",
+  "Selecciona al menos un integrante.",
+  "Esta conversación no es un grupo.",
+  "Hay integrantes que no están disponibles.",
+  "Solo se pueden eliminar grupos.",
+  "El emoji debe tener de 1 a 16 caracteres.",
+  "No tienes acceso a ese proyecto.",
+  "El archivo adjunto no corresponde a este mensaje.",
+  "El nombre del archivo debe tener de 1 a 255 caracteres.",
+  "El archivo adjunto debe indicar su tipo y su tamaño.",
+  "El archivo adjunto no existe en el almacenamiento.",
+  "El tamaño del archivo no coincide con el subido.",
+
   "Inicia sesión para continuar",
   "Tu rol no permite esta acción",
   "Solo un administrador puede gestionar proyectos y tareas",
@@ -75,19 +101,23 @@ const CANONICAL_MESSAGES = [
   "Solo un administrador registra reembolsos",
   "El estado del gasto lo define la votación",
   "Mes no válido: usa YYYY-MM",
+  "La imagen debe estar en tu carpeta",
+  "La imagen no existe en el almacenamiento",
+  "Operación de imagen no válida",
 ];
 
 const fold = (text: string) =>
-  text
-    .normalize("NFD")
-    .replace(/\p{M}/gu, "")
-    .trim()
-    .toLocaleLowerCase("es");
+  text.normalize("NFD").replace(/\p{M}/gu, "").trim().toLocaleLowerCase("es");
 
 const CANONICAL = new Map(CANONICAL_MESSAGES.map((m) => [fold(m), m]));
 
 /** Restricciones de la base con su mensaje para la persona usuaria. */
 const CONSTRAINT_MESSAGES: Record<string, string> = {
+  chat_preferences_wallpaper_path_owner_check:
+    "La imagen debe estar en tu carpeta",
+  chat_messages_body_len_check: "El mensaje puede tener hasta 4000 caracteres.",
+  chat_messages_attachment_size_check:
+    "El archivo está vacío o pesa demasiado.",
   tasks_link_check: "Usa un enlace http o https",
   time_entries_evidence_url_check: "Usa un enlace http o https",
   tasks_description_check: "Máximo 20,000 caracteres en la descripción",
@@ -102,6 +132,8 @@ const CONSTRAINT_MESSAGES: Record<string, string> = {
   projects_name_check: "Escribe el nombre del proyecto",
   sprints_goal_check: "Escribe el objetivo del sprint",
   sprints_check: "El fin del sprint no puede ser anterior al inicio",
+  profiles_avatar_path_owner_check: "La imagen debe estar en tu carpeta",
+  profiles_banner_path_owner_check: "La imagen debe estar en tu carpeta",
 };
 
 const NETWORK = /failed to fetch|networkerror|load failed|fetch failed/i;

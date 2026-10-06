@@ -9,15 +9,19 @@ import {
 
 describe("toServiceError", () => {
   it("restituye los acentos de los mensajes que la base escribe sin ellos", () => {
-    expect(toServiceError({ message: "Deten el temporizador antes de editar el registro" }).message).toBe(
-      "Detén el temporizador antes de editar el registro",
-    );
-    expect(toServiceError({ message: "Explica que necesita aclaracion" }).message).toBe(
-      "Explica qué necesita aclaración",
-    );
-    expect(toServiceError({ message: "Solo el administrador edita la asignacion y el contenido" }).message).toBe(
-      "Solo el administrador edita la asignación y el contenido",
-    );
+    expect(
+      toServiceError({
+        message: "Deten el temporizador antes de editar el registro",
+      }).message,
+    ).toBe("Detén el temporizador antes de editar el registro");
+    expect(
+      toServiceError({ message: "Explica que necesita aclaracion" }).message,
+    ).toBe("Explica qué necesita aclaración");
+    expect(
+      toServiceError({
+        message: "Solo el administrador edita la asignacion y el contenido",
+      }).message,
+    ).toBe("Solo el administrador edita la asignación y el contenido");
   });
 
   it("traduce las restricciones por su nombre", () => {
@@ -34,6 +38,23 @@ describe("toServiceError", () => {
           'duplicate key value violates unique constraint "project_labels_name_uidx"',
       }).message,
     ).toBe("Ya existe una etiqueta con ese nombre");
+  });
+
+  it("traduce los mensajes de las imágenes de perfil", () => {
+    expect(
+      toServiceError({ message: "Operacion de imagen no valida" }).message,
+    ).toBe("Operación de imagen no válida");
+    expect(
+      toServiceError({ message: "La imagen no existe en el almacenamiento" })
+        .message,
+    ).toBe("La imagen no existe en el almacenamiento");
+    expect(
+      toServiceError({
+        code: "23514",
+        message:
+          'new row for relation "profiles" violates check constraint "profiles_avatar_path_owner_check"',
+      }).message,
+    ).toBe("La imagen debe estar en tu carpeta");
   });
 
   it("una política RLS rechazada es un error de permisos", () => {
@@ -88,5 +109,21 @@ describe("servicios pendientes", () => {
     ).rejects.toThrow("CommentService.list aún no está implementado");
     const service = notImplemented<object>("X");
     expect((service as { then?: unknown }).then).toBeUndefined();
+  });
+});
+
+describe("canonical chat errors", () => {
+  it("restores accents before mapping permission error codes", () => {
+    expect(
+      toServiceError({
+        code: "42501",
+        message: "No tienes acceso a esta conversacion.",
+      }).message,
+    ).toBe("No tienes acceso a esta conversación.");
+    expect(
+      toServiceError({
+        message: "El tamano del archivo no coincide con el subido.",
+      }).message,
+    ).toBe("El tamaño del archivo no coincide con el subido.");
   });
 });

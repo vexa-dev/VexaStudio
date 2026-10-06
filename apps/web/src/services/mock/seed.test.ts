@@ -11,6 +11,10 @@ describe('seed', () => {
     expect(minimums).toEqual([48, 64, 48, 80])
   })
 
+  it('da a cada perfil una fecha de registro anterior a octubre de 2026', () => {
+    expect(db.profiles.every((p) => !!p.joinedAt && p.joinedAt < '2026-10-01')).toBe(true)
+  })
+
   it('tiene tareas en todas las columnas y un solo sprint activo', () => {
     expect(new Set(db.tasks.map((t) => t.status))).toEqual(new Set(['todo', 'in_progress', 'review', 'done']))
     expect(db.sprints.filter((s) => s.status === 'active')).toHaveLength(1)

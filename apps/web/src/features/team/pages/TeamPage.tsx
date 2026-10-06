@@ -32,7 +32,7 @@ export default function TeamPage() {
         {data.profiles.map((profile) => (
           <Card key={profile.id} className="flex flex-col gap-4">
             <div className="flex items-center justify-between">
-              <Avatar name={profile.name} size="lg" />
+              <Avatar name={profile.name} src={profile.avatarUrl} size="lg" />
               <Badge tone={profile.role === "admin" ? "primary" : "neutral"}>
                 {roleLabel[profile.role]}
               </Badge>
@@ -80,6 +80,10 @@ export default function TeamPage() {
                     name={
                       data.profiles.find((p) => p.id === update.userId)?.name ??
                       "Socio"
+                    }
+                    src={
+                      data.profiles.find((p) => p.id === update.userId)
+                        ?.avatarUrl
                     }
                     size="sm"
                   />

@@ -29,6 +29,9 @@ create function pg_temp.since(p_seq bigint) returns text language sql stable as 
   select coalesce(string_agg(event_type::text, ',' order by seq), '') from public.audit_log where seq > p_seq $$;
 
 -- ---------------------------------------------------------------- base
+-- Los ayudantes temporales pierden el EXECUTE de PUBLIC por la migración de privilegios por defecto.
+grant execute on all functions in schema pg_temp to public;
+
 select pg_temp.as_system();
 select is((select count(*)::int from public.audit_log), 0, 'el seed no deja actividad (como el mock)');
 select is((select seq from public.audit_chain_head), 0::bigint, 'la cadena arranca en 0');

@@ -251,6 +251,39 @@
   margin-left: 25px;
   background: var(--primary-fg);
 }
+.profile-status-presets {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 16px;
+}
+.profile-status-presets button {
+  min-height: 44px;
+  padding: 0 14px;
+  font-size: 13px;
+  border: 1px solid var(--border);
+  border-radius: 22px;
+  cursor: pointer;
+}
+.profile-status-presets button[aria-pressed="true"] {
+  background: var(--primary-soft);
+  border-color: var(--primary-text);
+}
+.profile-status-presets button:focus-visible,
+.profile-switch:focus-visible {
+  outline: 2px solid var(--primary-text);
+  outline-offset: 2px;
+}
+.profile-sound-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 12px;
+  padding-block: 20px;
+}
+.profile-sound-row > :first-child {
+  flex: 1 1 220px;
+}
 .profile-content section[hidden] {
   display: none;
 }
@@ -597,4 +630,51 @@
   .profile-mascot-coming .profile-mascot-art {
     height: 48px;
   }
+}
+
+.profile-wallpaper-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(112px, 1fr));
+  gap: 10px;
+  margin-bottom: 16px;
+}
+.profile-wallpaper-grid button {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-height: 44px;
+  padding: 8px;
+  font-size: 13px;
+  text-align: left;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  cursor: pointer;
+}
+.profile-wallpaper-grid button[aria-pressed="true"] {
+  background: var(--primary-soft);
+  border-color: var(--primary-text);
+}
+.profile-wallpaper-grid button:focus-visible {
+  outline: 2px solid var(--primary-text);
+  outline-offset: 2px;
+}
+.profile-wallpaper-swatch {
+  display: block;
+  height: 56px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background-color: var(--surface);
+  background-position: center;
+  background-size: cover;
+}
+.profile-wallpaper-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.image-picker-frame.image-picker-frame-wallpaper {
+  aspect-ratio: 9 / 16;
+  border-radius: 10px;
+  max-width: 200px;
+  margin-inline: auto;
 }

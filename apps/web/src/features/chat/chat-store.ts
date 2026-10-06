@@ -1,37 +1,15 @@
+import type {
+  ChatAttachment,
+  ChatMessage,
+  ChatSettings,
+  ChatThread,
+} from "@vexa/domain/chat";
 import type { Profile } from "@vexa/domain/types";
+import { normalizeWallpaper } from "./chat-wallpaper";
 
-export interface ChatAttachment {
-  name: string;
-  type: string;
-  data: string;
-}
-export interface ChatMessage {
-  id: string;
-  authorId: string;
-  text: string;
-  sentAt: number;
-  editedAt?: number;
-  deleted?: boolean;
-  replyTo?: string;
-  attachment?: ChatAttachment;
-  reactions: Record<string, string>;
-}
-export interface ChatThread {
-  id: string;
-  kind: "direct" | "group";
-  name: string;
-  description: string;
-  members: string[];
-  messages: ChatMessage[];
-  readAt: Record<string, number>;
-  archived?: boolean;
-}
-export interface ChatSettings {
-  status: string;
-  notifications: boolean;
-  sound: "soft" | "bell" | "none";
-  presence: boolean;
-}
+// Chat types live in the shared domain; re-exported so existing imports keep working.
+export type { ChatAttachment, ChatMessage, ChatSettings, ChatThread };
+
 export interface ChatStore {
   threads: ChatThread[];
   settings: Record<string, ChatSettings>;
@@ -42,9 +20,63 @@ export const defaultChatSettings: ChatSettings = {
   notifications: true,
   sound: "soft",
   presence: true,
+  wallpaper: { kind: "none" },
+  currentProjectId: null,
 };
 export function emptyChatStore(): ChatStore {
   return { threads: [], settings: {} };
+}
+export const CHAT_UPDATE_EVENT = "vexa-chat-update";
+const STATUS_MAX_LENGTH = 80;
+function normalizeProjectId(value: unknown): string | null {
+  return typeof value === "string" && value !== "" ? value : null;
+}
+/** Settings for one user; stored values from older versions are normalized. */
+export function chatSettingsFor(
+  store: ChatStore,
+  userId: string,
+): ChatSettings {
+  const stored = store.settings[userId];
+  if (!stored) return defaultChatSettings;
+  return {
+    ...defaultChatSettings,
+    ...stored,
+    wallpaper: normalizeWallpaper(stored.wallpaper),
+    currentProjectId: normalizeProjectId(stored.currentProjectId),
+  };
+}
+/** Merges a partial change over the user's settings, mutating the store. */
+export function patchChatSettings(
+  store: ChatStore,
+  userId: string,
+  patch: Partial<ChatSettings>,
+) {
+  const next = { ...chatSettingsFor(store, userId), ...patch };
+  next.wallpaper = normalizeWallpaper(next.wallpaper);
+  next.currentProjectId = normalizeProjectId(next.currentProjectId);
+  next.status = next.status.slice(0, STATUS_MAX_LENGTH);
+  store.settings[userId] = next;
+}
+/** Reads the persisted store; falls back to an empty one when unavailable. */
+export function readChatStore(): ChatStore {
+  try {
+    const stored = JSON.parse(localStorage.getItem(CHAT_KEY) ?? "null");
+    if (
+      stored &&
+      Array.isArray(stored.threads) &&
+      stored.settings &&
+      typeof stored.settings === "object"
+    )
+      return stored;
+  } catch {
+    /* Sin almacenamiento disponible. */
+  }
+  return emptyChatStore();
+}
+/** Persists the store and notifies this tab (other tabs get `storage`). */
+export function writeChatStore(store: ChatStore) {
+  localStorage.setItem(CHAT_KEY, JSON.stringify(store));
+  window.dispatchEvent(new Event(CHAT_UPDATE_EVENT));
 }
 export function canOpenThread(thread: ChatThread, user: Profile) {
   return (
@@ -52,7 +84,7 @@ export function canOpenThread(thread: ChatThread, user: Profile) {
     (thread.kind === "group" && user.role === "admin")
   );
 }
-function requireThread(
+export function requireThread(
   store: ChatStore,
   user: Profile,
   id: string,
@@ -196,4 +228,34 @@ export function reactToMessage(
     throw new Error("El mensaje ya no está disponible.");
   if (message.reactions[user.id] === emoji) delete message.reactions[user.id];
   else message.reactions[user.id] = emoji;
+}
+/** Marks the thread read up to now; returns false when it was already up to date. */
+export function readThread(
+  store: ChatStore,
+  user: Profile,
+  threadId: string,
+): boolean {
+  const thread = requireThread(store, user, threadId);
+  const last = thread.messages.at(-1)?.sentAt;
+  if (!last || (thread.readAt[user.id] ?? 0) >= last) return false;
+  thread.readAt[user.id] = Date.now();
+  return true;
+}
+/** Copies a message into another thread: "Reenviado: " text, same attachment, no reply. */
+export function forwardMessage(
+  store: ChatStore,
+  user: Profile,
+  fromThreadId: string,
+  messageId: string,
+  toThreadId: string,
+) {
+  const message = requireThread(store, user, fromThreadId).messages.find(
+    (entry) => entry.id === messageId,
+  );
+  if (!message || message.deleted)
+    throw new Error("El mensaje ya no está disponible.");
+  sendMessage(store, user, toThreadId, {
+    text: message.text ? `Reenviado: ${message.text}` : "",
+    attachment: message.attachment ? { ...message.attachment } : undefined,
+  });
 }

@@ -8,6 +8,8 @@ export const profileImageCatalog = {
     { name: "Órbita", src: "/profile/banner-orbit.svg" },
     { name: "Estudio", src: "/profile/banner-studio.svg" },
   ],
+  /** Chat wallpapers have no built-in images; presets live in chat-wallpaper.ts. */
+  wallpaper: [] as Array<{ name: string; src: string }>,
 };
 export type ProfileImageKind = keyof typeof profileImageCatalog;
 export interface ProfileImageSelection {

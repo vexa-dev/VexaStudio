@@ -1,0 +1,53 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+# Actions are pinned to major-version tags (not commit SHAs) for readability.
+jobs:
+  web:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run typecheck
+      - run: npm run lint
+      - run: npm run test
+      - run: npm run build
+
+  database:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: supabase/setup-cli@v1
+        with:
+          # Pinned: generated types differ between CLI versions and the drift check below compares them.
+          version: 2.119.0
+      - name: Start local Supabase
+        run: supabase start -x studio,imgproxy,edge-runtime,logflare,vector
+      - run: supabase test db
+      - name: Check generated types drift
+        run: |
+          node scripts/gen-db-types.mjs
+          if ! git diff --exit-code apps/web/src/services/supabase/database.types.ts; then
+            echo "::error::database.types.ts está desactualizado respecto a las migraciones. Ejecuta 'npm run db:types' y sube el cambio."
+            exit 1
+          fi
+      - name: Stop Supabase
+        if: always()
+        run: supabase stop

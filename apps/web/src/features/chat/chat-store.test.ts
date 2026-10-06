@@ -3,9 +3,12 @@ import type { Profile } from "@vexa/domain/types";
 import {
   canOpenThread,
   changeMessage,
+  chatSettingsFor,
   deleteGroup,
+  defaultChatSettings,
   directThread,
   emptyChatStore,
+  patchChatSettings,
   reactToMessage,
   saveGroup,
   sendMessage,
@@ -121,5 +124,79 @@ describe("permisos del chat local", () => {
       },
     });
     expect(store.threads[0].messages).toHaveLength(3);
+  });
+});
+
+describe("ajustes del chat", () => {
+  it("parte de los valores por defecto para un usuario nuevo", () => {
+    const store = emptyChatStore();
+    patchChatSettings(store, "nuevo", { sound: "bell" });
+    expect(store.settings.nuevo).toEqual({
+      ...defaultChatSettings,
+      sound: "bell",
+    });
+  });
+  it("conserva los campos no indicados y no toca a otros usuarios", () => {
+    const store = emptyChatStore();
+    store.settings.a = { ...defaultChatSettings, status: "Leyendo" };
+    store.settings.b = { ...defaultChatSettings, status: "Ocupado" };
+    patchChatSettings(store, "a", { notifications: false });
+    expect(store.settings.a).toEqual({
+      ...defaultChatSettings,
+      status: "Leyendo",
+      notifications: false,
+    });
+    expect(store.settings.b.status).toBe("Ocupado");
+  });
+  it("limita el estado a 80 caracteres", () => {
+    const store = emptyChatStore();
+    patchChatSettings(store, "a", { status: "x".repeat(120) });
+    expect(store.settings.a.status).toHaveLength(80);
+  });
+  it("usa Ninguno como fondo por defecto", () => {
+    expect(defaultChatSettings.wallpaper).toEqual({ kind: "none" });
+    expect(chatSettingsFor(emptyChatStore(), "nuevo").wallpaper).toEqual({
+      kind: "none",
+    });
+  });
+  it("guarda el fondo sin tocar el resto de ajustes", () => {
+    const store = emptyChatStore();
+    patchChatSettings(store, "a", {
+      wallpaper: { kind: "preset", id: "grid" },
+    });
+    expect(store.settings.a).toEqual({
+      ...defaultChatSettings,
+      wallpaper: { kind: "preset", id: "grid" },
+    });
+    patchChatSettings(store, "a", { sound: "none" });
+    expect(store.settings.a.wallpaper).toEqual({ kind: "preset", id: "grid" });
+  });
+  it("normaliza ajustes antiguos sin fondo o con fondo inválido", () => {
+    const store = emptyChatStore();
+    const { wallpaper: _omitted, ...old } = defaultChatSettings;
+    store.settings.a = { ...old, status: "Leyendo" } as never;
+    expect(chatSettingsFor(store, "a")).toEqual({
+      ...defaultChatSettings,
+      status: "Leyendo",
+    });
+    patchChatSettings(store, "a", { notifications: false });
+    expect(store.settings.a.wallpaper).toEqual({ kind: "none" });
+    store.settings.b = {
+      ...defaultChatSettings,
+      wallpaper: { kind: "preset", id: "zzz" },
+    } as never;
+    expect(chatSettingsFor(store, "b").wallpaper).toEqual({ kind: "none" });
+  });
+  it("fija el proyecto actual a mano y lo normaliza", () => {
+    expect(defaultChatSettings.currentProjectId).toBeNull();
+    const store = emptyChatStore();
+    patchChatSettings(store, "a", { currentProjectId: "p-vexa" });
+    patchChatSettings(store, "a", { sound: "none" });
+    expect(chatSettingsFor(store, "a").currentProjectId).toBe("p-vexa");
+    const { currentProjectId: _omitted, ...old } = defaultChatSettings;
+    store.settings.b = { ...old, status: "Leyendo" } as never;
+    expect(chatSettingsFor(store, "b").currentProjectId).toBeNull();
+    patchChatSettings(store, "a", { currentProjectId: "" });
+    expect(store.settings.a.currentProjectId).toBeNull();
   });
 });

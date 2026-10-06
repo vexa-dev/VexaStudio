@@ -1,10 +1,11 @@
+import { chatCopy } from "./chat-copy";
 import { useState } from "react";
 import type { Profile } from "@vexa/domain/types";
 import { Sheet } from "@/components/ui/Sheet";
 import { Field, TextareaField } from "@/components/ui/Field";
 import { Button } from "@/components/ui/Button";
 import { Avatar } from "@/components/ui/Avatar";
-import type { ChatThread } from "./chat-store";
+import type { ChatThread } from "@vexa/domain/chat";
 
 export function ChatGroupEditor({
   user,
@@ -18,8 +19,12 @@ export function ChatGroupEditor({
   members: Profile[];
   group?: ChatThread;
   onClose: () => void;
-  onSave: (name: string, description: string, memberIds: string[]) => boolean;
-  onDelete: () => void;
+  onSave: (
+    name: string,
+    description: string,
+    memberIds: string[],
+  ) => Promise<boolean>;
+  onDelete: () => Promise<void>;
 }) {
   const [name, setName] = useState(group?.name ?? "");
   const [description, setDescription] = useState(group?.description ?? "");
@@ -27,6 +32,7 @@ export function ChatGroupEditor({
     ...new Set([user.id, ...(group?.members ?? [])]),
   ]);
   const [confirm, setConfirm] = useState(false);
+  const [busy, setBusy] = useState(false);
   if (user.role !== "admin") return null;
   return (
     <Sheet
@@ -67,7 +73,7 @@ export function ChatGroupEditor({
                   )
                 }
               />
-              <Avatar name={member.name} size="sm" />
+              <Avatar name={member.name} src={member.avatarUrl} size="sm" />
               <span>
                 {member.name}
                 <small>
@@ -82,9 +88,14 @@ export function ChatGroupEditor({
             Cancelar
           </Button>
           <Button
-            disabled={!name.trim() || selected.length < 2}
-            onClick={() => {
-              if (onSave(name, description, selected)) onClose();
+            disabled={!name.trim() || selected.length < 2 || busy}
+            onClick={async () => {
+              setBusy(true);
+              try {
+                if (await onSave(name, description, selected)) onClose();
+              } finally {
+                setBusy(false);
+              }
             }}
           >
             {group ? "Guardar grupo" : "Crear grupo"}
@@ -94,11 +105,22 @@ export function ChatGroupEditor({
           <div className="chat-group-delete">
             {confirm ? (
               <>
-                <p>¿Eliminar este grupo y sus mensajes de la demo local?</p>
+                <p>{chatCopy.deleteGroup}</p>
                 <Button variant="secondary" onClick={() => setConfirm(false)}>
                   Cancelar
                 </Button>
-                <Button variant="danger" onClick={onDelete}>
+                <Button
+                  variant="danger"
+                  disabled={busy}
+                  onClick={async () => {
+                    setBusy(true);
+                    try {
+                      await onDelete();
+                    } finally {
+                      setBusy(false);
+                    }
+                  }}
+                >
                   Eliminar grupo
                 </Button>
               </>

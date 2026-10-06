@@ -1,68 +1,119 @@
-import { lazy, Suspense, useEffect, useRef, useState } from "react";
+import { chatCopy } from "./chat-copy";
+import {
+  lazy,
+  Suspense,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import {
   ArrowLeft,
-  Check,
-  CheckCheck,
-  Copy,
-  Forward,
+  FlaskConical,
+  FolderOpen,
   MessageCircle,
-  Paperclip,
-  Pencil,
+  Minus,
   Plus,
-  Reply,
   Search,
-  Send,
   Settings2,
-  Smile,
-  Trash2,
+  SquarePen,
+  UserRound,
+  PanelLeftOpen,
   Users,
   X,
 } from "lucide-react";
-import { toast } from "sonner";
 import type { Profile } from "@vexa/domain/types";
-import { formatDateTime } from "@vexa/domain/dates";
+import { chatPanelVisibility } from "@/app/chat-panel-visibility";
 import { SidePanel } from "@/components/ui/SidePanel";
 import { Sheet } from "@/components/ui/Sheet";
 import { Button } from "@/components/ui/Button";
+import { ErrorState } from "@/components/ui/ErrorState";
+import { Skeleton } from "@/components/ui/Skeleton";
 import { Avatar } from "@/components/ui/Avatar";
+import { BrandLogo } from "@/components/BrandLogo";
 import { ChoicePicker } from "@/components/ui/ChoicePicker";
+import { isSupabaseSource } from "@/services/supabase/data-source";
 import { useMembers } from "@/features/team/hooks/useMembers";
-import type { useChat } from "./useChat";
-import { ChatSettings } from "./ChatSettings";
 import { ChatGroupEditor } from "./ChatGroupEditor";
+import { ChatProfilePanel } from "./ChatProfilePanel";
+import { ChatFilesPanel } from "./ChatFilesPanel";
+import { collectSharedMedia } from "./shared-media";
+import { ChatComposer } from "./ChatComposer";
 import {
-  changeMessage,
-  deleteGroup,
-  directThread,
-  reactToMessage,
-  saveGroup,
-  sendMessage,
-  type ChatAttachment,
-  type ChatMessage,
-  type ChatThread,
-} from "./chat-store";
+  ChatConversationIntro,
+  ChatEmptyState,
+  ChatListEmpty,
+} from "./ChatEmptyState";
+import { ChatMessageList } from "./ChatMessageList";
+import { shortTime } from "./chat-format";
+import { threadIdentity } from "./thread-identity";
+import { chatSubtitle } from "./chat-subtitle";
+import { useWorkingNow } from "./useWorkingNow";
+import { ChatPersonRow } from "./ChatPersonRow";
+import { areaLabel, roleLabel } from "@/lib/labels";
+import type {
+  ChatAttachment,
+  ChatMessage,
+  ChatThread,
+} from "@vexa/domain/chat";
+import { countUnread, unreadByThread } from "./chat-logic";
+import { defaultChatSettings } from "./chat-store";
+import {
+  useChatActions,
+  useChatSettings,
+  useChatStatus,
+  useChatThreads,
+  useSharedMessages,
+  useWallpaperImage,
+} from "./hooks/useChatData";
+import { wallpaperStyle } from "./chat-wallpaper";
 import "../../app/user-menu.css";
 import "./chat.css";
+import "./chat-list.css";
 const EmojiPicker = lazy(() => import("./EmojiPicker"));
 
 export default function ChatPanel({
   user,
-  chat,
+  online,
   onClose,
+  minimized,
+  onMinimize,
+  onRestore,
+  onConversationChange,
 }: {
   user: Profile;
-  chat: ReturnType<typeof useChat>;
+  /** `userId -> last signal` of the people who are online. */
+  online: Record<string, number>;
   onClose: () => void;
+  minimized?: boolean;
+  onMinimize?: () => void;
+  onRestore?: () => void;
+  onConversationChange?: (hasConversation: boolean) => void;
 }) {
   const membersQuery = useMembers();
   const members = membersQuery.data ?? [user];
-  const { store, update, settings, online, threads } = chat;
-  const [tab, setTab] = useState<"chats" | "contacts" | "groups" | "settings">(
-    "chats",
-  );
+  const threadsQuery = useChatThreads(user.id);
+  const threads = useMemo(() => threadsQuery.data ?? [], [threadsQuery.data]);
+  const statusMap = useChatStatus(user.id).data;
+  const { settings } = useChatSettings(user.id);
+  const { image: wallpaperImage } = useWallpaperImage(user.id);
+  const actions = useChatActions(user.id);
+  const { markRead } = actions;
+  /** What everybody may see about a person; defaults until it loads. */
+  const statusOf = (id: string | undefined) =>
+    (id && statusMap?.[id]) || defaultChatSettings;
+  const [tab, setTab] = useState<"chats" | "contacts" | "groups">("chats");
   const [activeId, setActiveId] = useState<string | null>(null);
   const [query, setQuery] = useState("");
   const [messageSearch, setMessageSearch] = useState("");
+  const [searchOpen, setSearchOpen] = useState(false);
+  // Refreshed every minute so "Hoy"/"Ayer" labels stay right across midnight.
+  const [now, setNow] = useState(() => Date.now());
+  useEffect(() => {
+    const timer = window.setInterval(() => setNow(Date.now()), 60_000);
+    return () => window.clearInterval(timer);
+  }, []);
   const [draft, setDraft] = useState("");
   const [attachment, setAttachment] = useState<ChatAttachment | undefined>();
   const [reply, setReply] = useState<ChatMessage | null>(null);
@@ -74,18 +125,70 @@ export default function ChatPanel({
   );
   const [forward, setForward] = useState<ChatMessage | null>(null);
   const [forwardTo, setForwardTo] = useState("");
+  const [profileId, setProfileId] = useState<string | null>(null);
+  // The profile belongs to the conversation it was opened from.
+  const [profileThreadId, setProfileThreadId] = useState<string | null>(null);
+  // The files panel also belongs to one conversation; only one panel is open.
+  const [filesThreadId, setFilesThreadId] = useState<string | null>(null);
+  const openProfile = (id: string) => {
+    setProfileId(id);
+    setProfileThreadId(activeId);
+    setFilesThreadId(null);
+  };
+  const closeProfile = useCallback(() => setProfileThreadId(null), []);
+  const openFiles = () => {
+    setProfileThreadId(null);
+    setFilesThreadId(activeId);
+  };
+  const closeFiles = useCallback(() => setFilesThreadId(null), []);
   const input = useRef<HTMLTextAreaElement>(null);
-  const fileInput = useRef<HTMLInputElement>(null);
-  const messagesBox = useRef<HTMLDivElement>(null);
+  const messageSearchInput = useRef<HTMLInputElement>(null);
+  const listSearchInput = useRef<HTMLInputElement>(null);
   const active = threads.find((thread) => thread.id === activeId);
-  const otherId = active?.members.find((id) => id !== user.id);
+  const visibility = chatPanelVisibility(!!minimized, !!active);
+  useEffect(() => {
+    onConversationChange?.(!!active);
+  }, [active, onConversationChange]);
+  const sharedOpen =
+    (profileThreadId !== null && profileThreadId === activeId) ||
+    (filesThreadId !== null && filesThreadId === activeId);
+  const sharedMessages = useSharedMessages(user.id, activeId, sharedOpen).data;
+  const shared = useMemo(
+    () => collectSharedMedia(sharedMessages ?? []),
+    [sharedMessages],
+  );
+  const activeIdentity = active
+    ? threadIdentity(active, user.id, members)
+    : undefined;
+  const otherId = activeIdentity?.otherId;
+  const otherMember = members.find((member) => member.id === otherId);
+  const working = useWorkingNow(
+    otherId ?? "",
+    statusOf(otherId).currentProjectId,
+  );
+  const subtitle = active
+    ? chatSubtitle({
+        kind: active.kind,
+        working: otherId ? (working.data ?? null) : null,
+        online: !!otherId && !!online[otherId],
+        status: statusOf(otherId).status,
+        memberCount: active.members.length,
+      })
+    : "";
   function person(id: string) {
     return members.find((member) => member.id === id)?.name ?? "Integrante";
   }
   function title(thread: ChatThread) {
-    return thread.kind === "group"
-      ? thread.name
-      : person(thread.members.find((id) => id !== user.id) ?? user.id);
+    return threadIdentity(thread, user.id, members).title;
+  }
+  function presenceDot(id: string | undefined) {
+    const isOnline = !!id && !!online[id];
+    return (
+      <i
+        className={isOnline ? "chat-online-dot" : "chat-offline-dot"}
+        aria-label={chatCopy.presence(isOnline)}
+      />
+    );
   }
   function selectThread(id: string) {
     setActiveId(id);
@@ -96,44 +199,71 @@ export default function ChatPanel({
     setEmoji(false);
     setReactionTo(null);
     setMessageSearch("");
+    setSearchOpen(false);
+    setFilesThreadId(null);
   }
-  function unread(thread: ChatThread) {
-    return thread.messages.filter(
-      (message) =>
-        message.authorId !== user.id &&
-        message.sentAt > (thread.readAt[user.id] ?? 0),
-    ).length;
+  function closeMessageSearch() {
+    setMessageSearch("");
+    setSearchOpen(false);
   }
+  const unreadMap = useMemo(
+    () => unreadByThread(threads, user.id),
+    [threads, user.id],
+  );
+  // One markRead per thread and last message: a failure never retries in a loop.
+  const marked = useRef("");
+  const activeThreadId = active?.id;
+  const lastSentAt = active?.messages.at(-1)?.sentAt;
+  const myReadAt = active?.readAt[user.id] ?? 0;
   useEffect(() => {
-    const last = active?.messages.at(-1)?.sentAt;
-    if (active && last && (active.readAt[user.id] ?? 0) < last)
-      update((next) => {
-        const thread = next.threads.find((entry) => entry.id === active.id);
-        if (thread) thread.readAt[user.id] = Date.now();
-      });
-  }, [active, user.id, update]);
+    if (!activeThreadId || !lastSentAt || myReadAt >= lastSentAt) return;
+    const token = `${activeThreadId}:${lastSentAt}`;
+    if (marked.current === token) return;
+    marked.current = token;
+    void markRead(activeThreadId);
+  }, [activeThreadId, lastSentAt, myReadAt, markRead]);
   useEffect(() => {
-    if (messagesBox.current)
-      messagesBox.current.scrollTop = messagesBox.current.scrollHeight;
-  }, [activeId, active?.messages.length]);
-  function submit() {
+    if (searchOpen) messageSearchInput.current?.focus();
+  }, [searchOpen]);
+  function resetComposer() {
+    setDraft("");
+    setAttachment(undefined);
+    setReply(null);
+    setEdit(null);
+    setEmoji(false);
+    input.current?.focus();
+  }
+  async function submit() {
     if (!active) return;
-    const sent = update((next) => {
-      if (edit) changeMessage(next, user, active.id, edit.id, draft);
-      else
-        sendMessage(next, user, active.id, {
-          text: draft,
-          attachment,
-          replyTo: reply?.id,
-        });
+    if (edit) {
+      const edited = await actions.edit({
+        threadId: active.id,
+        messageId: edit.id,
+        text: draft,
+      });
+      if (edited.ok) resetComposer();
+      return;
+    }
+    // Sending is optimistic: clear the composer now, restore it if it fails.
+    const sent = { draft, attachment, reply };
+    resetComposer();
+    const result = await actions.send({
+      threadId: active.id,
+      text: sent.draft,
+      attachment: sent.attachment,
+      replyTo: sent.reply?.id,
     });
-    if (sent) {
-      setDraft("");
-      setAttachment(undefined);
-      setReply(null);
-      setEdit(null);
-      setEmoji(false);
-      input.current?.focus();
+    if (!result.ok) {
+      setDraft((current) => current || sent.draft);
+      setAttachment((current) => current ?? sent.attachment);
+      setReply((current) => current ?? sent.reply);
+    }
+  }
+  async function openDirect(memberId: string) {
+    const result = await actions.directThread(memberId);
+    if (result.ok) {
+      selectThread(result.value);
+      setTab("chats");
     }
   }
   const filteredThreads = threads.filter(
@@ -143,21 +273,102 @@ export default function ChatPanel({
         .toLowerCase()
         .includes(query.toLowerCase()),
   );
+  const contacts = members.filter(
+    (member) =>
+      member.id !== user.id &&
+      member.active &&
+      member.name.toLowerCase().includes(query.toLowerCase()),
+  );
+  const onlineCount = members.filter(
+    (member) =>
+      member.id !== user.id &&
+      member.active &&
+      !!online[member.id] &&
+      statusOf(member.id).presence,
+  ).length;
+  const unreadTotal = countUnread(threads, user.id);
+  const summary =
+    [
+      onlineCount > 0 && `${onlineCount} en línea`,
+      unreadTotal > 0 && `${unreadTotal} sin leer`,
+    ]
+      .filter(Boolean)
+      .join(" · ") || "VEXA Studio";
+  function startNewChat() {
+    onRestore?.();
+    setActiveId(null);
+    setTab("contacts");
+    setQuery("");
+    listSearchInput.current?.focus();
+  }
   return (
-    <SidePanel title="Chat VEXA" onClose={onClose} className="chat-drawer">
-      <p className="chat-preview-banner">
-        Demo local · los mensajes y la conexión se comparten solo entre pestañas
-        de este navegador.
-      </p>
+    <SidePanel
+      title="Chat VEXA"
+      onClose={onClose}
+      className={`chat-drawer${minimized && active ? " chat-contacts-minimized" : ""}`}
+      header={
+        <>
+          <div className="chat-heading-main">
+            <BrandLogo className="chat-heading-brand" decorative />
+            <div className="chat-heading-copy">
+              <strong aria-hidden="true">Chat</strong>
+              <small>{summary}</small>
+            </div>
+          </div>
+          <Button
+            variant="ghost"
+            className="w-11 px-0"
+            aria-label="Nuevo chat"
+            onClick={startNewChat}
+          >
+            <SquarePen size={20} aria-hidden="true" />
+          </Button>
+          {active && (minimized ? onRestore : onMinimize) && (
+            <Button
+              variant="ghost"
+              className="w-11 px-0"
+              aria-label={
+                minimized ? "Restaurar contactos" : "Minimizar contactos"
+              }
+              title={minimized ? "Restaurar contactos" : "Minimizar contactos"}
+              onClick={minimized ? onRestore : onMinimize}
+            >
+              {minimized ? (
+                <PanelLeftOpen size={20} aria-hidden="true" />
+              ) : (
+                <Minus size={20} aria-hidden="true" />
+              )}
+            </Button>
+          )}
+        </>
+      }
+    >
       <div className="chat-workspace">
-        <aside className={`chat-sidebar${active ? " chat-mobile-hidden" : ""}`}>
+        <aside
+          hidden={visibility.contactsHidden}
+          className={`chat-sidebar${active ? " chat-mobile-hidden" : ""}`}
+        >
+          {!isSupabaseSource() && (
+            <div className="chat-sidebar-head">
+              <span
+                className="chat-demo-badge"
+                title="Demo local: los mensajes y la conexión se comparten solo entre pestañas de este navegador."
+              >
+                <FlaskConical size={13} aria-hidden="true" />
+                Demo local
+                <span className="sr-only">
+                  : los mensajes y la conexión se comparten solo entre pestañas
+                  de este navegador.
+                </span>
+              </span>
+            </div>
+          )}
           <nav className="chat-tabs" aria-label="Apartados del chat">
             {(
               [
                 { id: "chats", icon: MessageCircle, label: "Chats" },
-                { id: "contacts", icon: Plus, label: "Personas" },
+                { id: "contacts", icon: UserRound, label: "Personas" },
                 { id: "groups", icon: Users, label: "Grupos" },
-                { id: "settings", icon: Settings2, label: "Ajustes" },
               ] as const
             ).map(({ id, icon: Icon, label }) => (
               <button
@@ -167,7 +378,6 @@ export default function ChatPanel({
                 onClick={() => {
                   setTab(id);
                   setQuery("");
-                  if (id === "settings") setActiveId(null);
                 }}
               >
                 <Icon size={18} aria-hidden="true" />
@@ -175,17 +385,17 @@ export default function ChatPanel({
               </button>
             ))}
           </nav>
-          {tab !== "settings" && (
-            <div className="chat-search">
-              <Search size={16} aria-hidden="true" />
-              <input
-                aria-label="Buscar conversaciones o personas"
-                placeholder="Buscar…"
-                value={query}
-                onChange={(event) => setQuery(event.target.value)}
-              />
-            </div>
-          )}
+          <div className="chat-search">
+            <Search size={16} aria-hidden="true" />
+            <input
+              ref={listSearchInput}
+              className="chat-search-input"
+              aria-label="Buscar conversaciones o personas"
+              placeholder="Buscar…"
+              value={query}
+              onChange={(event) => setQuery(event.target.value)}
+            />
+          </div>
           {tab === "groups" && user.role === "admin" && (
             <Button
               variant="secondary"
@@ -196,81 +406,104 @@ export default function ChatPanel({
               Crear grupo
             </Button>
           )}
-          {tab === "settings" ? (
-            <ChatSettings
-              user={user}
-              settings={settings}
-              onClose={onClose}
-              onChange={(patch) =>
-                update((next) => {
-                  next.settings[user.id] = { ...settings, ...patch };
-                })
-              }
-            />
-          ) : (
-            <div className="chat-thread-list">
-              {tab === "contacts" ? (
-                <>
-                  {membersQuery.isPending && (
-                    <p className="chat-hint">Cargando personas…</p>
+          <div className="chat-thread-list">
+            {tab === "contacts" ? (
+              <>
+                {membersQuery.isPending && (
+                  <p className="chat-hint">Cargando personas…</p>
+                )}
+                {membersQuery.isError && (
+                  <Button
+                    variant="secondary"
+                    onClick={() => void membersQuery.refetch()}
+                  >
+                    Volver a cargar personas
+                  </Button>
+                )}
+                {contacts.map((member) => {
+                  const isOnline =
+                    !!online[member.id] && statusOf(member.id).presence;
+                  return (
+                    <ChatPersonRow
+                      key={member.id}
+                      memberId={member.id}
+                      name={member.name}
+                      avatarSrc={member.avatarUrl}
+                      online={isOnline}
+                      status={statusOf(member.id).status}
+                      currentProjectId={statusOf(member.id).currentProjectId}
+                      detail={isOnline ? "En línea" : "Sin conexión"}
+                      onSelect={() => void openDirect(member.id)}
+                    />
+                  );
+                })}
+                {!membersQuery.isPending &&
+                  !membersQuery.isError &&
+                  !contacts.length && (
+                    <ChatListEmpty
+                      title={query ? "Sin resultados" : "Aún no hay personas"}
+                      hint={
+                        query
+                          ? "Prueba con otro nombre."
+                          : "Cuando se sume alguien al equipo aparecerá aquí."
+                      }
+                    />
                   )}
-                  {membersQuery.isError && (
-                    <Button
-                      variant="secondary"
-                      onClick={() => void membersQuery.refetch()}
-                    >
-                      Volver a cargar personas
-                    </Button>
-                  )}
-                  {members
-                    .filter(
-                      (member) =>
-                        member.id !== user.id &&
-                        member.active &&
-                        member.name.toLowerCase().includes(query.toLowerCase()),
-                    )
-                    .map((member) => (
-                      <button
-                        type="button"
-                        className="chat-thread"
-                        key={member.id}
-                        onClick={() => {
-                          let id = "";
-                          if (
-                            update((next) => {
-                              id = directThread(next, user, member.id);
-                            })
-                          ) {
-                            selectThread(id);
-                            setTab("chats");
-                          }
-                        }}
-                      >
-                        <Avatar name={member.name} />
-                        <span>
-                          <strong>{member.name}</strong>
-                          <small>
-                            {store.settings[member.id]?.status ?? "Disponible"}
-                          </small>
-                        </span>
-                        <i
-                          className={
-                            online[member.id]
-                              ? "chat-online-dot"
-                              : "chat-offline-dot"
-                          }
-                          aria-label={
-                            online[member.id]
-                              ? "En línea en la demo"
-                              : "Sin conexión en la demo"
-                          }
-                        />
-                      </button>
+              </>
+            ) : (
+              <>
+                {threadsQuery.isPending && (
+                  <output
+                    className="flex flex-col gap-2 p-3"
+                    aria-label="Cargando conversaciones"
+                  >
+                    {[0, 1, 2, 3].map((row) => (
+                      <Skeleton key={row} className="h-14" />
                     ))}
-                </>
-              ) : (
-                <>
-                  {filteredThreads.map((thread) => (
+                  </output>
+                )}
+                {threadsQuery.isError && (
+                  <ErrorState
+                    title="No se pudieron cargar los chats"
+                    message={threadsQuery.error.message}
+                    onRetry={() => void threadsQuery.refetch()}
+                  />
+                )}
+                {filteredThreads.map((thread) => {
+                  const identity = threadIdentity(thread, user.id, members);
+                  const last = thread.messages.at(-1);
+                  const count = unreadMap[thread.id] ?? 0;
+                  const preview = last?.deleted
+                    ? "Mensaje eliminado"
+                    : last?.text ||
+                      (last?.attachment
+                        ? "Archivo adjunto"
+                        : thread.description || "Empieza la conversación");
+                  const lastLine =
+                    last && !last.deleted && last.authorId === user.id
+                      ? `Tú: ${preview}`
+                      : preview;
+                  const otherPerson = identity.otherId;
+                  if (thread.kind === "direct" && otherPerson)
+                    return (
+                      <ChatPersonRow
+                        key={thread.id}
+                        memberId={otherPerson}
+                        name={identity.title}
+                        avatarSrc={identity.avatarSrc}
+                        online={!!online[otherPerson]}
+                        status={statusOf(otherPerson).status}
+                        currentProjectId={
+                          statusOf(otherPerson).currentProjectId
+                        }
+                        detail={lastLine}
+                        time={last ? shortTime(last.sentAt, now) : undefined}
+                        unread={count}
+                        selected={activeId === thread.id}
+                        onSelect={() => selectThread(thread.id)}
+                      />
+                    );
+                  return (
                     <button
                       type="button"
                       className="chat-thread"
@@ -283,506 +516,329 @@ export default function ChatPanel({
                           <Users size={20} aria-hidden="true" />
                         </span>
                       ) : (
-                        <Avatar name={title(thread)} />
+                        <span className="chat-avatar-wrap">
+                          <Avatar
+                            name={identity.title}
+                            src={identity.avatarSrc}
+                          />
+                          {presenceDot(identity.otherId)}
+                        </span>
                       )}
-                      <span>
-                        <strong>{title(thread)}</strong>
-                        <small>
-                          {thread.messages.at(-1)?.deleted
-                            ? "Mensaje eliminado"
-                            : thread.messages.at(-1)?.text ||
-                              (thread.messages.at(-1)?.attachment
-                                ? "Archivo adjunto"
-                                : thread.description ||
-                                  "Empieza la conversación")}
-                        </small>
+                      <span className="chat-thread-body">
+                        <span className="chat-thread-top">
+                          <strong>{identity.title}</strong>
+                          {last && (
+                            <time className="chat-thread-time">
+                              {shortTime(last.sentAt, now)}
+                            </time>
+                          )}
+                        </span>
+                        <span className="chat-thread-bottom">
+                          <small>
+                            {last && !last.deleted && last.authorId === user.id
+                              ? `Tú: ${preview}`
+                              : preview}
+                          </small>
+                          {count > 0 && (
+                            <b
+                              className="chat-unread"
+                              aria-label={`${count} sin leer`}
+                            >
+                              {count > 99 ? "99+" : count}
+                            </b>
+                          )}
+                        </span>
                       </span>
-                      {unread(thread) > 0 && (
-                        <b className="chat-unread">{unread(thread)}</b>
-                      )}
                     </button>
+                  );
+                })}
+                {!threadsQuery.isPending &&
+                  !threadsQuery.isError &&
+                  !filteredThreads.length &&
+                  (query ? (
+                    <ChatListEmpty
+                      title="Sin resultados"
+                      hint="Prueba con otro nombre o mensaje."
+                    />
+                  ) : tab === "groups" ? (
+                    <ChatListEmpty
+                      title="Aún no hay grupos"
+                      hint={
+                        user.role === "admin"
+                          ? "Crea un grupo y asigna a sus integrantes."
+                          : "Aquí aparecerán los grupos a los que te asignen."
+                      }
+                    />
+                  ) : (
+                    <ChatListEmpty
+                      title="Aún no tienes chats"
+                      hint="Elige a alguien de Personas para enviar tu primer mensaje."
+                      actionLabel="Nueva conversación"
+                      onAction={() => setTab("contacts")}
+                    />
                   ))}
-                  {!filteredThreads.length && (
-                    <div className="chat-list-empty">
-                      <MessageCircle size={28} aria-hidden="true" />
-                      <h3>
-                        {tab === "groups" ? "Tus grupos" : "Conversaciones"}
-                      </h3>
-                      <p>
-                        {tab === "groups"
-                          ? user.role === "admin"
-                            ? "Crea un grupo y asigna a sus integrantes."
-                            : "Aquí aparecerán los grupos a los que te asignen."
-                          : "Abre Personas para empezar un mensaje directo."}
-                      </p>
-                    </div>
-                  )}
-                </>
-              )}
-            </div>
-          )}
+              </>
+            )}
+          </div>
         </aside>
-        {tab !== "settings" && (
-          <section
-            className={`chat-conversation${!active ? " chat-mobile-hidden" : ""}`}
-            aria-label="Conversación"
-          >
-            {active ? (
-              <>
-                <header className="chat-conversation-heading">
+        <section
+          className={`chat-conversation${!active ? " chat-mobile-hidden" : ""}`}
+          aria-label="Conversación"
+        >
+          {active ? (
+            <>
+              <header className="chat-conversation-heading">
+                <Button
+                  variant="ghost"
+                  className="chat-back"
+                  aria-label="Volver a conversaciones"
+                  onClick={() => {
+                    onRestore?.();
+                    setActiveId(null);
+                  }}
+                >
+                  <ArrowLeft size={18} aria-hidden="true" />
+                </Button>
+                {active.kind === "group" ? (
+                  <>
+                    <span className="chat-group-avatar" aria-hidden="true">
+                      <Users size={20} />
+                    </span>
+                    <div className="chat-heading-text">
+                      <h3>{activeIdentity?.title}</h3>
+                      <p>{subtitle}</p>
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <button
+                      type="button"
+                      className="chat-heading-avatar"
+                      aria-label={`Ver perfil de ${activeIdentity?.title ?? ""}`}
+                      onClick={() => otherId && openProfile(otherId)}
+                    >
+                      <span className="chat-avatar-wrap">
+                        <Avatar
+                          name={activeIdentity?.title ?? ""}
+                          src={activeIdentity?.avatarSrc}
+                        />
+                        {presenceDot(otherId)}
+                      </span>
+                    </button>
+                    <button
+                      type="button"
+                      className="chat-heading-text chat-heading-profile"
+                      aria-label={`Ver perfil de ${activeIdentity?.title ?? ""}`}
+                      onClick={() => otherId && openProfile(otherId)}
+                    >
+                      <h3>{activeIdentity?.title}</h3>
+                      <p>{subtitle}</p>
+                    </button>
+                  </>
+                )}
+                <Button
+                  variant="ghost"
+                  className="chat-icon-button"
+                  aria-label="Archivos compartidos"
+                  onClick={openFiles}
+                >
+                  <FolderOpen size={18} aria-hidden="true" />
+                </Button>
+                <Button
+                  variant="ghost"
+                  className="chat-icon-button"
+                  aria-label="Buscar en esta conversación"
+                  aria-expanded={searchOpen}
+                  aria-controls="chat-message-search"
+                  onClick={() =>
+                    searchOpen ? closeMessageSearch() : setSearchOpen(true)
+                  }
+                >
+                  <Search size={18} aria-hidden="true" />
+                </Button>
+                {active.kind === "group" && user.role === "admin" && (
                   <Button
                     variant="ghost"
-                    className="chat-back"
-                    aria-label="Volver a conversaciones"
-                    onClick={() => setActiveId(null)}
+                    className="chat-icon-button"
+                    aria-label="Administrar grupo"
+                    onClick={() => setGroupEditor(active)}
                   >
-                    <ArrowLeft size={18} aria-hidden="true" />
+                    <Settings2 size={18} aria-hidden="true" />
                   </Button>
-                  <div>
-                    <h3>{title(active)}</h3>
-                    <p>
-                      {active.kind === "group"
-                        ? `${active.members.length} integrantes`
-                        : `${otherId && online[otherId] ? "En línea" : "Sin conexión"} · ${store.settings[otherId ?? ""]?.status ?? "Disponible"}`}
-                    </p>
-                  </div>
-                  {active.kind === "group" && user.role === "admin" && (
-                    <Button
-                      variant="ghost"
-                      aria-label="Administrar grupo"
-                      onClick={() => setGroupEditor(active)}
-                    >
-                      <Settings2 size={18} aria-hidden="true" />
-                    </Button>
-                  )}
-                </header>
-                {active.kind === "group" && active.description && (
-                  <p className="chat-group-description">{active.description}</p>
                 )}
-                <div className="chat-message-search">
+              </header>
+              {searchOpen && (
+                <div className="chat-message-search" id="chat-message-search">
                   <Search size={14} aria-hidden="true" />
                   <input
+                    ref={messageSearchInput}
+                    className="chat-search-input"
                     placeholder="Buscar en esta conversación"
                     aria-label="Buscar mensajes"
                     value={messageSearch}
                     onChange={(event) => setMessageSearch(event.target.value)}
+                    onKeyDown={(event) => {
+                      if (event.key === "Escape") {
+                        event.preventDefault();
+                        event.stopPropagation();
+                        closeMessageSearch();
+                      }
+                    }}
                   />
+                  <button
+                    type="button"
+                    aria-label="Cerrar búsqueda"
+                    onClick={closeMessageSearch}
+                  >
+                    <X size={16} aria-hidden="true" />
+                  </button>
                 </div>
-                <div className="chat-messages" ref={messagesBox}>
-                  {active.messages
-                    .filter((message) =>
-                      message.text
-                        .toLowerCase()
-                        .includes(messageSearch.toLowerCase()),
-                    )
-                    .map((message) => {
-                      const own = message.authorId === user.id;
-                      const quoted = active.messages.find(
-                        (entry) => entry.id === message.replyTo,
-                      );
-                      const read = active.members.some(
-                        (id) =>
-                          id !== user.id &&
-                          (active.readAt[id] ?? 0) >= message.sentAt,
-                      );
-                      return (
-                        <article
-                          key={message.id}
-                          className={`chat-message${own ? " chat-message-own" : ""}`}
-                        >
-                          <div className="chat-bubble">
-                            {!own && active.kind === "group" && (
-                              <strong className="chat-author">
-                                {person(message.authorId)}
-                              </strong>
-                            )}
-                            {quoted && (
-                              <blockquote>
-                                {person(quoted.authorId)}
-                                <span>
-                                  {quoted.deleted
-                                    ? "Mensaje eliminado"
-                                    : quoted.text || "Archivo adjunto"}
-                                </span>
-                              </blockquote>
-                            )}
-                            {message.deleted ? (
-                              <p className="chat-deleted">Mensaje eliminado</p>
-                            ) : (
-                              <>
-                                {message.text && <p>{message.text}</p>}
-                                {message.attachment && (
-                                  <a
-                                    href={message.attachment.data}
-                                    download={message.attachment.name}
-                                    className="chat-attachment"
-                                  >
-                                    {message.attachment.type.startsWith(
-                                      "image/",
-                                    ) && (
-                                      <img
-                                        src={message.attachment.data}
-                                        alt={message.attachment.name}
-                                      />
-                                    )}
-                                    {message.attachment.name}
-                                  </a>
-                                )}
-                              </>
-                            )}
-                            <footer>
-                              <time
-                                title={formatDateTime(
-                                  new Date(message.sentAt).toISOString(),
-                                )}
-                              >
-                                {new Intl.DateTimeFormat("es-PE", {
-                                  hour: "2-digit",
-                                  minute: "2-digit",
-                                  timeZone: "America/Lima",
-                                }).format(message.sentAt)}
-                              </time>
-                              {message.editedAt && <span>editado</span>}
-                              {own &&
-                                (read ? (
-                                  <CheckCheck
-                                    size={14}
-                                    aria-label="Revisado en la demo local"
-                                  />
-                                ) : (
-                                  <Check
-                                    size={14}
-                                    aria-label="Guardado en la demo local"
-                                  />
-                                ))}
-                            </footer>
-                          </div>
-                          {!message.deleted && (
-                            <div className="chat-message-actions">
-                              <button
-                                type="button"
-                                aria-label="Responder mensaje"
-                                onClick={() => {
-                                  setReply(message);
-                                  setEdit(null);
-                                  input.current?.focus();
-                                }}
-                              >
-                                <Reply size={14} />
-                              </button>
-                              <button
-                                type="button"
-                                aria-label="Reaccionar con emoji"
-                                onClick={() => {
-                                  setReactionTo(message.id);
-                                  setEmoji(true);
-                                }}
-                              >
-                                <Smile size={14} />
-                              </button>
-                              <button
-                                type="button"
-                                aria-label="Reenviar mensaje"
-                                onClick={() => {
-                                  setForward(message);
-                                  setForwardTo("");
-                                }}
-                              >
-                                <Forward size={14} />
-                              </button>
-                              <button
-                                type="button"
-                                aria-label="Copiar mensaje"
-                                onClick={() => {
-                                  void navigator.clipboard
-                                    .writeText(message.text)
-                                    .then(() =>
-                                      toast.success("Mensaje copiado"),
-                                    )
-                                    .catch(() =>
-                                      toast.error(
-                                        "No se pudo copiar el mensaje",
-                                      ),
-                                    );
-                                }}
-                              >
-                                <Copy size={14} />
-                              </button>
-                              {own && (
-                                <button
-                                  type="button"
-                                  aria-label="Editar mensaje"
-                                  onClick={() => {
-                                    setEdit(message);
-                                    setReply(null);
-                                    setDraft(message.text);
-                                    input.current?.focus();
-                                  }}
-                                >
-                                  <Pencil size={14} />
-                                </button>
-                              )}
-                              {(own ||
-                                (user.role === "admin" &&
-                                  active.kind === "group")) && (
-                                <button
-                                  type="button"
-                                  aria-label="Eliminar mensaje"
-                                  onClick={() =>
-                                    update((next) =>
-                                      changeMessage(
-                                        next,
-                                        user,
-                                        active.id,
-                                        message.id,
-                                        null,
-                                      ),
-                                    )
-                                  }
-                                >
-                                  <Trash2 size={14} />
-                                </button>
-                              )}
-                            </div>
-                          )}
-                          {Object.keys(message.reactions).length > 0 && (
-                            <div className="chat-reactions">
-                              {[
-                                ...new Set(Object.values(message.reactions)),
-                              ].map((reaction) => (
-                                <button
-                                  type="button"
-                                  key={reaction}
-                                  aria-label={`Reacción ${reaction}`}
-                                  aria-pressed={
-                                    message.reactions[user.id] === reaction
-                                  }
-                                  onClick={() =>
-                                    update((next) =>
-                                      reactToMessage(
-                                        next,
-                                        user,
-                                        active.id,
-                                        message.id,
-                                        reaction,
-                                      ),
-                                    )
-                                  }
-                                >
-                                  {reaction}
-                                  <span>
-                                    {
-                                      Object.values(message.reactions).filter(
-                                        (value) => value === reaction,
-                                      ).length
-                                    }
-                                  </span>
-                                </button>
-                              ))}
-                            </div>
-                          )}
-                        </article>
-                      );
-                    })}
-                  {!active.messages.length && (
-                    <div className="chat-list-empty">
-                      <MessageCircle size={30} aria-hidden="true" />
-                      <p>Empieza con un saludo 👋</p>
-                    </div>
-                  )}
-                </div>
-                {(reply || edit) && (
-                  <div className="chat-composer-context">
+              )}
+              {active.kind === "group" && active.description && (
+                <p className="chat-group-description">{active.description}</p>
+              )}
+              <ChatMessageList
+                thread={active}
+                user={user}
+                members={members}
+                search={messageSearch}
+                now={now}
+                style={wallpaperStyle(
+                  settings?.wallpaper ?? defaultChatSettings.wallpaper,
+                  wallpaperImage,
+                )}
+                emptyState={
+                  <ChatConversationIntro
+                    title={activeIdentity?.title ?? ""}
+                    avatarSrc={activeIdentity?.avatarSrc ?? null}
+                    group={active.kind === "group"}
+                    onOpenProfile={
+                      otherId ? () => openProfile(otherId) : undefined
+                    }
+                    detail={
+                      active.kind === "group"
+                        ? `${active.members.length} integrantes`
+                        : otherMember
+                          ? `${roleLabel[otherMember.role]} · ${areaLabel[otherMember.area]}`
+                          : "Integrante del equipo"
+                    }
+                    status={active.kind === "group" ? undefined : subtitle}
+                    hint={
+                      active.kind === "group"
+                        ? "Aún no hay mensajes. Escribe al grupo para empezar."
+                        : "Aún no hay mensajes. Escribe abajo para saludar."
+                    }
+                  />
+                }
+                onReply={(message) => {
+                  setReply(message);
+                  setEdit(null);
+                  input.current?.focus();
+                }}
+                onEdit={(message) => {
+                  setEdit(message);
+                  setReply(null);
+                  setDraft(message.text);
+                  input.current?.focus();
+                }}
+                onReact={(message) => {
+                  setReactionTo(message.id);
+                  setEmoji(true);
+                }}
+                onForward={(message) => {
+                  setForward(message);
+                  setForwardTo("");
+                }}
+              />
+              {emoji && (
+                <div className="chat-emoji-area">
+                  <div>
                     <span>
-                      <strong>
-                        {edit
-                          ? "Editar mensaje"
-                          : `Responder a ${person(reply!.authorId)}`}
-                      </strong>
-                      <small>
-                        {(edit ?? reply)?.text || "Archivo adjunto"}
-                      </small>
+                      {reactionTo ? "Reaccionar al mensaje" : "Elegir emoji"}
                     </span>
                     <button
                       type="button"
-                      aria-label="Cancelar respuesta o edición"
+                      aria-label="Cerrar emojis"
                       onClick={() => {
-                        setReply(null);
-                        setEdit(null);
-                        setDraft("");
+                        setEmoji(false);
+                        setReactionTo(null);
                       }}
                     >
-                      <X size={16} />
+                      <X size={16} aria-hidden="true" />
                     </button>
                   </div>
-                )}
-                {attachment && (
-                  <div className="chat-composer-context">
-                    <span>{attachment.name}</span>
-                    <button
-                      type="button"
-                      aria-label="Quitar adjunto"
-                      onClick={() => setAttachment(undefined)}
-                    >
-                      <X size={16} />
-                    </button>
-                  </div>
-                )}
-                {emoji && (
-                  <div className="chat-emoji-area">
-                    <div>
-                      <span>
-                        {reactionTo ? "Reaccionar al mensaje" : "Elegir emoji"}
-                      </span>
-                      <button
-                        type="button"
-                        aria-label="Cerrar emojis"
-                        onClick={() => {
+                  <Suspense
+                    fallback={<p className="chat-hint">Cargando emojis…</p>}
+                  >
+                    <EmojiPicker
+                      onClose={() => {
+                        setEmoji(false);
+                        setReactionTo(null);
+                      }}
+                      onSelect={(value) => {
+                        if (reactionTo) {
+                          void actions.react({
+                            threadId: active.id,
+                            messageId: reactionTo,
+                            emoji: value,
+                          });
                           setEmoji(false);
                           setReactionTo(null);
-                        }}
-                      >
-                        <X size={16} />
-                      </button>
-                    </div>
-                    <Suspense
-                      fallback={<p className="chat-hint">Cargando emojis…</p>}
-                    >
-                      <EmojiPicker
-                        onSelect={(value) => {
-                          if (reactionTo) {
-                            update((next) =>
-                              reactToMessage(
-                                next,
-                                user,
-                                active.id,
-                                reactionTo,
-                                value,
-                              ),
-                            );
-                            setEmoji(false);
-                            setReactionTo(null);
-                          } else setDraft((current) => current + value);
-                        }}
-                      />
-                    </Suspense>
-                  </div>
-                )}
-                <form
-                  className="chat-composer"
-                  onSubmit={(event) => {
-                    event.preventDefault();
-                    submit();
-                  }}
-                >
-                  <button
-                    type="button"
-                    aria-label="Seleccionar emoji"
-                    aria-expanded={emoji}
-                    onClick={() => {
-                      setEmoji(!emoji);
-                      setReactionTo(null);
-                    }}
-                  >
-                    <Smile size={20} />
-                  </button>
-                  <button
-                    type="button"
-                    aria-label="Adjuntar imagen o archivo"
-                    disabled={!!edit}
-                    onClick={() => fileInput.current?.click()}
-                  >
-                    <Paperclip size={19} />
-                  </button>
-                  <input
-                    ref={fileInput}
-                    type="file"
-                    className="sr-only"
-                    tabIndex={-1}
-                    aria-label="Seleccionar adjunto"
-                    accept="image/jpeg,image/png,image/webp,application/pdf,text/plain"
-                    onChange={(event) => {
-                      const file = event.target.files?.[0];
-                      event.target.value = "";
-                      if (!file) return;
-                      if (
-                        file.size > 3 * 1024 * 1024 ||
-                        ![
-                          "image/jpeg",
-                          "image/png",
-                          "image/webp",
-                          "application/pdf",
-                          "text/plain",
-                        ].includes(file.type)
-                      ) {
-                        toast.error(
-                          "Usa una imagen, PDF o texto de hasta 3 MB.",
-                        );
-                        return;
-                      }
-                      const reader = new FileReader();
-                      reader.onload = () => {
-                        if (typeof reader.result === "string")
-                          setAttachment({
-                            name: file.name,
-                            type: file.type,
-                            data: reader.result,
-                          });
-                      };
-                      reader.onerror = () =>
-                        toast.error("No se pudo abrir el adjunto.");
-                      reader.readAsDataURL(file);
-                    }}
-                  />
-                  <textarea
-                    ref={input}
-                    value={draft}
-                    maxLength={4000}
-                    aria-label="Escribir mensaje"
-                    placeholder="Escribe un mensaje…"
-                    rows={1}
-                    onChange={(event) => setDraft(event.target.value)}
-                    onKeyDown={(event) => {
-                      if (
-                        event.key === "Enter" &&
-                        !event.shiftKey &&
-                        !event.nativeEvent.isComposing
-                      ) {
-                        event.preventDefault();
-                        submit();
-                      }
-                    }}
-                  />
-                  <button
-                    className="chat-send"
-                    type="submit"
-                    aria-label={
-                      edit ? "Guardar edición" : "Enviar mensaje en la demo"
-                    }
-                    disabled={!draft.trim() && !attachment}
-                  >
-                    <Send size={19} />
-                  </button>
-                </form>
-              </>
-            ) : (
-              <div className="chat-welcome">
-                <span>
-                  <MessageCircle size={36} aria-hidden="true" />
-                </span>
-                <h3>Conversaciones que acercan</h3>
-                <p>
-                  Mensajes directos y grupos del equipo, en tu espacio de
-                  trabajo.
-                </p>
-                <Button variant="secondary" onClick={() => setTab("contacts")}>
-                  Iniciar conversación
-                </Button>
-                <small>Sin stickers. Todos los emojis que necesitas.</small>
-              </div>
-            )}
-          </section>
-        )}
+                        } else setDraft((current) => current + value);
+                      }}
+                    />
+                  </Suspense>
+                </div>
+              )}
+              <ChatComposer
+                draft={draft}
+                onDraftChange={setDraft}
+                attachment={attachment}
+                onAttachmentChange={setAttachment}
+                reply={reply}
+                edit={edit}
+                replyAuthor={reply ? person(reply.authorId) : ""}
+                onCancelContext={() => {
+                  setReply(null);
+                  setEdit(null);
+                  setDraft("");
+                }}
+                emojiOpen={emoji}
+                onToggleEmoji={() => {
+                  setEmoji(!emoji);
+                  setReactionTo(null);
+                }}
+                onSubmit={() => void submit()}
+                inputRef={input}
+              />
+            </>
+          ) : (
+            <ChatEmptyState onNewChat={() => setTab("contacts")} />
+          )}
+          <ChatProfilePanel
+            member={members.find((member) => member.id === profileId) ?? null}
+            open={profileThreadId !== null && profileThreadId === activeId}
+            status={profileId ? statusOf(profileId).status : undefined}
+            currentProjectId={statusOf(profileId ?? undefined).currentProjectId}
+            online={
+              !!profileId && !!online[profileId] && statusOf(profileId).presence
+            }
+            fileCount={
+              shared.media.length +
+              shared.documents.length +
+              shared.links.length
+            }
+            onOpenFiles={openFiles}
+            onClose={closeProfile}
+          />
+          <ChatFilesPanel
+            open={filesThreadId !== null && filesThreadId === activeId}
+            title={activeIdentity?.title ?? ""}
+            shared={shared}
+            authorName={person}
+            onClose={closeFiles}
+          />
+        </section>
       </div>
       {groupEditor && (
         <ChatGroupEditor
@@ -790,27 +846,23 @@ export default function ChatPanel({
           members={members}
           group={groupEditor === "new" ? undefined : groupEditor}
           onClose={() => setGroupEditor(null)}
-          onSave={(name, description, memberIds) => {
-            let id = "";
-            const success = update((next) => {
-              id = saveGroup(next, user, {
-                id: groupEditor === "new" ? undefined : groupEditor.id,
-                name,
-                description,
-                members: memberIds,
-              });
+          onSave={async (name, description, memberIds) => {
+            const result = await actions.saveGroup({
+              id: groupEditor === "new" ? undefined : groupEditor.id,
+              name,
+              description,
+              members: memberIds,
             });
-            if (success) {
+            if (result.ok) {
               setTab("groups");
-              selectThread(id);
+              selectThread(result.value);
             }
-            return success;
+            return result.ok;
           }}
-          onDelete={() => {
-            if (
-              groupEditor !== "new" &&
-              update((next) => deleteGroup(next, user, groupEditor.id))
-            ) {
+          onDelete={async () => {
+            if (groupEditor === "new") return;
+            const result = await actions.deleteGroup(groupEditor.id);
+            if (result.ok) {
               setGroupEditor(null);
               setActiveId(null);
             }
@@ -839,17 +891,15 @@ export default function ChatPanel({
                 Cancelar
               </Button>
               <Button
-                disabled={!forwardTo}
-                onClick={() => {
-                  if (
-                    update((next) =>
-                      sendMessage(next, user, forwardTo, {
-                        text: forward.text ? `Reenviado: ${forward.text}` : "",
-                        attachment: forward.attachment,
-                      }),
-                    )
-                  )
-                    setForward(null);
+                disabled={!forwardTo || !active}
+                onClick={async () => {
+                  if (!active) return;
+                  const result = await actions.forward({
+                    fromThreadId: active.id,
+                    messageId: forward.id,
+                    toThreadId: forwardTo,
+                  });
+                  if (result.ok) setForward(null);
                 }}
               >
                 Reenviar

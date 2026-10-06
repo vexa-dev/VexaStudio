@@ -3,6 +3,10 @@ import type { Project, Sprint, TaskStatus } from "@vexa/domain/types";
 import { monthKey } from "@vexa/domain/dates";
 import { monthlyActivity } from "@vexa/domain/time-activity";
 import { services } from "@/services";
+import {
+  sprintTaskCounts,
+  type TaskProgress,
+} from "@/features/dashboard/dashboard-selectors";
 
 export interface ProjectSummary {
   project: Project;
@@ -10,6 +14,8 @@ export interface ProjectSummary {
   sprint: Sprint | null;
   tasksByStatus: Record<TaskStatus, number>;
   taskCount: number;
+  /** Avance del sprint activo, o del proyecto completo si no hay sprint. */
+  progress: TaskProgress;
   /** Horas registradas por todo el equipo este mes (Lima) en tareas del proyecto. */
   monthHours: number;
 }
@@ -74,6 +80,7 @@ export function useProjectSummaries() {
           sprint,
           tasksByStatus,
           taskCount: scoped.length,
+          progress: sprintTaskCounts(scoped, sprint),
           monthHours,
         };
       });

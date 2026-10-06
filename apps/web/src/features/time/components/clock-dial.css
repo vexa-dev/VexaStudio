@@ -1,0 +1,308 @@
+/* Interactive clock. Tokens only; motion is limited to transform, opacity and clip-path. */
+.clock-dial {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  min-width: 0;
+}
+.clock-readout {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 30px;
+  font-weight: 600;
+  line-height: 1.1;
+  color: var(--fg);
+}
+.clock-exact {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 20px;
+  margin: -4px 0 0;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--success);
+  opacity: 0;
+  clip-path: inset(0 100% 0 0);
+}
+.clock-exact[data-on="true"] {
+  opacity: 1;
+  clip-path: inset(0 0 0 0);
+  transition:
+    clip-path 260ms var(--ease-out),
+    opacity 120ms var(--ease-out);
+}
+.clock-svg {
+  display: block;
+  max-width: 100%;
+  height: auto;
+  aspect-ratio: 1;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-tap-highlight-color: transparent;
+  cursor: grab;
+}
+.clock-face {
+  fill: var(--neutral-900);
+  stroke: var(--neutral-700);
+  stroke-width: 3;
+  transition: stroke 160ms var(--ease-out);
+}
+.clock-dial[data-exact] .clock-face {
+  stroke: var(--vexa-brand);
+}
+.clock-tick {
+  stroke: var(--neutral-500);
+  stroke-width: 1;
+  stroke-linecap: round;
+}
+.clock-tick.is-major {
+  stroke: var(--neutral-300);
+  stroke-width: 2;
+}
+.clock-numeral {
+  fill: var(--neutral-50);
+  font-family: var(--font-display);
+  font-size: 15px;
+  font-weight: 500;
+  pointer-events: none;
+}
+.clock-numeral.is-now {
+  fill: var(--steel-200);
+  font-weight: 700;
+}
+.clock-arm {
+  stroke-linecap: round;
+  pointer-events: none;
+}
+.clock-arm.is-hour {
+  stroke: var(--steel);
+  stroke-width: 5;
+}
+.clock-arm.is-minute {
+  stroke: var(--neutral-50);
+  stroke-width: 3;
+}
+.clock-hub {
+  fill: var(--vexa-brand);
+  stroke: var(--neutral-900);
+  stroke-width: 2;
+  pointer-events: none;
+}
+.clock-ghost circle {
+  fill: none;
+  stroke: var(--steel-300);
+  stroke-width: 2;
+  stroke-dasharray: 3 3;
+  pointer-events: none;
+}
+.clock-ghost {
+  transition: opacity 160ms var(--ease-out);
+}
+.clock-ghost[data-hidden="true"] {
+  opacity: 0;
+}
+.clock-handle {
+  outline: none;
+  cursor: grab;
+}
+.clock-grip {
+  stroke: var(--neutral-900);
+  stroke-width: 3;
+  transform-box: fill-box;
+  transform-origin: center;
+}
+.clock-handle.is-hour .clock-grip {
+  fill: var(--steel);
+}
+.clock-handle.is-minute .clock-grip {
+  fill: var(--neutral-50);
+}
+.clock-grip.is-pulse {
+  animation: clock-magnet 160ms var(--ease-out);
+}
+@keyframes clock-magnet {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.15);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+.clock-focus {
+  fill: none;
+  stroke: var(--neutral-50);
+  stroke-width: 2;
+  opacity: 0;
+  pointer-events: none;
+}
+.clock-handle:focus-visible .clock-focus {
+  opacity: 1;
+}
+.clock-touch {
+  fill: transparent;
+}
+.clock-meridiem {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4px;
+  width: min(100%, 240px);
+  padding: 3px;
+  border: 1px solid var(--control-border);
+  border-radius: 12px;
+  background: var(--input);
+}
+.clock-meridiem button {
+  min-height: 44px;
+  border-radius: 9px;
+  font-size: 14px;
+  color: var(--muted);
+  touch-action: manipulation;
+}
+.clock-meridiem button[aria-pressed="true"] {
+  background: var(--primary-soft);
+  color: var(--primary-text);
+  font-weight: 600;
+}
+.clock-meridiem button:focus-visible,
+.clock-typed input:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+}
+.clock-typed {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  width: min(100%, 240px);
+  font-size: 13px;
+  font-weight: 500;
+}
+.clock-typed input {
+  min-height: 44px;
+  padding: 10px 12px;
+  border: 1px solid var(--control-border);
+  border-radius: 9px;
+  background: var(--input);
+  color: var(--fg);
+  font-size: 16px;
+  font-variant-numeric: tabular-nums;
+}
+.clock-typed input[aria-invalid="true"] {
+  border-color: var(--danger);
+}
+.clock-error {
+  width: min(100%, 240px);
+  margin: -4px 0 0;
+  font-size: 12px;
+  color: var(--danger);
+}
+
+/* Popover layer used by ClockTimeField. */
+.clock-layer {
+  position: fixed;
+  inset: 0;
+  z-index: 10000;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  background: color-mix(in oklab, var(--neutral-950) 45%, transparent);
+  animation: clock-layer-in 180ms var(--ease-out);
+}
+.clock-card {
+  width: 100%;
+  max-width: 360px;
+  max-height: 100%;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 16px 16px max(16px, env(safe-area-inset-bottom));
+  border: 1px solid var(--border);
+  border-radius: 16px 16px 0 0;
+  background: var(--surface);
+  box-shadow: var(--sh-pop);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  outline: none;
+}
+.clock-card-actions {
+  display: flex;
+  justify-content: flex-end;
+}
+.clock-card-actions > * {
+  min-height: 44px;
+}
+.clock-field-hint {
+  margin: 0;
+  font-size: 12px;
+  color: var(--muted);
+}
+.clock-field-hint.is-warning {
+  color: var(--warning);
+}
+/* Own line: an inline 44px button would stretch the text line it sits in. */
+.clock-use-target {
+  display: block;
+  min-height: 44px;
+  padding: 0 4px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--primary-text);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.clock-use-target:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+  border-radius: 6px;
+}
+@keyframes clock-layer-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+@media (min-width: 640px) {
+  .clock-layer {
+    align-items: center;
+  }
+  .clock-card {
+    border-radius: 16px;
+  }
+}
+@media (hover: hover) and (pointer: fine) {
+  .clock-meridiem button:hover:not([aria-pressed="true"]) {
+    background: var(--hover);
+  }
+  .clock-use-target:hover {
+    color: var(--fg);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .clock-grip.is-pulse {
+    animation: clock-magnet-calm 160ms linear;
+  }
+  .clock-exact[data-on="true"] {
+    clip-path: none;
+    transition: opacity 120ms linear;
+  }
+  .clock-exact {
+    clip-path: none;
+  }
+}
+@keyframes clock-magnet-calm {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.6;
+  }
+}

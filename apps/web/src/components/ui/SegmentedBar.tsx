@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { cn } from '@/lib/utils'
+import { segmentLayout } from './segmented-bar-model'
 
 export interface Segment {
   id: string
@@ -18,17 +19,19 @@ interface SegmentedBarProps {
   summary: string
   /** Con `false` la barra aparece completa, sin recorrido. */
   animate?: boolean
+  /** Short note shown when there is nothing to split (all values are 0). */
+  emptyLabel?: string
   className?: string
 }
 
 const MIN_SEGMENT = '2.75rem'
 
 /**
- * Reparto de un total entre varias personas. El segmento propio usa el verde de marca y los demás
+ * Reparto de un total entre varias personas. El segmento propio usa el verde de marca (salvo sin datos, donde todo es neutro) y los demás
  * un neutro; el significado no depende del color porque cada segmento se nombra debajo, con el mismo
  * ancho proporcional. La barra se revela de izquierda a derecha con `clip-path`.
  */
-export function SegmentedBar({ segments, summary, animate = true, className }: SegmentedBarProps) {
+export function SegmentedBar({ segments, summary, animate = true, emptyLabel, className }: SegmentedBarProps) {
   const [revealed, setRevealed] = useState(!animate)
   useEffect(() => {
     if (!animate) return
@@ -36,11 +39,11 @@ export function SegmentedBar({ segments, summary, animate = true, className }: S
     return () => cancelAnimationFrame(frame)
   }, [animate])
 
-  const total = segments.reduce((sum, s) => sum + s.value, 0)
-  const weight = (value: number) => (total === 0 ? 1 : Math.max(value, total * 0.02))
+  const { empty, weights } = segmentLayout(segments.map((s) => s.value))
+  const note = empty ? emptyLabel : undefined
 
   return (
-    <div role="group" aria-label={summary} className={cn('flex flex-col gap-2.5', className)}>
+    <div role="group" aria-label={note ? `${summary}. ${note}` : summary} className={cn('flex flex-col gap-2.5', className)}>
       <div
         aria-hidden="true"
         className={cn(
@@ -49,20 +52,20 @@ export function SegmentedBar({ segments, summary, animate = true, className }: S
         )}
         style={{ clipPath: revealed ? 'inset(0 0 0 0)' : 'inset(0 100% 0 0)' }}
       >
-        {segments.map((segment) => (
+        {segments.map((segment, index) => (
           <div
             key={segment.id}
-            className={cn('h-full rounded-md', segment.highlight ? 'bg-primary' : 'bg-segment')}
-            style={{ flex: `${weight(segment.value)} 1 0`, minWidth: MIN_SEGMENT }}
+            className={cn('h-full rounded-md', !empty && segment.highlight ? 'bg-primary' : 'bg-segment')}
+            style={{ flex: `${weights[index]} 1 0`, minWidth: MIN_SEGMENT }}
           />
         ))}
       </div>
       <ul className="flex w-full gap-1">
-        {segments.map((segment) => (
+        {segments.map((segment, index) => (
           <li
             key={segment.id}
             className="min-w-0"
-            style={{ flex: `${weight(segment.value)} 1 0`, minWidth: MIN_SEGMENT }}
+            style={{ flex: `${weights[index]} 1 0`, minWidth: MIN_SEGMENT }}
           >
             <p className={cn('truncate text-xs', segment.highlight ? 'font-semibold text-primary-text' : 'text-muted')}>
               {segment.label}
@@ -71,6 +74,7 @@ export function SegmentedBar({ segments, summary, animate = true, className }: S
           </li>
         ))}
       </ul>
+      {note && <p className="text-xs text-muted">{note}</p>}
     </div>
   )
 }
