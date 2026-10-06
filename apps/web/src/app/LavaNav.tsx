@@ -2,7 +2,7 @@
 import { motion } from "motion/react";
 import { useReducedMotion } from "@/lib/useReducedMotion";
 import { NavLink } from "react-router-dom";
-import { UserRound } from "lucide-react";
+import { Avatar } from "@/components/ui/Avatar";
 import { BrandLogo } from "@/components/BrandLogo";
 import { motionTokens, springs } from "@/lib/motion-tokens";
 import { useAuth } from "@/features/auth/hooks/useAuth";
@@ -200,8 +200,12 @@ export function LavaNav() {
         ))}
       </nav>
       <nav className="lava-utilities" aria-label="Más opciones">
-        <NavLink to="/perfil" className="lava-link" aria-label="Mi perfil">
-          <UserRound size={21} />
+        <NavLink
+          to="/perfil"
+          className="lava-link lava-link--photo"
+          aria-label="Mi perfil"
+        >
+          <Avatar name={user?.name ?? ""} src={user?.avatarUrl} size="sm" />
           <span className="lava-tooltip">Mi perfil</span>
         </NavLink>
       </nav>

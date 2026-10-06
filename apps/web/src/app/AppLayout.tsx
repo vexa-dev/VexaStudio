@@ -14,6 +14,7 @@ import { isSupabaseSource } from "@/services/supabase/data-source";
 import { navItems, navigationFor } from "./nav";
 import { ThemeToggle } from "./ThemeToggle";
 import { UserMenu } from "./UserMenu";
+import { ProfileLink } from "./ProfileLink";
 import { NotificationMenu } from "@/features/notifications/NotificationMenu";
 import { useCardTilt } from "@/lib/useCardTilt";
 import { useAuth } from "@/features/auth/hooks/useAuth";
@@ -74,6 +75,7 @@ export function AppLayout() {
           <ThemeToggle />
           {user && <NotificationMenu key={user.id} user={user} />}
           <UserMenu />
+          <ProfileLink />
         </div>
       </header>
 
