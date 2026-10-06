@@ -12,6 +12,7 @@ import type {
   IsoDateTime,
   MemberMonthlySummary,
   MemberPoints,
+  Notification,
   Profile,
   Project,
   ProjectLabel,
@@ -55,6 +56,7 @@ export function mapProfile(row: Tables<"profiles">): Profile {
     area: row.area,
     weeklyHours: row.weekly_hours,
     active: row.active,
+    joinedAt: isoInstant(row.created_at),
   };
 }
 
@@ -314,5 +316,21 @@ export function mapAuditEntry(row: Tables<"audit_log">): AuditLogEntry {
     requestId: row.request_id,
     sessionId: row.session_id ?? "",
     client: mapClient(row),
+  };
+}
+
+/** La carga de un aviso son textos planos: cualquier otro valor se descarta. */
+export function mapNotification(row: Tables<"notifications">): Notification {
+  const payload: Record<string, string> = {};
+  if (typeof row.payload === "object" && row.payload !== null && !Array.isArray(row.payload))
+    for (const [key, value] of Object.entries(row.payload))
+      if (typeof value === "string") payload[key] = value;
+  return {
+    id: row.id,
+    userId: row.user_id,
+    type: row.type,
+    payload,
+    read: row.read_at !== null,
+    createdAt: isoInstant(row.created_at),
   };
 }

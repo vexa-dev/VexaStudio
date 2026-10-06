@@ -8,6 +8,7 @@ import {
   mapLabel,
   mapMemberPoints,
   mapMonthlySummary,
+  mapNotification,
   mapProfile,
   mapProject,
   mapRecurring,
@@ -73,6 +74,8 @@ describe("perfiles y ajustes", () => {
         area: "management_finance",
         weekly_hours: 15,
         active: true,
+        avatar_path: "u1/avatar-1.webp",
+        banner_path: null,
         created_at: T,
         updated_at: T,
       }),
@@ -83,6 +86,7 @@ describe("perfiles y ajustes", () => {
       area: "management_finance",
       weeklyHours: 15,
       active: true,
+      joinedAt: ISO,
     });
   });
 
@@ -505,5 +509,36 @@ describe("actividad", () => {
     });
     expect(entry.client.platform).toBe("web");
     expect(entry.changes).toEqual([]);
+  });
+});
+
+describe("mapNotification", () => {
+  const row: Tables<"notifications"> = {
+    id: "n1",
+    user_id: "u1",
+    type: "task_assigned",
+    payload: { title: "Hola", taskId: "t1", extra: 3, nested: { a: 1 }, nada: null },
+    read_at: null,
+    created_at: "2026-10-05T15:00:00+00:00",
+  };
+
+  it("traduce la fila al dominio y deja solo claves de texto en la carga", () => {
+    expect(mapNotification(row)).toEqual({
+      id: "n1",
+      userId: "u1",
+      type: "task_assigned",
+      payload: { title: "Hola", taskId: "t1" },
+      read: false,
+      createdAt: "2026-10-05T15:00:00.000Z",
+    });
+  });
+
+  it("read_at con fecha significa leída", () => {
+    expect(mapNotification({ ...row, read_at: "2026-10-05T16:00:00+00:00" }).read).toBe(true);
+  });
+
+  it("una carga que no es objeto queda vacía", () => {
+    expect(mapNotification({ ...row, payload: ["x"] }).payload).toEqual({});
+    expect(mapNotification({ ...row, payload: null as never }).payload).toEqual({});
   });
 });
