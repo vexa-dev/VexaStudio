@@ -1,0 +1,307 @@
+/* Shared files panel and media viewer. Tokens only; motion is transform/opacity. */
+
+.chat-files-title {
+  min-width: 0;
+}
+.chat-files-title h3 {
+  margin: 0;
+  color: var(--fg);
+  font-size: 0.9375rem;
+  font-weight: 600;
+  line-height: 1.3;
+}
+.chat-files-title p {
+  margin: 0;
+  overflow: hidden;
+  color: var(--muted);
+  font-size: 0.75rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Tabs */
+.chat-files-tabs {
+  flex: 0 0 auto;
+  display: flex;
+  gap: 0.25rem;
+  padding: 0 0.75rem 0.5rem;
+  border-bottom: 1px solid var(--border);
+}
+.chat-files-tabs [role="tab"] {
+  flex: 1 1 0;
+  min-height: 44px;
+  padding: 0 0.25rem;
+  border: 0;
+  border-radius: 12px;
+  background: transparent;
+  color: var(--muted);
+  font: inherit;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  cursor: pointer;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+.chat-files-tabs [role="tab"][aria-selected="true"] {
+  background: var(--primary-soft);
+  color: var(--primary-text);
+  font-weight: 600;
+}
+.chat-files-tabs [role="tab"]:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+}
+@media (hover: hover) and (pointer: fine) {
+  .chat-files-tabs [role="tab"][aria-selected="false"]:hover {
+    background: var(--surface-2);
+  }
+}
+
+.chat-files-scroll {
+  padding: 0 0 1.5rem;
+}
+.chat-files-month h4 {
+  margin: 0;
+  padding: 1rem 1rem 0.5rem;
+  color: var(--muted);
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+.chat-files-list,
+.chat-files-grid {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+/* Media grid */
+.chat-files-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 2px;
+  padding: 0 2px;
+}
+.chat-files-thumb {
+  position: relative;
+  display: block;
+  width: 100%;
+  aspect-ratio: 1;
+  padding: 0;
+  border: 0;
+  overflow: hidden;
+  background: var(--surface-2);
+  cursor: pointer;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+.chat-files-thumb img,
+.chat-files-thumb video {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  pointer-events: none;
+}
+.chat-files-thumb:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: -2px;
+}
+.chat-files-play {
+  position: absolute;
+  right: 6px;
+  bottom: 6px;
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--bg) 78%, transparent);
+  color: var(--fg);
+}
+
+/* Document and link rows */
+.chat-files-row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  min-height: 56px;
+  padding: 0.5rem 1rem;
+  color: var(--fg);
+  text-decoration: none;
+}
+.chat-files-link:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: -2px;
+}
+@media (hover: hover) and (pointer: fine) {
+  .chat-files-link:hover {
+    background: var(--surface-2);
+  }
+}
+.chat-files-icon {
+  flex: 0 0 auto;
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  background: var(--surface-2);
+  color: var(--muted);
+}
+.chat-files-text {
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+.chat-files-text strong {
+  overflow: hidden;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.chat-files-text small {
+  overflow: hidden;
+  color: var(--muted);
+  font-size: 0.75rem;
+  line-height: 1.4;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.chat-files-action,
+.chat-viewer-button {
+  flex: 0 0 auto;
+  display: inline-grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+.chat-files-action {
+  color: var(--primary-text);
+}
+.chat-files-action:focus-visible,
+.chat-viewer-button:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+}
+@media (hover: hover) and (pointer: fine) {
+  .chat-files-action:hover {
+    background: var(--surface-2);
+  }
+}
+
+/* Empty state */
+.chat-files-empty {
+  display: grid;
+  justify-items: center;
+  gap: 0.25rem;
+  padding: 3rem 2rem;
+  color: var(--muted);
+  text-align: center;
+}
+.chat-files-empty strong {
+  color: var(--fg);
+  font-size: 0.9375rem;
+}
+.chat-files-empty p {
+  margin: 0;
+  font-size: 0.8125rem;
+  line-height: 1.5;
+}
+
+/* Viewer: sits above the panels inside the conversation pane. */
+.chat-viewer {
+  position: absolute;
+  inset: 0;
+  z-index: 30;
+  display: flex;
+  flex-direction: column;
+  background: color-mix(in srgb, var(--bg) 94%, var(--fg));
+  color: var(--fg);
+  animation: chat-viewer-in 200ms var(--ease-out) both;
+}
+@keyframes chat-viewer-in {
+  from {
+    opacity: 0;
+    transform: scale(0.98);
+  }
+}
+.chat-viewer-bar {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-height: 56px;
+  padding: 0 0.5rem;
+  border-bottom: 1px solid var(--border);
+}
+.chat-viewer-meta {
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+.chat-viewer-meta strong {
+  overflow: hidden;
+  font-size: 0.875rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.chat-viewer-meta span,
+.chat-viewer-count {
+  color: var(--muted);
+  font-size: 0.75rem;
+}
+.chat-viewer-stage {
+  position: relative;
+  flex: 1 1 auto;
+  min-height: 0;
+  display: grid;
+  place-items: center;
+  padding: 0.5rem;
+}
+.chat-viewer-media {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+}
+.chat-viewer-nav {
+  position: absolute;
+  top: 50%;
+  margin-top: -22px;
+  background: color-mix(in srgb, var(--bg) 78%, transparent);
+  box-shadow: 0 0 0 1px var(--border);
+}
+.chat-viewer-nav.is-prev {
+  left: 0.5rem;
+}
+.chat-viewer-nav.is-next {
+  right: 0.5rem;
+}
+.chat-viewer-nav:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+@media (hover: hover) and (pointer: fine) {
+  .chat-viewer-button:hover:not(:disabled) {
+    background: var(--surface-2);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  @keyframes chat-viewer-in {
+    from {
+      opacity: 0;
+    }
+  }
+}
