@@ -10,8 +10,8 @@ select is(
   '', 'toda tabla de public tiene RLS activado');
 select is(
   (select count(*)::int from pg_class c join pg_namespace n on n.oid = c.relnamespace
-   where n.nspname = 'public' and c.relkind in ('r', 'p')), 24,
-  'las 24 tablas del alcance (si agregas una, agregale RLS y politicas y actualiza este numero)');
+   where n.nspname = 'public' and c.relkind in ('r', 'p')), 28,
+  'las 28 tablas del alcance (si agregas una, agregale RLS y politicas y actualiza este numero)');
 select is(
   (select coalesce(string_agg(c.relname, ', '), '') from pg_class c join pg_namespace n on n.oid = c.relnamespace
    where n.nspname = 'public' and c.relkind in ('r', 'p') and c.relname <> 'audit_chain_head'
@@ -28,7 +28,7 @@ select is(
 select is(
   (select coalesce(string_agg(c.relname, ', '), '') from pg_class c join pg_namespace n on n.oid = c.relnamespace
    where n.nspname = 'public' and c.relkind in ('r', 'p')
-     and c.relname not in ('project_members', 'task_labels')
+     and c.relname not in ('project_members', 'task_labels', 'time_entry_participants', 'time_entry_evidence')
      and has_table_privilege('authenticated', c.oid, 'delete')),
   '', 'authenticated no borra en ninguna tabla (salvo las de union)');
 select is(
@@ -68,8 +68,9 @@ select is(
   (select coalesce(string_agg(p.proname, ', '), '') from pg_proc p join pg_namespace n on n.oid = p.pronamespace
    where n.nspname = 'public' and p.prosecdef and p.proname not in (
      'auth_role', 'is_admin', 'is_partner_or_admin', 'is_project_member', 'can_access_project',
-     'can_view_task', 'chat_can_access', 'verify_audit_chain')),
+     'can_view_task', 'chat_can_access', 'hours_entry_tagged', 'verify_audit_chain')),
   -- chat_can_access es un ayudante de permisos (integrante del hilo, o admin en grupos), igual que can_view_task.
+  -- hours_entry_tagged responde solo si quien llama esta etiquetado en un registro (evita recursion de RLS).
   '', 'las unicas funciones publicas SECURITY DEFINER son los ayudantes de permisos y la verificacion de la cadena');
 select is(
   (select coalesce(string_agg(p.proname, ', '), '') from pg_proc p join pg_namespace n on n.oid = p.pronamespace
