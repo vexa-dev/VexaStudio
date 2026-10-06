@@ -9,6 +9,7 @@ import {
   mapMemberPoints,
   mapMonthlySummary,
   mapNotification,
+  mapNotificationPreferences,
   mapProfile,
   mapProject,
   mapRecurring,
@@ -76,6 +77,8 @@ describe("perfiles y ajustes", () => {
         active: true,
         avatar_path: "u1/avatar-1.webp",
         banner_path: null,
+        username: "jhony",
+        bio: null,
         created_at: T,
         updated_at: T,
       }),
@@ -87,7 +90,19 @@ describe("perfiles y ajustes", () => {
       weeklyHours: 15,
       active: true,
       joinedAt: ISO,
+      username: "jhony",
+      bio: null,
     });
+  });
+
+  it("mapea las preferencias de notificación", () => {
+    expect(
+      mapNotificationPreferences({
+        task_assigned: false,
+        hours_reminder: true,
+        weekly_summary: false,
+      }),
+    ).toEqual({ taskAssigned: false, hoursReminder: true, weeklySummary: false });
   });
 
   it("mapea los ajustes y recorta los segundos de las horas", () => {
@@ -309,6 +324,72 @@ describe("horas", () => {
     });
     expect(entry.endedAt).toBeNull();
     expect(entry.segmentStartedAt).toBe(ISO);
+  });
+
+  it("sin relaciones embebidas, el registro trae listas vacías de etiquetas y evidencia", () => {
+    const entry = mapTimeEntry(timeRow);
+    expect(entry.participants).toEqual([]);
+    expect(entry.evidence).toEqual([]);
+  });
+
+  it("mapea etiquetas y evidencia embebidas, en orden estable", () => {
+    const entry = mapTimeEntry({
+      ...timeRow,
+      time_entry_participants: [
+        { entry_id: "h1", user_id: "u3", share_percent: 50, created_at: T },
+        { entry_id: "h1", user_id: "u2", share_percent: 100, created_at: T },
+      ],
+      time_entry_evidence: [
+        {
+          id: "ev2",
+          entry_id: "h1",
+          uploader_id: "u1",
+          path: "h1/ev2/b.pdf",
+          name: "b.pdf",
+          mime: "application/pdf",
+          size: 20,
+          created_at: "2026-10-03T18:00:00+00:00",
+          purge_after: null,
+          purged_at: null,
+        },
+        {
+          id: "ev1",
+          entry_id: "h1",
+          uploader_id: "u1",
+          path: "h1/ev1/a.png",
+          name: "a.png",
+          mime: "image/png",
+          size: 10,
+          created_at: T,
+          purge_after: "2026-10-10T17:00:00+00:00",
+          purged_at: "2026-10-11T17:00:00+00:00",
+        },
+      ],
+    });
+    expect(entry.participants).toEqual([
+      { userId: "u2", sharePercent: 100 },
+      { userId: "u3", sharePercent: 50 },
+    ]);
+    expect(entry.evidence).toEqual([
+      {
+        id: "ev1",
+        name: "a.png",
+        mime: "image/png",
+        size: 10,
+        createdAt: ISO,
+        purgeAt: "2026-10-10T17:00:00.000Z",
+        purged: true,
+      },
+      {
+        id: "ev2",
+        name: "b.pdf",
+        mime: "application/pdf",
+        size: 20,
+        createdAt: "2026-10-03T18:00:00.000Z",
+        purgeAt: null,
+        purged: false,
+      },
+    ]);
   });
 
   it("una RPC sin fila devuelve null, no un registro vacío", () => {

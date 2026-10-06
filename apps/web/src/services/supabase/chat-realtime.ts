@@ -47,6 +47,7 @@ export function createChatRealtime(client: VexaSupabase) {
     const current = ++generation;
     const user = (await client.auth.getSession()).data.session?.user.id;
     if (!user || (!tracking && !presenceListeners.size)) {
+      if (!user) actor = undefined;
       await clearChannels();
       return;
     }
@@ -100,12 +101,18 @@ export function createChatRealtime(client: VexaSupabase) {
       }
       publishPresence();
     } catch {
-      await clearChannels();
-    } // Authentication / authorization failures hide presence.
+      // Transient failure: keep the channels, show the last known state and retry on the next tick.
+      if (current === generation) publishPresence();
+    }
   }
   function startPresence() {
     if (!authStop) {
-      const auth = client.auth.onAuthStateChange(() => {
+      const auth = client.auth.onAuthStateChange((event, session) => {
+        // auth-js re-emits SIGNED_IN on every tab refocus and TOKEN_REFRESHED hourly; supabase-js
+        // already refreshes the Realtime token, so only a sign-out or another user resets channels.
+        const next = session?.user.id;
+        if (event !== "SIGNED_OUT" && next && next === actor) return;
+        if (!next) actor = undefined;
         void clearChannels().then(() => {
           if (tracking || presenceListeners.size)
             setTimeout(() => void refreshPresence(), 0);
@@ -116,6 +123,7 @@ export function createChatRealtime(client: VexaSupabase) {
     if (!statusChannel) {
       statusChannel = client.channel(
         `chat-presence-status:${crypto.randomUUID()}`,
+        { config: { private: true } },
       );
       for (const table of ["chat_status", "profiles"])
         statusChannel.on(
@@ -144,7 +152,7 @@ export function createChatRealtime(client: VexaSupabase) {
       listeners.add(listener);
       let stopped = false;
       const channel = client.channel(`chat-changes:${crypto.randomUUID()}`, {
-        config: { postgres_changes_options: { wait: true } },
+        config: { private: true, postgres_changes_options: { wait: true } },
       });
       for (const table of [
         "chat_threads",
@@ -153,6 +161,7 @@ export function createChatRealtime(client: VexaSupabase) {
         "chat_messages",
         "chat_reactions",
         "chat_status",
+        "chat_attachment_states",
       ])
         channel.on(
           "postgres_changes",

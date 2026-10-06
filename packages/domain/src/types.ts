@@ -22,6 +22,54 @@ export interface Profile {
   bannerUrl?: string | null;
   /** Fecha de registro en la plataforma. */
   joinedAt?: IsoDateTime;
+  /** Usuario único (minúsculas, 3–30: letras, números, punto o guion bajo); `null` hasta elegirlo. */
+  username?: string | null;
+  /** "Sobre mí", hasta 280 caracteres. */
+  bio?: string | null;
+  /** Correo de la cuenta (solo lectura); lo entrega la sesión de Supabase, no la tabla de perfiles. */
+  email?: string | null;
+}
+
+/** Datos personales que la propia persona puede editar. */
+export interface ProfileDetailsInput {
+  name: string;
+  username: string | null;
+  bio: string | null;
+}
+
+/** Factor TOTP de segundo paso. */
+export interface MfaFactor {
+  id: Id;
+  friendlyName: string | null;
+  /** `unverified` es un alta que no se terminó de confirmar. */
+  status: "verified" | "unverified";
+  createdAt: IsoDateTime;
+}
+
+/** Alta de un factor TOTP: la persona escanea el QR (o escribe el secreto) y confirma con un código. */
+export interface MfaEnrollment {
+  factorId: Id;
+  /** SVG del código QR listo para mostrar. */
+  qrCodeSvg: string;
+  /** Secreto en texto para quien no puede escanear; nunca se registra ni se guarda. */
+  secret: string;
+  /** URI `otpauth://`. */
+  uri: string;
+}
+
+/** Si la sesión actual aún necesita el segundo paso (aal1 con factor verificado → aal2). */
+export interface MfaChallenge {
+  required: boolean;
+  factorId?: Id;
+}
+
+/** Preferencias de notificación por persona; sin fila guardada, todo está activado. */
+export interface NotificationPreferences {
+  taskAssigned: boolean;
+  /** Guardada; aún sin efecto (no hay recordatorios por reloj). */
+  hoursReminder: boolean;
+  /** Guardada; aún sin efecto (no hay resumen por reloj). */
+  weeklySummary: boolean;
 }
 
 /** Parámetros del acuerdo de socios (tabla `settings`, en camelCase). */
@@ -79,6 +127,25 @@ export interface Task {
   link: string | null;
 }
 
+/** Person who helped on an entry; `sharePercent` (1-100) of its hours is credited to them. */
+export interface HoursParticipant {
+  userId: Id;
+  sharePercent: number;
+}
+
+/** File attached to an entry. The bytes live in Storage (or in the mock); this is the metadata. */
+export interface HoursEvidence {
+  id: Id;
+  name: string;
+  mime: string;
+  size: number;
+  createdAt: IsoDateTime;
+  /** When the file becomes eligible for deletion; `null`/absent while the entry is not validated. */
+  purgeAt?: IsoDateTime | null;
+  /** The file was already deleted (the metadata stays as a text marker). */
+  purged: boolean;
+}
+
 export interface TimeEntry {
   id: Id;
   userId: Id;
@@ -111,6 +178,10 @@ export interface TimeEntry {
     projectId: Id | null;
     hours: number;
   }[];
+  /** People tagged by the owner. Always present when it comes from a service (empty = none). */
+  participants?: HoursParticipant[];
+  /** Attached files. Always present when it comes from a service (empty = none). */
+  evidence?: HoursEvidence[];
 }
 
 export type ExpenseCategory =

@@ -50,6 +50,9 @@ export function createSupabaseClient(
 ): VexaSupabase {
   const persist = options.persistSession ?? true;
   return createClient<Database>(url, key, {
+    // Heartbeat in a same-origin worker: background tabs throttle timers and would drop presence.
+    // A hosted file (not the default Blob URL) keeps CSP `worker-src 'self'` intact.
+    realtime: { worker: true, workerUrl: "/realtime-heartbeat.worker.js" },
     global: { fetch: withActivityHeaders((...args) => fetch(...args)) },
     auth: {
       persistSession: persist,

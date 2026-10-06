@@ -1,3 +1,4 @@
+import { entriesCreditedTo } from "@vexa/domain/hours-credit";
 import { monthlyActivity } from "@vexa/domain/time-activity";
 import {
   computeCompliance,
@@ -25,8 +26,9 @@ function partners() {
 export function summarizeMonth(month: string): MemberMonthlySummary[] {
   const { timeEntries, absences, settings } = getDb();
   return partners().map((profile) => {
+    // Own entries at 100 % plus the validated ones where the person was tagged, at their share.
     const hours = monthlyActivity(
-      timeEntries.filter((e) => e.userId === profile.id),
+      entriesCreditedTo(timeEntries, profile.id),
       month,
     ).total;
     const reducedHours = absences
@@ -54,9 +56,10 @@ export function summarizePoints(): MemberPoints[] {
   return computePoints(
     partners().map((profile) => ({
       userId: profile.id,
-      hourPoints: timeEntries
-        .filter((e) => e.userId === profile.id)
-        .reduce((sum, e) => sum + entryPoints(e, settings), 0),
+      hourPoints: timeEntries.reduce(
+        (sum, e) => sum + entryPoints(e, settings, profile.id),
+        0,
+      ),
       moneyPoints: expenses
         .filter((e) => e.paidBy === profile.id)
         .reduce((sum, e) => sum + expensePoints(e, settings), 0),

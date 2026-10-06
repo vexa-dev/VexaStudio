@@ -65,11 +65,33 @@ export interface RecordAuditInput {
 }
 
 /**
+ * Foto de un registro para el historial. En horas, la evidencia se reduce a `{ id, name }` de los archivos
+ * vigentes (como en SQL): las fechas de retiro y los retiros no son una edición del registro.
+ */
+function auditView(table: AuditTable, snapshot: object | null): object | null {
+  if (!snapshot || table !== "time_entries") return snapshot;
+  const { evidence, ...rest } = snapshot as {
+    evidence?: { id: Id; name: string; purged: boolean }[];
+  };
+  return {
+    ...rest,
+    evidence: (evidence ?? [])
+      .filter((file) => !file.purged)
+      .map(({ id, name }) => ({ id, name })),
+  };
+}
+
+/**
  * Agrega una entrada al registro. Una edición sin cambios no deja rastro y devuelve `null`.
  * Es lo único que escribe `auditLog`: el servicio expuesto es de solo lectura.
  */
-export function recordAudit(input: RecordAuditInput): AuditLogEntry | null {
+export function recordAudit(raw: RecordAuditInput): AuditLogEntry | null {
   const db = getDb();
+  const input: RecordAuditInput = {
+    ...raw,
+    before: auditView(raw.table, raw.before),
+    after: auditView(raw.table, raw.after),
+  };
   const record = (input.after ?? input.before) as { id: Id } | null;
   if (!record) throw new Error("La actividad necesita un registro");
   const changes = diffFields(input.before, input.after);

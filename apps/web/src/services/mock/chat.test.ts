@@ -395,6 +395,37 @@ describe("regla 7: lectura", () => {
   });
 });
 
+describe("entrega", () => {
+  it("marcar entregado deja la marca sin marcar leído", async () => {
+    as(ROBER);
+    const id = await chat.directThread(JOSE);
+    tick();
+    await chat.sendMessage(id, { text: "Uno" });
+    as(JOSE);
+    tick();
+    await chat.markDelivered(id);
+    const seen = await thread(id);
+    expect(seen.deliveredAt?.[JOSE]).toBe(clock);
+    expect(seen.readAt[JOSE]).toBeUndefined();
+  });
+  it("no escribe si ya está al día ni sin mensajes de otros", async () => {
+    as(ROBER);
+    const id = await chat.directThread(JOSE);
+    await chat.sendMessage(id, { text: "Uno" });
+    const events = vi.fn();
+    const stop = chat.subscribe(events);
+    await chat.markDelivered(id); // only my own message
+    expect(events).not.toHaveBeenCalled();
+    stop();
+  });
+  it("rechaza una conversación ajena", async () => {
+    as(ROBER);
+    const id = await chat.directThread(JOSE);
+    as(DIEGO);
+    await expect(chat.markDelivered(id)).rejects.toThrow(NO_ACCESS);
+  });
+});
+
 describe("regla 8: reenviar", () => {
   it("antepone Reenviado:, copia el adjunto y no conserva la respuesta", async () => {
     as(ROBER);
@@ -586,6 +617,99 @@ describe("persistencia y eventos", () => {
     setSessionUserId(null);
     await expect(chat.listThreads()).rejects.toThrow(
       "Inicia sesión para usar el chat.",
+    );
+  });
+});
+
+describe("ciclo de vida de los adjuntos", () => {
+  let id: string;
+  let messageId: string;
+  const find = async () =>
+    (await thread(id)).messages.find((m) => m.id === messageId)!;
+  beforeEach(async () => {
+    as(ROBER);
+    id = await chat.directThread(JOSE);
+    messageId = (await chat.sendMessage(id, { text: "", attachment: photo }))
+      .id;
+  });
+
+  it("no se responde antes de que todos descarguen; el emisor cuenta como descarga", async () => {
+    await expect(chat.answerAttachmentKeep(messageId, false)).rejects.toThrow(
+      "Todavía falta que todos descarguen el archivo.",
+    );
+    as(JOSE);
+    await chat.markAttachmentDownloaded(messageId);
+    await chat.markAttachmentDownloaded(messageId);
+    const life = (await find()).attachmentLife!;
+    expect(Object.keys(life.downloadedAt)).toEqual([JOSE]);
+    expect(life.downloadedAt[JOSE]).toBe(clock);
+  });
+  it("solo integrantes descargan o responden", async () => {
+    as(DIEGO);
+    await expect(chat.markAttachmentDownloaded(messageId)).rejects.toThrow(
+      "El mensaje ya no está disponible.",
+    );
+    await expect(chat.answerAttachmentKeep(messageId, false)).rejects.toThrow(
+      "El mensaje ya no está disponible.",
+    );
+  });
+  it("si todos liberan el archivo se retira y el mensaje queda como marcador", async () => {
+    as(JOSE);
+    await chat.markAttachmentDownloaded(messageId);
+    await chat.answerAttachmentKeep(messageId, false);
+    expect((await find()).attachment).toBeDefined();
+    as(ROBER);
+    await chat.answerAttachmentKeep(messageId, false);
+    const purged = await find();
+    expect(purged.attachment).toBeUndefined();
+    expect(purged.purgedAttachment).toEqual({
+      name: "foto.png",
+      type: "image/png",
+      size: 1,
+      purgedAt: clock,
+    });
+    expect(purged.deleted).toBeFalsy();
+    await expect(chat.answerAttachmentKeep(messageId, true)).rejects.toThrow(
+      "El archivo ya fue eliminado para liberar espacio.",
+    );
+  });
+  it("conservar gana: un solo 'conservar' mantiene el archivo", async () => {
+    as(JOSE);
+    await chat.markAttachmentDownloaded(messageId);
+    await chat.answerAttachmentKeep(messageId, true);
+    as(ROBER);
+    await chat.answerAttachmentKeep(messageId, false);
+    await chat.purgeReleasedAttachment(messageId);
+    const kept = await find();
+    expect(kept.attachment).toEqual(photo);
+    expect(kept.purgedAttachment).toBeUndefined();
+  });
+  it("quien no responde equivale a conservar y no hay retiro automático", async () => {
+    as(JOSE);
+    await chat.markAttachmentDownloaded(messageId);
+    await chat.answerAttachmentKeep(messageId, false);
+    clock += 365 * 24 * 3600 * 1000;
+    await chat.purgeReleasedAttachment(messageId);
+    expect((await find()).attachment).toBeDefined();
+  });
+  it("se responde una sola vez", async () => {
+    as(JOSE);
+    await chat.markAttachmentDownloaded(messageId);
+    await chat.answerAttachmentKeep(messageId, true);
+    await expect(chat.answerAttachmentKeep(messageId, false)).rejects.toThrow(
+      "Ya respondiste sobre este archivo.",
+    );
+  });
+  it("un hilo con un solo integrante no tiene ciclo", async () => {
+    as(JHONY);
+    const solo = await chat.saveGroup({
+      name: "Solo",
+      description: "",
+      members: [JHONY],
+    });
+    const sent = await chat.sendMessage(solo, { text: "", attachment: photo });
+    await expect(chat.answerAttachmentKeep(sent.id, false)).rejects.toThrow(
+      "Todavía falta que todos descarguen el archivo.",
     );
   });
 });

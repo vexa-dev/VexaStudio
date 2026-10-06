@@ -6,7 +6,6 @@ import type {
   ExpenseService,
   MeetingService,
   MemberService,
-  NotificationService,
   Services,
   SettingsService,
 } from "@vexa/services";
@@ -17,6 +16,8 @@ import { requireStudioAccess } from "./studio-access";
 import { dashboard } from "./dashboard";
 import { projects, sprints, tasks, time } from "./work";
 import { delay, notImplemented } from "./utils";
+import { profileAuth } from "./auth";
+import { notificationService, resetNotificationPreferences } from "./notifications";
 import {
   resetProfileMedia,
   updateProfileMedia,
@@ -46,6 +47,7 @@ const auth: AuthService = {
   async updateProfileMedia(patch) {
     return delay(updateProfileMedia(patch));
   },
+  ...profileAuth,
 };
 
 const settings: SettingsService = {
@@ -114,7 +116,7 @@ export function createMockServices(): Services {
     comments: notImplemented<CommentService>("CommentService"),
     announcements: notImplemented<AnnouncementService>("AnnouncementService"),
     meetings: notImplemented<MeetingService>("MeetingService"),
-    notifications: notImplemented<NotificationService>("NotificationService"),
+    notifications: notificationService,
     audit: auditService,
     chat: chatService,
   };
@@ -126,4 +128,5 @@ import { resetMock as resetDb } from "./db";
 export function resetMock(): void {
   resetDb();
   resetProfileMedia();
+  resetNotificationPreferences();
 }

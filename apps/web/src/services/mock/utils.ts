@@ -23,3 +23,11 @@ export function notImplemented<T extends object>(name: string): T {
 export function pending(name: string): () => Promise<never> {
   return () => Promise.reject(new Error(`${name} aún no está implementado en el mock`))
 }
+
+/** Mensaje de lo que solo existe con la conexión a Supabase (contraseña, segundo paso, sesiones). */
+export const SUPABASE_ONLY_MESSAGE = 'Disponible solo con la conexión a Supabase.'
+
+/** Método que el mock no puede simular: falla con un aviso claro y en español. */
+export function supabaseOnly(): Promise<never> {
+  return Promise.reject(new Error(SUPABASE_ONLY_MESSAGE))
+}

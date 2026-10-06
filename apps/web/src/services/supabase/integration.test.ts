@@ -270,4 +270,92 @@ describe.skipIf(!url || !key)("Supabase local (integración)", () => {
     const others = await alex.services.notifications.list();
     expect(others.some((n) => n.payload.taskName === title)).toBe(false);
   });
+
+  it("perfil propio y preferencias: usuario único y task_assigned apagado no avisa", async () => {
+    const saved = await alex.services.auth.updateProfile({
+      name: "Alex",
+      username: "Alex.Demo",
+      bio: "Colaborador de demostración",
+    });
+    expect(saved).toMatchObject({ id: ALEX, username: "alex.demo" });
+    await expect(
+      rober.services.auth.updateProfile({ name: "Rober", username: "ALEX.demo", bio: null }),
+    ).rejects.toThrow("Ese usuario ya está en uso");
+
+    await alex.services.notifications.updatePreferences({ taskAssigned: false });
+    expect(await alex.services.notifications.getPreferences()).toMatchObject({
+      taskAssigned: false,
+      hoursReminder: true,
+    });
+    const title = `Sin aviso ${Date.now()}`;
+    await admin.services.tasks.create({
+      sprintId: null,
+      projectId: "10000000-0000-4000-8000-000000000001",
+      title,
+      assigneeId: ALEX,
+      estimateHours: null,
+      link: null,
+    });
+    const own = await alex.services.notifications.list();
+    expect(own.some((n) => n.payload.taskName === title)).toBe(false);
+    await alex.services.notifications.updatePreferences({ taskAssigned: true });
+  });
+
+  it("segundo paso: el alta devuelve QR y secreto, y sin factor verificado no se pide el código", async () => {
+    const enrollment = await alex.services.auth.enrollMfa();
+    expect(enrollment.qrCodeSvg).toContain("svg");
+    expect(enrollment.secret.length).toBeGreaterThan(10);
+    expect(enrollment.uri).toMatch(/^otpauth:\/\//);
+    expect(await alex.services.auth.getMfaChallenge()).toEqual({ required: false });
+    const factors = await alex.services.auth.listMfaFactors();
+    expect(factors.find((f) => f.id === enrollment.factorId)?.status).toBe("unverified");
+    await alex.services.auth.disableMfa(enrollment.factorId);
+    expect(await alex.services.auth.listMfaFactors()).toEqual([]);
+  });
+
+  it("horas con etiqueta y evidencia: la persona etiquetada las ve, la revisión fija 7 días y corregir los limpia", async () => {
+    const yesterday = todayLima(new Date(Date.now() - 86_400_000));
+    const created = await rober.services.time.addManual({
+      taskId: null,
+      date: yesterday,
+      hours: 2,
+      description: "Integración de etiquetas y evidencia",
+      participants: [{ userId: ALEX, sharePercent: 50 }],
+    });
+    expect(created.participants).toEqual([{ userId: ALEX, sharePercent: 50 }]);
+
+    const file = await rober.services.time.addEvidence(created.id, {
+      name: "captura integración.pdf",
+      type: "application/pdf",
+      data: `data:application/pdf;base64,${btoa("evidencia")}`,
+    });
+    expect(file).toMatchObject({ mime: "application/pdf", size: 9, purged: false });
+
+    // La persona etiquetada (colaborador) ve el registro, sus etiquetas y el archivo firmado.
+    const seen = (await alex.services.time.listEntries()).find((e) => e.id === created.id);
+    expect(seen?.participants).toHaveLength(1);
+    expect(seen?.evidence?.map((f) => f.id)).toEqual([file.id]);
+    expect(await alex.services.time.getEvidenceUrl(file.id)).toMatch(/^https?:\/\//);
+    // Quien está etiquetado no revisa; quien no, sí.
+    await expect(alex.services.time.validate([created.id])).rejects.toThrow();
+
+    const [approved] = await admin.services.time.validate([created.id]);
+    expect(approved.validated).toBe(true);
+    const kept = approved.evidence![0];
+    const days = (Date.parse(kept.purgeAt!) - Date.now()) / 86_400_000;
+    expect(days).toBeGreaterThan(6.9);
+    expect(days).toBeLessThan(7.1);
+
+    // Corregir las horas devuelve el registro a pendiente y limpia la fecha de retiro.
+    const edited = await rober.services.time.update(created.id, { hours: 3 });
+    expect(edited.validated).toBe(false);
+    expect(edited.evidence![0].purgeAt ?? null).toBeNull();
+
+    // Aún no vence: el barrido no retira nada y nunca falla.
+    expect(await rober.services.time.purgeExpiredEvidence()).toBe(0);
+    await rober.services.time.removeEvidence(file.id);
+    expect((await rober.services.time.listEntries({ userId: ROBER })).find((e) => e.id === created.id)?.evidence)
+      .toEqual([]);
+    await rober.services.time.void(created.id, "Prueba de integración");
+  });
 });

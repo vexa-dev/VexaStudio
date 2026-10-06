@@ -22,6 +22,8 @@ export interface FakeSpec {
   rpc?: Record<string, FakeResult>;
   /** Persona con sesión; `null` simula que no hay sesión. */
   userId?: string | null;
+  /** Resultado de Storage por operación (`upload`, `remove`, `sign`); sin dato devuelve éxito vacío. */
+  storage?: { upload?: FakeResult; remove?: FakeResult; sign?: FakeResult };
 }
 
 export const ok = (data: unknown): FakeResult => ({ data, error: null });
@@ -55,6 +57,36 @@ export function fakeClient(spec: FakeSpec = {}) {
         Promise.resolve({
           data: { session: userId ? { user: { id: userId } } : null },
         }),
+      // Sin segundo paso: la sesión ya es completa (aal1 y sin factores).
+      mfa: {
+        getAuthenticatorAssuranceLevel: () =>
+          Promise.resolve({
+            data: { currentLevel: "aal1", nextLevel: "aal1" },
+            error: null,
+          }),
+        listFactors: () =>
+          Promise.resolve({ data: { all: [], totp: [] }, error: null }),
+      },
+    },
+    storage: {
+      from: (bucket: string) => {
+        const call = async (method: string, result: FakeResult, args: unknown[]) => {
+          calls.push({ target: `storage:${bucket}`, method, args });
+          return result;
+        };
+        return {
+          upload: (...args: unknown[]) =>
+            call("upload", spec.storage?.upload ?? ok({ path: String(args[0]) }), args),
+          remove: (...args: unknown[]) =>
+            call("remove", spec.storage?.remove ?? ok([]), args),
+          createSignedUrl: (...args: unknown[]) =>
+            call(
+              "createSignedUrl",
+              spec.storage?.sign ?? ok({ signedUrl: `https://files.test/${String(args[0])}?t=1` }),
+              args,
+            ),
+        };
+      },
     },
     from: (table: string) => chain(table, spec.tables?.[table] ?? ok(null)),
     rpc: (name: string, args?: unknown) => {
@@ -76,6 +108,8 @@ export const profileRow = (role: "admin" | "partner" | "collaborator", id = "u1"
   area: "technical",
   weekly_hours: 20,
   active: true,
+  username: null,
+  bio: null,
   created_at: "2026-10-03T17:00:00+00:00",
   updated_at: "2026-10-03T17:00:00+00:00",
 });

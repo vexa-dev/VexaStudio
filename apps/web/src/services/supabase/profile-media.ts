@@ -1,6 +1,7 @@
 import type { Profile } from "@vexa/domain/types";
 import type { VexaSupabase } from "@/lib/supabase";
 import { toServiceError, unwrap, unwrapMaybe } from "./errors";
+import { STORAGE_CACHE_CONTROL, persistedUrls, type PersistedUrl } from "./chat-media";
 import { mapProfile } from "./mappers";
 import type { Tables } from "./database.types";
 
@@ -82,6 +83,28 @@ export function createSignedUrlResolver(
 ): SignedUrlResolver {
   const cache = new Map<string, { url: string; expiresAt: number }>();
   const key = (bucket: string, path: string) => `${bucket}/${path}`;
+  // Persisted entries are scoped to the signed-in user; hydrated once per user into `cache`.
+  let hydratedFor: string | undefined;
+  let lastUser: string | undefined;
+
+  async function currentUser(): Promise<string | undefined> {
+    try {
+      return (await client.auth.getSession()).data.session?.user.id;
+    } catch {
+      return undefined;
+    }
+  }
+
+  async function hydrate() {
+    const user = await currentUser();
+    lastUser = user;
+    if (!user || user === hydratedFor) return user;
+    hydratedFor = user;
+    persistedUrls.purge("profile", user);
+    for (const [entryKey, hit] of Object.entries(persistedUrls.read("profile", user, now())))
+      if (!cache.has(entryKey)) cache.set(entryKey, hit);
+    return user;
+  }
 
   const fresh = (bucket: string, path: string): string | null => {
     const hit = cache.get(key(bucket, path));
@@ -96,13 +119,14 @@ export function createSignedUrlResolver(
         .createSignedUrls(paths, ttlSeconds);
       if (error || !data) return;
       const signedAt = now();
+      const signed: Record<string, PersistedUrl> = {};
       for (const item of data) {
         if (item.error || !item.path || !item.signedUrl) continue;
-        cache.set(key(bucket, item.path), {
-          url: item.signedUrl,
-          expiresAt: signedAt + ttlSeconds * 1000,
-        });
+        const entry = { url: item.signedUrl, expiresAt: signedAt + ttlSeconds * 1000 };
+        cache.set(key(bucket, item.path), entry);
+        signed[key(bucket, item.path)] = entry;
       }
+      if (lastUser) persistedUrls.write("profile", lastUser, signed, signedAt);
     } catch {
       // Una foto que no se puede firmar nunca rompe la pantalla: se muestra sin foto.
     }
@@ -114,7 +138,14 @@ export function createSignedUrlResolver(
       if (!path || fresh(bucket, path)) continue;
       missing.set(bucket, (missing.get(bucket) ?? new Set()).add(path));
     }
-    await Promise.all([...missing].map(([bucket, paths]) => sign(bucket, [...paths])));
+    if (missing.size) await hydrate();
+    for (const [bucket, paths] of missing)
+      for (const path of paths) if (fresh(bucket, path)) paths.delete(path);
+    await Promise.all(
+      [...missing]
+        .filter(([, paths]) => paths.size > 0)
+        .map(([bucket, paths]) => sign(bucket, [...paths])),
+    );
     return refs.map(({ bucket, path }) => (path ? fresh(bucket, path) : null));
   };
 
@@ -123,8 +154,16 @@ export function createSignedUrlResolver(
       return (await resolveMany([{ bucket, path }]))[0] ?? null;
     },
     resolveMany,
-    forget: (bucket, path) => void cache.delete(key(bucket, path)),
-    clear: () => cache.clear(),
+    forget: (bucket, path) => {
+      cache.delete(key(bucket, path));
+      if (lastUser)
+        persistedUrls.write("profile", lastUser, {}, now(), [key(bucket, path)]);
+    },
+    clear: () => {
+      cache.clear();
+      hydratedFor = undefined;
+      persistedUrls.purge("profile");
+    },
   };
 }
 
@@ -181,14 +220,46 @@ async function currentPath(client: VexaSupabase, { userId, kind }: MediaTarget) 
   return row?.[column] ?? null;
 }
 
-/** Retira un objeto sin que un fallo cambie el resultado: el objeto viejo queda huérfano, nada más. */
-async function removeQuietly(client: VexaSupabase, bucket: ProfileBucket, path: string | null) {
-  if (!path) return;
+/**
+ * Retira objetos sin que un fallo cambie el resultado (Storage devuelve `{ error }` en vez de lanzar):
+ * lo que no se pueda borrar queda huérfano, nada más.
+ */
+async function removeQuietly(client: VexaSupabase, bucket: ProfileBucket, paths: string[]) {
+  if (paths.length === 0) return;
   try {
-    await client.storage.from(bucket).remove([path]);
+    await client.storage.from(bucket).remove(paths);
   } catch {
     // Mejor esfuerzo.
   }
+}
+
+/**
+ * Objetos de esta persona y tipo que ya no están referenciados: la ruta anterior del perfil más
+ * cualquier `<tipo>-*` que haya quedado en su carpeta (subidas viejas cuya limpieza falló). Solo
+ * mira la carpeta propia; si el listado falla, queda la ruta anterior.
+ */
+async function staleObjects(
+  client: VexaSupabase,
+  { userId, kind }: MediaTarget,
+  keep: string | null,
+  previous: string | null,
+): Promise<string[]> {
+  const stale = new Set<string>();
+  if (previous) stale.add(previous);
+  try {
+    const { data, error } = await client.storage
+      .from(BUCKET[kind])
+      .list(userId, { limit: 100, sortBy: { column: "created_at", order: "desc" } });
+    if (!error && data) {
+      for (const { name } of data) {
+        if (name.startsWith(`${kind}-`)) stale.add(`${userId}/${name}`);
+      }
+    }
+  } catch {
+    // Mejor esfuerzo.
+  }
+  if (keep) stale.delete(keep);
+  return [...stale];
 }
 
 /** Sube la imagen, guarda su ruta con la RPC y retira la anterior. Devuelve la fila del perfil. */
@@ -203,20 +274,26 @@ export async function uploadProfileImage(
 
   const { error: uploadError } = await client.storage
     .from(bucket)
-    .upload(path, blob, { contentType: mime, upsert: false });
+    .upload(path, blob, {
+      contentType: mime,
+      upsert: false,
+      cacheControl: STORAGE_CACHE_CONTROL,
+    });
   if (uploadError) throw toStorageError(uploadError);
 
   const args = kind === "avatar" ? { p_avatar_path: path } : { p_banner_path: path };
   const result = await client.rpc("set_profile_media", args);
   if (result.error || !result.data) {
-    await removeQuietly(client, bucket, path);
+    await removeQuietly(client, bucket, [path]);
     throw toServiceError(result.error ?? { message: "El servidor no devolvió datos" });
   }
-  if (previous && previous !== path) await removeQuietly(client, bucket, previous);
+  // Solo con la ruta nueva ya guardada se retira lo anterior; cada subida usa una ruta nueva
+  // (`<tipo>-<marca>.<ext>`), así que nunca se sobrescribe y la carpeta no acumula variantes.
+  await removeQuietly(client, bucket, await staleObjects(client, { userId, kind }, path, previous));
   return result.data as ProfileRow;
 }
 
-/** Quita la foto o el banner y retira el objeto. */
+/** Quita la foto o el banner y retira el objeto (y cualquier sobrante de su tipo). */
 export async function clearProfileImage(
   client: VexaSupabase,
   { userId, kind }: MediaTarget,
@@ -224,6 +301,10 @@ export async function clearProfileImage(
   const previous = await currentPath(client, { userId, kind });
   const args = kind === "avatar" ? { p_clear_avatar: true } : { p_clear_banner: true };
   const row = unwrap(await client.rpc("set_profile_media", args)) as ProfileRow;
-  await removeQuietly(client, BUCKET[kind], previous);
+  await removeQuietly(
+    client,
+    BUCKET[kind],
+    await staleObjects(client, { userId, kind }, null, previous),
+  );
   return row;
 }

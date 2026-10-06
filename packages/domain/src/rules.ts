@@ -1,7 +1,9 @@
+import { pointsCredit } from './hours-credit'
 import type {
   Expense,
   ExpenseStatus,
   ExpenseVote,
+  Id,
   MemberPoints,
   Settings,
   TimeEntry,
@@ -12,13 +14,21 @@ export const EXPENSE_VOTES_REQUIRED = 3
 
 const MS_PER_DAY = 24 * 60 * 60 * 1000
 
-/** Puntos de un registro de horas: solo horas no pagadas, validadas y no anuladas. */
+/**
+ * Puntos de un registro de horas: solo horas no pagadas, validadas y no anuladas. Con `userId` se
+ * calculan los de esa persona (dueño al 100 %, persona etiquetada a su porcentaje); sin él, los del dueño.
+ */
 export function entryPoints(
-  entry: Pick<TimeEntry, 'hours' | 'paid' | 'validated' | 'voidedAt'>,
+  entry: Pick<TimeEntry, 'hours' | 'paid' | 'validated' | 'voidedAt'> &
+    Partial<Pick<TimeEntry, 'userId' | 'participants'>>,
   settings: Pick<Settings, 'pointsPerHour'>,
+  userId?: Id,
 ): number {
   if (entry.paid || !entry.validated || entry.voidedAt) return 0
-  return entry.hours * settings.pointsPerHour
+  if (userId === undefined) return entry.hours * settings.pointsPerHour
+  return (
+    pointsCredit({ userId: entry.userId ?? userId, ...entry }, userId) * settings.pointsPerHour
+  )
 }
 
 /**

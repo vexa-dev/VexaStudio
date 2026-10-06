@@ -35,6 +35,8 @@ import { buildSeed } from "./seed";
 /** Base de datos simulada en memoria; una colección por tabla del modelo del PRD. */
 export interface MockDb {
   hoursDrafts?: HoursDraft[];
+  /** Bytes (data URL) of the files attached to hours, by evidence id. Kept apart from the entries. */
+  evidenceFiles?: Record<Id, string>;
   projectLabels?: ProjectLabel[];
   profiles: Profile[];
   settings: Settings;
@@ -202,6 +204,12 @@ function migrate(db: MockDb): MockDb {
   db.auditLog = migrateAuditLog(db.auditLog ?? [], db.profiles);
   db.hoursDrafts ??= [];
   db.projectLabels ??= [];
+  db.evidenceFiles ??= {};
+  // Entries saved before tags and evidence existed get empty lists (additive migration).
+  for (const entry of db.timeEntries) {
+    entry.participants ??= [];
+    entry.evidence ??= [];
+  }
   // Add a dedicated demo collaborator without changing existing profiles or work.
   if (!db.profiles.some((p) => p.id === "u-demo-collaborator")) {
     db.profiles.push({
