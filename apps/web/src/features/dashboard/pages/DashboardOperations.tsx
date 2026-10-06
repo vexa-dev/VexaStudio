@@ -147,6 +147,7 @@ export function DashboardOperations({
   const expenses = useExpenseOverview();
   const members = useMembers();
   const { user } = useAuth();
+  const canManageExpenses = user?.role === "admin";
   const [onlyMine, setOnlyMine] = useState(false);
   // The scope list fades only after the person changes tabs; the first paint uses the staggered entrance.
   const [swapped, setSwapped] = useState(false);
@@ -268,7 +269,7 @@ export function DashboardOperations({
                 </span>
               ),
             },
-          ]}
+          ].filter(item => canManageExpenses || !item.to.startsWith("/gastos"))}
         />
       </div>
       <div className="dashboard-body">
@@ -391,6 +392,7 @@ export function DashboardOperations({
           <DashboardProjects index={6} />
         </div>
         <div className="dashboard-side-col">
+          {canManageExpenses && (
           <section
             aria-labelledby="dashboard-decisions"
             className="dashboard-block dashboard-block-expenses enter"
@@ -461,7 +463,7 @@ export function DashboardOperations({
               <p className="dashboard-local-note">
                 {isSupabaseSource()
                   ? "Por ahora solo se pueden consultar los gastos; la votación aún no está habilitada."
-                  : "La demo permite consultar los gastos; la votación aún no está habilitada."}
+                  : "El módulo Gastos permite registrar propuestas, comprobantes e ingresos en este navegador. Este resumen conserva los movimientos de la fuente de datos."}
               </p>
               <CardLink
                 to={review.hidden > 0 ? "/gastos?filter=pending" : "/gastos"}
@@ -476,6 +478,7 @@ export function DashboardOperations({
               </CardLink>
             </Card>
           </section>
+          )}
           {team}
         </div>
       </div>
@@ -562,3 +565,4 @@ export function DashboardProjects({ index = 6 }: { index?: number }) {
     </section>
   );
 }
+
