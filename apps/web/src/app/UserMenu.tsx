@@ -5,6 +5,7 @@ import {
   countUnread,
   incomingMessages,
   incomingNotice,
+  noticeTitle,
 } from "@/features/chat/chat-logic";
 import {
   useChatSettings,
@@ -20,6 +21,7 @@ import { MessageCircle } from "lucide-react";
 import { unreadLabel } from "./unread-label";
 import { nextChatMode, type ChatMode, type ChatModeAction } from "./chat-dock";
 import { useAuth } from "@/features/auth/hooks/useAuth";
+import { useMembers } from "@/features/team/hooks/useMembers";
 const ChatPanel = lazy(() => import("@/features/chat/ChatPanel"));
 export function UserMenu() {
   const { user } = useAuth();
@@ -41,6 +43,9 @@ function ChatEntry({ user }: { user: Profile }) {
   useChatSync();
   const threads = useChatThreads(user.id);
   const { settings } = useChatSettings(user.id);
+  // Read through a ref so a members refresh never re-runs the incoming-message effect.
+  const membersRef = useRef<Profile[]>([]);
+  membersRef.current = useMembers().data ?? [];
   // Until the settings load nobody is shown as online.
   const online = useChatPresence(settings?.presence ?? false);
   // Null until the first load, so history is never announced as new.
@@ -57,7 +62,14 @@ function ChatEntry({ user }: { user: Profile }) {
     );
     const notice = incomingNotice(incoming, settings);
     if (!notice) return;
-    toast("Nuevo mensaje de chat", { description: notice.body });
+    const latest = incoming.at(-1);
+    const author = membersRef.current.find(
+      (member) => member.id === latest?.authorId,
+    )?.name;
+    const source = loaded.find((thread) =>
+      thread.messages.some((message) => message.id === latest?.id),
+    );
+    toast(noticeTitle(author, source), { description: notice.body });
     if (notice.sound) notificationChime(notice.sound);
   }, [threads.data, settings, user.id]);
   useEffect(() => {

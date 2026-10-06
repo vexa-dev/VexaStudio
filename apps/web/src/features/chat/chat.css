@@ -352,7 +352,8 @@
   display: flex;
   align-items: flex-start;
   gap: 8px;
-  margin-bottom: 10px;
+  /* Two-step rhythm: 4px between bubbles of a run, 12px between runs. */
+  margin-bottom: 12px;
 }
 .chat-run-own {
   justify-content: flex-end;
@@ -364,7 +365,7 @@
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  gap: 2px;
+  gap: 4px;
   min-width: 0;
   max-width: 86%;
 }
@@ -429,6 +430,9 @@
 .chat-ticks {
   display: inline-flex;
   align-items: center;
+}
+.chat-ticks.is-read {
+  color: var(--success);
 }
 .chat-author {
   display: block;
@@ -543,6 +547,68 @@
 }
 .chat-attachment-meta small {
   color: var(--muted);
+}
+
+/* Keep-or-release question under a file, its answer note and the purged placeholder */
+.chat-attachment-prompt {
+  display: grid;
+  gap: 8px;
+  margin-top: 6px;
+  padding: 8px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: color-mix(in oklab, var(--surface) 70%, transparent);
+  color: var(--fg);
+  font-size: 12px;
+}
+.chat-attachment-prompt {
+  min-width: 0;
+  margin-inline: 0;
+}
+.chat-attachment-prompt legend {
+  padding: 0 4px;
+  font-weight: 600;
+}
+.chat-attachment-prompt div {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.chat-attachment-prompt button {
+  flex: 1 1 120px;
+  min-height: 44px;
+  padding: 0 12px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--surface);
+  color: var(--fg);
+  font: inherit;
+  font-weight: 600;
+  touch-action: manipulation;
+  cursor: pointer;
+}
+.chat-attachment-prompt button:focus-visible {
+  outline: 2px solid var(--primary-text);
+  outline-offset: 2px;
+}
+.chat-attachment-prompt button:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+@media (hover: hover) and (pointer: fine) {
+  .chat-attachment-prompt button:not(:disabled):hover {
+    border-color: var(--primary-text);
+    background: var(--primary-soft);
+  }
+}
+.chat-attachment-note {
+  margin: 4px 0 0;
+  font-size: 11px;
+  color: var(--muted);
+}
+.chat-attachment-purged {
+  min-width: 200px;
+  border-style: dashed;
 }
 
 /* Composer: one rounded container plus a round send button */
