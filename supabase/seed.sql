@@ -17,6 +17,10 @@ alter table public.profiles disable trigger audit_profiles;
 alter table public.settings disable trigger audit_settings;
 alter table public.project_members disable trigger audit_project_members_ins;
 alter table public.task_labels disable trigger audit_task_labels_ins;
+-- Los avisos nacen de acciones reales: la carga inicial no los genera.
+alter table public.project_members disable trigger notify_project_members_added;
+alter table public.tasks disable trigger notify_tasks_assigned;
+alter table public.expenses disable trigger notify_expenses_vote;
 
 -- ---------------------------------------------------------------------------
 -- Usuarios (auth.users + identities) y perfiles
@@ -226,5 +230,8 @@ alter table public.profiles enable trigger audit_profiles;
 alter table public.settings enable trigger audit_settings;
 alter table public.project_members enable trigger audit_project_members_ins;
 alter table public.task_labels enable trigger audit_task_labels_ins;
+alter table public.project_members enable trigger notify_project_members_added;
+alter table public.tasks enable trigger notify_tasks_assigned;
+alter table public.expenses enable trigger notify_expenses_vote;
 
 commit;
