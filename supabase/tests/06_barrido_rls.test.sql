@@ -10,8 +10,8 @@ select is(
   '', 'toda tabla de public tiene RLS activado');
 select is(
   (select count(*)::int from pg_class c join pg_namespace n on n.oid = c.relnamespace
-   where n.nspname = 'public' and c.relkind in ('r', 'p')), 16,
-  'las 16 tablas del alcance (si agregas una, agregale RLS y politicas y actualiza este numero)');
+   where n.nspname = 'public' and c.relkind in ('r', 'p')), 24,
+  'las 24 tablas del alcance (si agregas una, agregale RLS y politicas y actualiza este numero)');
 select is(
   (select coalesce(string_agg(c.relname, ', '), '') from pg_class c join pg_namespace n on n.oid = c.relnamespace
    where n.nspname = 'public' and c.relkind in ('r', 'p') and c.relname <> 'audit_chain_head'
@@ -59,13 +59,17 @@ select is(
 select is(
   (select coalesce(string_agg(p.proname, ', '), '') from pg_proc p join pg_namespace n on n.oid = p.pronamespace
    where n.nspname = 'private' and p.prosecdef and has_function_privilege('authenticated', p.oid, 'execute')
-     and p.proname not in ('close_timer_entry', 'prepare_task_hours')),
-  '', 'las funciones SECURITY DEFINER internas no estan abiertas a authenticated (salvo las de reloj)');
+     and p.proname not in ('close_timer_entry', 'prepare_task_hours',
+       -- Implementaciones de los RPC del chat (B5b): los envoltorios publicos son SECURITY INVOKER y
+       -- llaman a estas funciones, que validan permisos adentro y tienen `grant execute` explicito.
+       'chat_direct_thread', 'chat_save_group', 'chat_delete_group', 'chat_react')),
+  '', 'las funciones SECURITY DEFINER internas no estan abiertas a authenticated (salvo las de reloj y las de los RPC del chat)');
 select is(
   (select coalesce(string_agg(p.proname, ', '), '') from pg_proc p join pg_namespace n on n.oid = p.pronamespace
    where n.nspname = 'public' and p.prosecdef and p.proname not in (
      'auth_role', 'is_admin', 'is_partner_or_admin', 'is_project_member', 'can_access_project',
-     'can_view_task', 'verify_audit_chain')),
+     'can_view_task', 'chat_can_access', 'verify_audit_chain')),
+  -- chat_can_access es un ayudante de permisos (integrante del hilo, o admin en grupos), igual que can_view_task.
   '', 'las unicas funciones publicas SECURITY DEFINER son los ayudantes de permisos y la verificacion de la cadena');
 select is(
   (select coalesce(string_agg(p.proname, ', '), '') from pg_proc p join pg_namespace n on n.oid = p.pronamespace
