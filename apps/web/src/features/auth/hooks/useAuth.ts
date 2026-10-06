@@ -9,7 +9,14 @@ interface AuthContextValue {
   signIn: (userId: string) => Promise<void>
   /** `true` cuando la fuente de datos autentica con correo y contraseña (Supabase). */
   supportsPassword: boolean
-  signInWithPassword: (email: string, password: string) => Promise<void>
+  /** Resolves `"mfa"` when the password was accepted but the account still needs its second step. */
+  signInWithPassword: (email: string, password: string) => Promise<'done' | 'mfa'>
+  /** The session needs a verification code (after the password, or after a reload). */
+  mfaPending: boolean
+  /** Completes the second step with the 6-digit code and signs the person in. */
+  verifyMfa: (code: string) => Promise<void>
+  /** Abandons the second step and discards the half-open session. */
+  cancelMfa: () => Promise<void>
   signOut: () => Promise<void>
 }
 

@@ -7,8 +7,22 @@ import {
   type ProfileImageKind,
   type ProfileImageSelection,
 } from "./profile-image-catalog";
-import { encodeWithinLimit, outputSize } from "./profile-image-output";
+import { isSupabaseSource } from "@/services/supabase/data-source";
+import {
+  encodeWithinLimit,
+  exceedsPixelLimit,
+  fitOutputSize,
+  outputProfile,
+  outputSize,
+} from "./profile-image-output";
 import "./profile-image-picker.css";
+
+/**
+ * Upload limit before processing. The crop is downsized to the output profile,
+ * so a 4K phone photo (5-12 MB) must not be rejected; the pixel guard in
+ * `exceedsPixelLimit` protects the browser instead.
+ */
+const MAX_UPLOAD_MB = 25;
 
 const KIND_COPY = {
   photo: {
@@ -16,21 +30,21 @@ const KIND_COPY = {
     title: "Elige tu foto de perfil",
     upload: "Subir mi foto",
     apply: "Aplicar foto",
-    maxMb: 5,
+    maxMb: MAX_UPLOAD_MB,
   },
   banner: {
     aspect: 5,
     title: "Elige tu banner",
     upload: "Subir mi banner",
     apply: "Aplicar banner",
-    maxMb: 10,
+    maxMb: MAX_UPLOAD_MB,
   },
   wallpaper: {
     aspect: 9 / 16,
     title: "Elige el fondo del chat",
     upload: "Subir mi imagen",
     apply: "Aplicar fondo",
-    maxMb: 10,
+    maxMb: MAX_UPLOAD_MB,
   },
 } as const satisfies Record<
   ProfileImageKind,
@@ -122,13 +136,20 @@ export function ProfileImagePicker({
     setBusy(true);
     try {
       const canvas = document.createElement("canvas");
-      const target = outputSize(kind);
+      const profile = outputProfile(isSupabaseSource());
+      const cropWidth = dimensions.width / width;
+      const cropHeight = dimensions.height / height;
+      const target = fitOutputSize(
+        outputSize(kind, profile),
+        cropWidth,
+        cropHeight,
+      );
       canvas.width = target.width;
       canvas.height = target.height;
       const context = canvas.getContext("2d");
       if (!context) throw new Error("No se pudo preparar la imagen.");
-      const cropWidth = dimensions.width / width;
-      const cropHeight = dimensions.height / height;
+      context.imageSmoothingEnabled = true;
+      context.imageSmoothingQuality = "high";
       context.drawImage(
         image.current,
         ((dimensions.width - cropWidth) * x) / 100,
@@ -140,8 +161,10 @@ export function ProfileImagePicker({
         canvas.width,
         canvas.height,
       );
-      const preview = encodeWithinLimit((type, quality) =>
-        canvas.toDataURL(type, quality),
+      const preview = encodeWithinLimit(
+        (type, quality) => canvas.toDataURL(type, quality),
+        profile,
+        kind,
       );
       if (!preview) throw new Error("La imagen es demasiado pesada.");
       onApply({
@@ -262,12 +285,20 @@ export function ProfileImagePicker({
                 src={src}
                 alt="Previsualización del encuadre"
                 draggable={false}
-                onLoad={(event) =>
+                onLoad={(event) => {
+                  const { naturalWidth, naturalHeight } = event.currentTarget;
+                  if (exceedsPixelLimit(naturalWidth, naturalHeight)) {
+                    setDimensions({ width: 0, height: 0 });
+                    setError(
+                      "La imagen tiene demasiados píxeles. Prueba con una más pequeña.",
+                    );
+                    return;
+                  }
                   setDimensions({
-                    width: event.currentTarget.naturalWidth,
-                    height: event.currentTarget.naturalHeight,
-                  })
-                }
+                    width: naturalWidth,
+                    height: naturalHeight,
+                  });
+                }}
                 onError={() => {
                   setDimensions({ width: 0, height: 0 });
                   setError("No se pudo abrir esta imagen. Selecciona otra.");

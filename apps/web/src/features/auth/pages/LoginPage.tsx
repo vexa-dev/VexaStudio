@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { motion, useAnimate } from 'motion/react'
 import { BrandLogo } from '@/components/BrandLogo'
 import { Navigate, useLocation, useNavigate } from 'react-router-dom'
@@ -13,6 +13,7 @@ import { motionTokens } from '@/lib/motion-tokens'
 import { ErrorState } from '@/components/ui/ErrorState'
 import { Skeleton } from '@/components/ui/Skeleton'
 import { stagger } from '@/lib/utils'
+import { normalizeCodeInput, MFA_CODE_LENGTH } from '../schemas'
 import { useAuth } from '../hooks/useAuth'
 import { useLoginProfiles } from '../hooks/useLoginProfiles'
 import './login.css'
@@ -28,7 +29,7 @@ function readLastUser(): string | null {
 }
 
 export default function LoginPage() {
-  const { user, signIn, supportsPassword, signInWithPassword } = useAuth()
+  const { user, signIn, supportsPassword, signInWithPassword, mfaPending, verifyMfa, cancelMfa } = useAuth()
   const { data, isLoading, isError, refetch } = useLoginProfiles()
   const navigate = useNavigate()
   const location = useLocation()
@@ -41,6 +42,9 @@ export default function LoginPage() {
   const [formNotice, setFormNotice] = useState<string | null>(null)
   const [submitting, setSubmitting] = useState(false)
   const [credentialsError, setCredentialsError] = useState<string | null>(null)
+  const [code, setCode] = useState('')
+  const codeInput = useRef<HTMLInputElement>(null)
+  const [codeError, setCodeError] = useState<string | null>(null)
   const reduced = useReducedMotion()
   const [scope, animate] = useAnimate()
   const from = (location.state as { from?: string } | null)?.from ?? '/'
@@ -54,6 +58,10 @@ export default function LoginPage() {
         delay: reduced ? 0 : index * motionTokens.login.staggerSeconds, ease: motionTokens.easing.smooth }))
     return () => controls.forEach(control => control.stop())
   }, [animate, reduced, scope])
+
+  useEffect(() => {
+    if (mfaPending) codeInput.current?.focus()
+  }, [mfaPending])
 
   useEffect(() => {
     if (reduced) return
@@ -106,9 +114,41 @@ export default function LoginPage() {
         </div>
         <section className="access-panel" aria-labelledby="access-title">
           <div className="access-panel-heading">
-            <h2 id="access-title">{recovering ? 'Recupera tu acceso' : 'Inicia sesión'}</h2>
-            {recovering && <p>Indica el correo de tu cuenta.</p>}
+            <h2 id="access-title">{mfaPending ? 'Verifica tu identidad' : recovering ? 'Recupera tu acceso' : 'Inicia sesión'}</h2>
+            {mfaPending && <p>Escribe el código de 6 dígitos de tu aplicación de autenticación.</p>}
+            {recovering && !mfaPending && <p>Indica el correo de tu cuenta.</p>}
           </div>
+          {mfaPending ? (
+            <form className="access-form" noValidate onSubmit={async event => {
+              event.preventDefault()
+              if (code.length !== MFA_CODE_LENGTH) {
+                setCodeError('Escribe el código de 6 dígitos.')
+                return
+              }
+              setCodeError(null)
+              setSubmitting(true)
+              try {
+                await verifyMfa(code)
+                navigate(from, { replace: true })
+              } catch (reason) {
+                setCodeError(reason instanceof Error ? reason.message : 'No pudimos verificar el código. Inténtalo de nuevo.')
+              } finally {
+                setSubmitting(false)
+              }
+            }}>
+              <label htmlFor="login-code">Código de verificación</label>
+              <input id="login-code" name="code" inputMode="numeric" autoComplete="one-time-code" maxLength={MFA_CODE_LENGTH}
+                placeholder="000000" value={code} ref={codeInput} aria-invalid={codeError ? true : undefined}
+                aria-describedby={codeError ? 'login-code-error' : undefined}
+                onChange={event => setCode(normalizeCodeInput(event.target.value))} />
+              {codeError && <p id="login-code-error" role="alert" className="access-error">{codeError}</p>}
+              <button type="submit" className="access-submit" disabled={submitting}>
+                {submitting ? 'Verificando…' : 'Verificar'}<ArrowUpRight size={17} aria-hidden="true" />
+              </button>
+              <button type="button" className="access-text-button access-back" disabled={submitting}
+                onClick={() => { setCode(''); setCodeError(null); void cancelMfa() }}>Volver</button>
+            </form>
+          ) : (
           <form className="access-form" onSubmit={async event => {
             event.preventDefault()
             if (supportsPassword && !recovering) {
@@ -116,8 +156,8 @@ export default function LoginPage() {
               setCredentialsError(null)
               setSubmitting(true)
               try {
-                await signInWithPassword(String(data.get('email') ?? ''), String(data.get('password') ?? ''))
-                navigate(from, { replace: true })
+                const outcome = await signInWithPassword(String(data.get('email') ?? ''), String(data.get('password') ?? ''))
+                if (outcome === 'done') navigate(from, { replace: true })
               } catch (reason) {
                 setCredentialsError(reason instanceof Error ? reason.message : 'No pudimos entrar. Inténtalo de nuevo.')
               } finally {
@@ -154,6 +194,7 @@ export default function LoginPage() {
             {credentialsError && <p role="alert" className="access-error">{credentialsError}</p>}
             {formNotice && <motion.output className="access-form-notice" aria-live="polite" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: motionTokens.duration.fast }}>{formNotice}</motion.output>}
           </form>
+          )}
           {!supportsPassword && <>
           <div className="access-demo-divider"><span>O explora la demo</span></div>
           {error && <p role="alert" className="access-error">{error}</p>}

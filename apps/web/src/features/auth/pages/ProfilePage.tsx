@@ -6,14 +6,10 @@ import {
   Check,
   History,
   LockKeyhole,
-  Laptop,
-  LogOut,
   MessageCircle,
   Plus,
-  Smartphone,
   Sparkles,
   Settings2,
-  ShieldCheck,
   UserRound,
 } from "lucide-react";
 import type { Profile } from "@vexa/domain/types";
@@ -22,7 +18,6 @@ import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { ErrorState } from "@/components/ui/ErrorState";
-import { Field, TextareaField } from "@/components/ui/Field";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { ChatSettings } from "@/features/chat/ChatSettings";
@@ -31,7 +26,10 @@ import { MyActivity } from "@/features/activity/components/MyActivity";
 import { areaLabel, roleLabel } from "@/lib/labels";
 import { useAuth } from "../hooks/useAuth";
 import { useProfileMedia } from "../hooks/useProfileMedia";
+import { NotificationPrefs } from "../components/NotificationPrefs";
+import { PersonalDataForm } from "../components/PersonalDataForm";
 import { ProfileImagePicker } from "../components/ProfileImagePicker";
+import { SecuritySection } from "../components/SecuritySection";
 import type {
   ProfileImageKind,
   ProfileImageSelection,
@@ -46,47 +44,6 @@ const sections = [
   { id: "activity", label: "Mi actividad", icon: History },
 ] as const;
 type Section = (typeof sections)[number]["id"];
-
-function PreviewFooter({ label = "Guardar cambios" }: { label?: string }) {
-  return (
-    <div className="profile-footer">
-      <p>Vista previa. El guardado estará disponible próximamente.</p>
-      <Button disabled>{label}</Button>
-    </div>
-  );
-}
-
-function PreferenceSwitch({
-  title,
-  description,
-  initial = false,
-}: {
-  title: string;
-  description: string;
-  initial?: boolean;
-}) {
-  const [checked, setChecked] = useState(initial);
-  const id = useId();
-  return (
-    <div className="profile-preference-row">
-      <div>
-        <label htmlFor={id}>{title}</label>
-        <p>{description}</p>
-      </div>
-      <button
-        id={id}
-        type="button"
-        role="switch"
-        aria-checked={checked}
-        aria-label={title}
-        className="profile-switch"
-        onClick={() => setChecked(!checked)}
-      >
-        <span />
-      </button>
-    </div>
-  );
-}
 
 /** A saved image only keeps its final crop, so it doubles as the original. */
 function savedSelection(
@@ -112,7 +69,6 @@ function ProfileView({ user }: { user: Profile }) {
       { replace: true, preventScrollReset: true },
     );
   }
-  const [name, setName] = useState(user.name);
   const media = useProfileMedia();
   const photo = savedSelection(user.avatarUrl);
   const banner = savedSelection(user.bannerUrl);
@@ -139,7 +95,6 @@ function ProfileView({ user }: { user: Profile }) {
       <PageHeader
         title="Mi perfil"
         description="Tu identidad y tu forma de trabajar en VEXA."
-        actions={<Badge>Vista previa</Badge>}
       />
       <Card className="profile-cover-card">
         <div
@@ -194,14 +149,14 @@ function ProfileView({ user }: { user: Profile }) {
             onClick={() => setImagePicker("photo")}
           >
             <Avatar
-              name={name || user.name}
+              name={user.name}
               src={user.avatarUrl}
               size="lg"
               className="profile-initials"
             />
           </button>
           <div className="profile-identity-details">
-            <h2>{name || user.name}</h2>
+            <h2>{user.name}</h2>
             <p>{areaLabel[user.area]}</p>
             <Badge tone="primary">{roleLabel[user.role]}</Badge>
           </div>
@@ -233,9 +188,9 @@ function ProfileView({ user }: { user: Profile }) {
           <div className="profile-preview-note">
             <Settings2 size={17} aria-hidden="true" />
             <p>
-              Tu foto y tu banner se guardan al aplicarlos. Los ajustes de
-              Mensajería también se guardan. Los demás datos y preferencias son
-              una vista previa y no se guardan todavía.
+              Tu foto y tu banner se guardan al aplicarlos. Tus datos,
+              seguridad, avisos y los ajustes de Mensajería se guardan con
+              su propio botón.
             </p>
           </div>
           <section aria-labelledby={headingId} hidden={section !== "personal"}>
@@ -270,163 +225,11 @@ function ProfileView({ user }: { user: Profile }) {
                   )}
                 </div>
               </div>
-              <div className="profile-fields">
-                <Field
-                  label="Nombre visible"
-                  value={name}
-                  onChange={(event) => setName(event.target.value)}
-                  maxLength={80}
-                  autoComplete="off"
-                  hint="El nombre que aparecerá en tareas y proyectos."
-                />
-                <Field
-                  label="Nombre de usuario"
-                  placeholder="Tu nombre de usuario"
-                  autoComplete="off"
-                  maxLength={30}
-                  hint="Un identificador único para tu perfil."
-                />
-                <div className="profile-full">
-                  <Field
-                    label="Correo electrónico"
-                    type="email"
-                    placeholder="tu@correo.com"
-                    autoComplete="off"
-                    hint="El correo actual se mostrará cuando conectemos tu cuenta."
-                  />
-                </div>
-                <div className="profile-full">
-                  <TextareaField
-                    label="Sobre mí"
-                    placeholder="Tu especialidad, en qué trabajas o cómo puedes ayudar al equipo…"
-                    maxLength={280}
-                    hint="Una presentación breve, de hasta 280 caracteres."
-                  />
-                </div>
-              </div>
-              <div className="profile-account-info">
-                <ShieldCheck size={18} aria-hidden="true" />
-                <p>
-                  Tu rol, área y compromiso semanal los administra el equipo.
-                </p>
-              </div>
-              <PreviewFooter />
+              <PersonalDataForm user={user} />
             </Card>
           </section>
           <section aria-label="Seguridad" hidden={section !== "security"}>
-            <Card className="profile-panel">
-              <div className="profile-section-heading">
-                <span>02 / CUENTA</span>
-                <h2>Seguridad</h2>
-                <p>Gestiona el acceso a tu espacio de trabajo.</p>
-              </div>
-              <h3>Cambiar contraseña</h3>
-              <p className="profile-help">
-                Estos campos se habilitarán al conectar la gestión de tu cuenta.
-              </p>
-              <div className="profile-fields">
-                <div className="profile-full">
-                  <Field
-                    label="Contraseña actual"
-                    type="password"
-                    placeholder="Tu contraseña actual"
-                    disabled
-                  />
-                </div>
-                <Field
-                  label="Nueva contraseña"
-                  type="password"
-                  placeholder="Crea una contraseña segura"
-                  disabled
-                />
-                <Field
-                  label="Confirmar contraseña"
-                  type="password"
-                  placeholder="Repite la nueva contraseña"
-                  disabled
-                />
-              </div>
-              <PreviewFooter label="Actualizar contraseña" />
-            </Card>
-            <Card className="profile-panel profile-security-card">
-              <div className="profile-section-title">
-                <ShieldCheck size={21} aria-hidden="true" />
-                <div>
-                  <h3>Verificación en dos pasos</h3>
-                  <p className="profile-help">
-                    Añade un código de tu aplicación de autenticación al iniciar
-                    sesión.
-                  </p>
-                </div>
-                <Badge>Vista previa</Badge>
-              </div>
-              <div className="profile-security-action">
-                <div>
-                  <strong>Aplicación de autenticación</strong>
-                  <p>
-                    Google Authenticator, Microsoft Authenticator o similar.
-                  </p>
-                </div>
-                <Button variant="secondary" disabled>
-                  Configurar verificación
-                </Button>
-              </div>
-              <div className="profile-security-action">
-                <div>
-                  <strong>Códigos de recuperación</strong>
-                  <p>Para recuperar el acceso si pierdes tu dispositivo.</p>
-                </div>
-                <Button variant="ghost" disabled>
-                  Ver códigos
-                </Button>
-              </div>
-            </Card>
-            <Card className="profile-panel profile-security-card">
-              <div className="profile-section-heading">
-                <h2>Dispositivos y sesiones</h2>
-                <p>
-                  Consulta dónde has iniciado sesión y controla tus accesos.
-                </p>
-              </div>
-              <p className="profile-session-note">
-                Datos de ejemplo para mostrar la vista. No representan tus
-                sesiones reales.
-              </p>
-              <div className="profile-device">
-                <Laptop size={24} aria-hidden="true" />
-                <div>
-                  <h3>Equipo de escritorio</h3>
-                  <p>Chrome · Windows · Lima, Perú</p>
-                  <span>Última actividad: hace unos minutos · ejemplo</span>
-                </div>
-                <Badge>Esta sesión · ejemplo</Badge>
-                <Button variant="ghost" disabled>
-                  <LogOut size={16} aria-hidden="true" />
-                  Cerrar sesión
-                </Button>
-              </div>
-              <div className="profile-device">
-                <Smartphone size={24} aria-hidden="true" />
-                <div>
-                  <h3>Teléfono móvil</h3>
-                  <p>Safari · iOS · Lima, Perú</p>
-                  <span>Última actividad: ayer · ejemplo</span>
-                </div>
-                <Button variant="secondary" disabled>
-                  <LogOut size={16} aria-hidden="true" />
-                  Cerrar sesión
-                </Button>
-              </div>
-              <div className="profile-footer">
-                <p>
-                  Los controles de sesiones se habilitarán al conectar tu
-                  cuenta.
-                </p>
-                <Button variant="secondary" disabled>
-                  Cerrar las otras sesiones
-                </Button>
-              </div>
-            </Card>
+            <SecuritySection />
           </section>
           <section aria-label="Preferencias" hidden={section !== "preferences"}>
             <Card className="profile-panel">
@@ -495,23 +298,9 @@ function ProfileView({ user }: { user: Profile }) {
               <div className="profile-divider" />
               <h3 className="flex flex-wrap items-center gap-2">
                 <Bell size={17} aria-hidden="true" />
-                Avisos y recordatorios <Badge>Vista previa</Badge>
+                Avisos y recordatorios
               </h3>
-              <PreferenceSwitch
-                title="Nuevas asignaciones"
-                description="Un aviso cuando recibas una tarea."
-                initial
-              />
-              <PreferenceSwitch
-                title="Recordatorio de horas"
-                description="Recuerda confirmar tus horas al terminar el día."
-                initial
-              />
-              <PreferenceSwitch
-                title="Resumen semanal"
-                description="Tu avance y próximos pendientes en un solo correo."
-              />
-              <PreviewFooter label="Guardar preferencias" />
+              <NotificationPrefs />
             </Card>
           </section>
           <section
