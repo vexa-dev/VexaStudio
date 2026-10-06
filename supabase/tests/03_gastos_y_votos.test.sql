@@ -25,6 +25,9 @@ declare n int;
 begin execute p_sql; get diagnostics n = row_count; return n; end $$;
 
 -- ---------------------------------------------------------------- limite de aprobacion
+-- Los ayudantes temporales pierden el EXECUTE de PUBLIC por la migración de privilegios por defecto.
+grant execute on all functions in schema pg_temp to public;
+
 select pg_temp.as_user('rober');
 select set_config('t.x50', (select id::text from public.create_expense(50, 'PEN', 'Dominio extra', 'infrastructure')), true);
 select set_config('t.x51', (select id::text from public.create_expense(50.01, 'PEN', 'Licencia', 'software')), true);

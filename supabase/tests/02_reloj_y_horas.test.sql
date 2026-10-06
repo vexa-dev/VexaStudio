@@ -25,6 +25,9 @@ create function pg_temp.lima_today() returns date language sql stable as $$
   select (now() at time zone 'America/Lima')::date $$;
 
 -- ---------------------------------------------------------------- reloj unico
+-- Los ayudantes temporales pierden el EXECUTE de PUBLIC por la migración de privilegios por defecto.
+grant execute on all functions in schema pg_temp to public;
+
 select pg_temp.as_user('jose');
 select lives_ok($$select public.start_timer('30000000-0000-4000-8000-000000000009')$$,
   'iniciar el reloj en una tarea propia');

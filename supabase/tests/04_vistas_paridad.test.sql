@@ -22,6 +22,9 @@ begin
 end $$;
 
 -- ---------------------------------------------------------------- fixture determinista
+-- Los ayudantes temporales pierden el EXECUTE de PUBLIC por la migración de privilegios por defecto.
+grant execute on all functions in schema pg_temp to public;
+
 select pg_temp.as_system();
 delete from public.expense_votes;
 delete from public.expenses;
