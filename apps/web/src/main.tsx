@@ -5,6 +5,7 @@ import { BrowserRouter } from "react-router-dom";
 import { registerSW } from "virtual:pwa-register";
 import { ThemeProvider } from "@/app/ThemeProvider";
 import { Toaster } from "@/components/ui/Toaster";
+import { TooltipLayer } from "@/components/ui/TooltipLayer";
 import { AuthProvider } from "@/features/auth/AuthProvider";
 import "@fontsource-variable/sora";
 import "@fontsource/ibm-plex-sans/latin-400.css";
@@ -15,6 +16,7 @@ import { configureZod } from "./lib/zod-config";
 import "./index.css";
 import "./colors.css";
 import "./glass.css";
+import "./components/ui/search-field.css";
 
 configureZod();
 registerSW({ immediate: true });
@@ -33,6 +35,7 @@ createRoot(document.getElementById("root")!).render(
           <AuthProvider>
             <App />
             <Toaster />
+            <TooltipLayer />
           </AuthProvider>
         </BrowserRouter>
       </ThemeProvider>

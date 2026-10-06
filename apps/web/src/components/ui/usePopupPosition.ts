@@ -2,10 +2,12 @@ import { useLayoutEffect, useState, type RefObject } from "react";
 
 /** Mantiene el menú dentro de la pantalla o del modal, incluso con transforms. */
 export function usePopupPosition(
-  trigger: RefObject<HTMLButtonElement | null>,
+  trigger: RefObject<HTMLElement | null>,
   popup: RefObject<HTMLDivElement | null>,
   open: boolean,
   minimumWidth = 190,
+  maximumHeight = 320,
+  maximumWidth = Infinity,
 ) {
   const [position, setPosition] = useState({
     top: 0,
@@ -33,9 +35,13 @@ export function usePopupPosition(
       const below = boundaryBottom - rect.bottom - 6;
       const above = rect.top - boundaryTop - 6;
       const flip = below < 180 && above > below;
-      const maxHeight = Math.max(44, Math.min(320, flip ? above : below));
+      const maxHeight = Math.max(
+        44,
+        Math.min(maximumHeight, flip ? above : below),
+      );
       const width = Math.min(
         Math.max(rect.width, minimumWidth),
+        maximumWidth,
         boundaryRight - boundaryLeft,
       );
       const top = flip
@@ -64,7 +70,7 @@ export function usePopupPosition(
       window.removeEventListener("resize", update);
       window.removeEventListener("scroll", update, true);
     };
-  }, [open, minimumWidth, trigger, popup]);
+  }, [open, minimumWidth, maximumHeight, maximumWidth, trigger, popup]);
 
   return position;
 }

@@ -76,7 +76,7 @@ export function TaskCard({
       <div className="task-card-meta">
         {task.description?.trim() && (
           <span
-            title="Tiene descripción"
+            data-tooltip="Tiene descripción"
             className="inline-flex items-center gap-1"
           >
             <AlignLeft size={14} />

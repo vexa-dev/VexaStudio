@@ -25,7 +25,14 @@ function Picker({
   const root = useRef<HTMLDivElement>(null);
   const trigger = useRef<HTMLButtonElement>(null);
   const popup = useRef<HTMLDivElement>(null);
-  const position = usePopupPosition(trigger, popup, open, 286);
+  const position = usePopupPosition(
+    trigger,
+    popup,
+    open,
+    304,
+    400,
+    calendar ? 304 : Infinity,
+  );
   const [target, setTarget] = useState<HTMLElement | null>(null);
   const [restoreFocus, setRestoreFocus] = useState(false);
   const close = () => {
@@ -84,7 +91,7 @@ function Picker({
         createPortal(
           <div
             ref={popup}
-            className="hours-picker-popup"
+            className={`hours-picker-popup${calendar ? " hours-calendar-popup" : ""}`}
             style={{
               ...position,
               position: "fixed",
@@ -110,6 +117,7 @@ export function DatePicker({
   min,
   max,
   monthOnly = false,
+  allowClear = true,
 }: {
   label: string;
   value: string;
@@ -117,6 +125,7 @@ export function DatePicker({
   min?: string;
   max?: string;
   monthOnly?: boolean;
+  allowClear?: boolean;
 }) {
   const [shown, setShown] = useState(() => (value || todayLima()).slice(0, 7));
   const changeShown = (offset: number) => {
@@ -185,7 +194,7 @@ export function DatePicker({
           ) : (
             <>
               <div className="hours-calendar-days">
-                {["L", "M", "M", "J", "V", "S", "D"].map((day, i) => (
+                {["Lu", "Ma", "Mi", "Ju", "Vi", "Sá", "Do"].map((day, i) => (
                   <span key={i}>{day}</span>
                 ))}
                 {Array.from({ length: first }, (_, i) => (
@@ -199,6 +208,7 @@ export function DatePicker({
                       key={date}
                       aria-label={formatIsoDate(date)}
                       aria-pressed={value === date}
+                      data-today={date === todayLima() || undefined}
                       disabled={disabled(date)}
                       onClick={() => {
                         onChange(date);
@@ -211,15 +221,17 @@ export function DatePicker({
                 })}
               </div>
               <div className="hours-calendar-footer">
-                <button
-                  type="button"
-                  onClick={() => {
-                    onChange("");
-                    close();
-                  }}
-                >
-                  Limpiar
-                </button>
+                {allowClear && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      onChange("");
+                      close();
+                    }}
+                  >
+                    Limpiar
+                  </button>
+                )}
                 <button
                   type="button"
                   disabled={disabled(todayLima())}

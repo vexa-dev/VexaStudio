@@ -57,7 +57,7 @@ export function ActivityRow({
         <time
           className="num shrink-0 pt-0.5 text-xs text-muted"
           dateTime={entry.occurredAt}
-          title={entry.occurredAt}
+          data-tooltip={entry.occurredAt}
         >
           {timeOfDay(entry.occurredAt)}
         </time>

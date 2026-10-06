@@ -14,11 +14,15 @@ describe("role navigation", () => {
       navigationFor("collaborator").filter((item) => item.mobile),
     ).toHaveLength(5);
   });
-  it("keeps expenses and team for both studio roles", () => {
+  it("keeps team for studio roles and expenses only for admins", () => {
     for (const role of ["admin", "partner"] as const)
       expect(navigationFor(role).map((item) => item.to)).toEqual(
-        expect.arrayContaining(["/gastos", "/equipo"]),
+        expect.arrayContaining(["/equipo"]),
       );
+    expect(navigationFor("admin").map((item) => item.to)).toContain("/gastos");
+    expect(navigationFor("partner").map((item) => item.to)).not.toContain(
+      "/gastos",
+    );
   });
   it("limits activity to studio roles and keeps it out of the bottom bar", () => {
     for (const role of ["admin", "partner"] as const)

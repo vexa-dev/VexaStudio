@@ -124,7 +124,7 @@ function ProfileView({ user }: { user: Profile }) {
           <div className="profile-cover-actions">
             <Button
               variant="secondary"
-              title="JPG, PNG o WebP · máximo 10 MB"
+              data-tooltip="JPG, PNG o WebP · máximo 10 MB"
               onClick={() => setImagePicker("banner")}
             >
               <Camera size={16} aria-hidden="true" />

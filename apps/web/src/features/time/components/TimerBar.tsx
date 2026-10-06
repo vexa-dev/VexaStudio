@@ -99,7 +99,7 @@ export function TimerChip() {
         >
           {formatClock(elapsed)}
         </span>
-        <span className="active-timer-title" title={title}>
+        <span className="active-timer-title" data-tooltip={title}>
           {title}
         </span>
       </div>
@@ -123,7 +123,7 @@ export function TimerChip() {
       <Button
         variant="ghost"
         aria-label="Detener temporizador"
-        title="Finalizar y preparar horas"
+        data-tooltip="Finalizar y preparar horas"
         className="active-timer-stop"
         disabled={stop.isPending}
         onClick={() => stop.mutate()}
