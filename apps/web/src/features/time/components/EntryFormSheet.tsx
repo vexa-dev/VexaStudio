@@ -1,5 +1,5 @@
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Controller, useForm } from "react-hook-form";
+import { Controller, useForm, useWatch } from "react-hook-form";
 import { Button } from "@/components/ui/Button";
 import { Field, TextareaField } from "@/components/ui/Field";
 import { Sheet } from "@/components/ui/Sheet";
@@ -8,7 +8,10 @@ import { useAuth } from "@/features/auth/hooks/useAuth";
 import { useProjects } from "@/features/projects/hooks/useProjects";
 import { useTasks } from "@/features/tasks/hooks/useTasks";
 import { todayLima } from "@vexa/domain/dates";
-import { useAddManualEntry, useUpdateEntry } from "../hooks/useTime";
+import { limaInstant } from "@vexa/domain/clock";
+import { useAddManualEntry, useEntries, useUpdateEntry } from "../hooks/useTime";
+import { lastEndOnDate } from "../last-end";
+import { ClockTimeField } from "./ClockTimeField";
 import { ChoicePicker, DatePicker } from "./TimePickers";
 import { entrySchema, type EntryFormValues } from "../schemas";
 
@@ -49,6 +52,29 @@ function EntryForm({
         hours: entry?.hours,
       },
     });
+
+  const [watchedDate, watchedHours] = useWatch({
+    control,
+    name: ["date", "hours"],
+  });
+  const dayStart = /^\d{4}-\d{2}-\d{2}$/.test(watchedDate ?? "")
+    ? limaInstant(watchedDate, { hour24: 0, minute: 0 }).getTime()
+    : null;
+  const dayEntries = useEntries(
+    {
+      from: new Date((dayStart ?? 0) - 86400000).toISOString(),
+      to: new Date((dayStart ?? 0) + 86400000 - 1).toISOString(),
+    },
+    dayStart === null ? undefined : user?.id,
+  );
+  const lastEnd =
+    dayStart !== null && user
+      ? lastEndOnDate(
+          (dayEntries.data ?? []).filter((e) => e.id !== entry?.id),
+          watchedDate,
+          user.id,
+        )
+      : null;
 
   const projectName = (id: string | null) =>
     projects.data?.find((p) => p.id === id)?.name ?? "";
@@ -178,11 +204,20 @@ function EntryForm({
           {...register("hours", { valueAsNumber: true })}
         />
       </div>
-      <Field
-        label="Hora de inicio (Lima)"
-        type="time"
-        error={formState.errors.startTime?.message}
-        {...register("startTime")}
+      <Controller
+        name="startTime"
+        control={control}
+        render={({ field }) => (
+          <ClockTimeField
+            label="Hora de inicio (Lima)"
+            value={field.value}
+            onChange={field.onChange}
+            error={formState.errors.startTime?.message}
+            date={watchedDate}
+            hours={watchedHours}
+            target={lastEnd}
+          />
+        )}
       />
       <p className="text-xs text-muted">
         Editar un registro aprobado lo devuelve a revisión. Queda pendiente de
