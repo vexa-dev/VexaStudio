@@ -191,7 +191,14 @@ export function migrateAuditLog(
   return migrated;
 }
 
+const DEMO_JOINED_AT = "2026-03-02T14:00:00.000Z";
+/** Fallback registration date for profiles persisted before `joinedAt` existed. */
+const LEGACY_JOINED_AT = "2026-01-12T14:00:00.000Z";
+
 function migrate(db: MockDb): MockDb {
+  for (const profile of db.profiles)
+    profile.joinedAt ??=
+      profile.id === "u-demo-collaborator" ? DEMO_JOINED_AT : LEGACY_JOINED_AT;
   db.auditLog = migrateAuditLog(db.auditLog ?? [], db.profiles);
   db.hoursDrafts ??= [];
   db.projectLabels ??= [];
@@ -204,6 +211,7 @@ function migrate(db: MockDb): MockDb {
       area: "technical",
       weeklyHours: 15,
       active: true,
+      joinedAt: DEMO_JOINED_AT,
     });
     db.tasks.push(
       {

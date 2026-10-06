@@ -20,6 +20,7 @@ const PROFILES: Profile[] = [
     area: "management_finance",
     weeklyHours: 15,
     active: true,
+    joinedAt: "2026-01-12T14:00:00.000Z",
   },
   {
     id: USER.rober,
@@ -28,6 +29,7 @@ const PROFILES: Profile[] = [
     area: "technical",
     weeklyHours: 20,
     active: true,
+    joinedAt: "2026-01-12T14:00:00.000Z",
   },
   {
     id: USER.jose,
@@ -36,6 +38,7 @@ const PROFILES: Profile[] = [
     area: "commercial",
     weeklyHours: 15,
     active: true,
+    joinedAt: "2026-02-02T14:00:00.000Z",
   },
   {
     id: USER.diego,
@@ -44,6 +47,7 @@ const PROFILES: Profile[] = [
     area: "design_marketing",
     weeklyHours: 25,
     active: true,
+    joinedAt: "2026-02-16T14:00:00.000Z",
   },
 ];
 

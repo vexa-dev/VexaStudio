@@ -9,7 +9,8 @@ export function cn(...classes: (string | false | null | undefined)[]): string {
 export function initials(name: string): string {
   return name
     .split(/\s+/)
-    .filter(Boolean)
+    // Skip separators such as "·" or "-": only words with a letter or digit count.
+    .filter((part) => /[\p{L}\p{N}]/u.test(part))
     .slice(0, 2)
     .map((part) => part[0].toUpperCase())
     .join('')

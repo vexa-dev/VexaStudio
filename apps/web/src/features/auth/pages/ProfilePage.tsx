@@ -8,6 +8,7 @@ import {
   LockKeyhole,
   Laptop,
   LogOut,
+  MessageCircle,
   Plus,
   Smartphone,
   Sparkles,
@@ -20,11 +21,16 @@ import { Avatar } from "@/components/ui/Avatar";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
+import { ErrorState } from "@/components/ui/ErrorState";
 import { Field, TextareaField } from "@/components/ui/Field";
 import { PageHeader } from "@/components/ui/PageHeader";
+import { Skeleton } from "@/components/ui/Skeleton";
+import { ChatSettings } from "@/features/chat/ChatSettings";
+import { useChatSettings } from "@/features/chat/hooks/useChatData";
 import { MyActivity } from "@/features/activity/components/MyActivity";
 import { areaLabel, roleLabel } from "@/lib/labels";
 import { useAuth } from "../hooks/useAuth";
+import { useProfileMedia } from "../hooks/useProfileMedia";
 import { ProfileImagePicker } from "../components/ProfileImagePicker";
 import type {
   ProfileImageKind,
@@ -36,6 +42,7 @@ const sections = [
   { id: "personal", label: "Datos personales", icon: UserRound },
   { id: "security", label: "Seguridad", icon: LockKeyhole },
   { id: "preferences", label: "Preferencias", icon: Settings2 },
+  { id: "messaging", label: "Mensajería", icon: MessageCircle },
   { id: "activity", label: "Mi actividad", icon: History },
 ] as const;
 type Section = (typeof sections)[number]["id"];
@@ -81,6 +88,13 @@ function PreferenceSwitch({
   );
 }
 
+/** A saved image only keeps its final crop, so it doubles as the original. */
+function savedSelection(
+  url: string | null | undefined,
+): ProfileImageSelection | null {
+  return url ? { original: url, preview: url, zoom: 1, x: 50, y: 50 } : null;
+}
+
 function ProfileView({ user }: { user: Profile }) {
   const [mascot, setMascot] = useState<"robot" | "none">("robot");
   const [searchParams, setSearchParams] = useSearchParams();
@@ -99,10 +113,13 @@ function ProfileView({ user }: { user: Profile }) {
     );
   }
   const [name, setName] = useState(user.name);
-  const [photo, setPhoto] = useState<ProfileImageSelection | null>(null);
-  const [banner, setBanner] = useState<ProfileImageSelection | null>(null);
+  const media = useProfileMedia();
+  const photo = savedSelection(user.avatarUrl);
+  const banner = savedSelection(user.bannerUrl);
   const [imagePicker, setImagePicker] = useState<ProfileImageKind | null>(null);
   const headingId = useId();
+  const messagingHeadingId = useId();
+  const chatSettings = useChatSettings(user.id);
   return (
     <>
       {imagePicker && (
@@ -110,7 +127,13 @@ function ProfileView({ user }: { user: Profile }) {
           kind={imagePicker}
           current={imagePicker === "photo" ? photo : banner}
           onClose={() => setImagePicker(null)}
-          onApply={imagePicker === "photo" ? setPhoto : setBanner}
+          onApply={(image) =>
+            media.mutate(
+              imagePicker === "photo"
+                ? { avatarUrl: image.preview }
+                : { bannerUrl: image.preview },
+            )
+          }
         />
       )}
       <PageHeader
@@ -126,7 +149,7 @@ function ProfileView({ user }: { user: Profile }) {
             <img
               className="profile-cover-image"
               src={banner.preview}
-              alt="Vista previa de tu banner de perfil"
+              alt="Tu banner de perfil"
             />
           ) : (
             <div aria-hidden="true">
@@ -155,9 +178,8 @@ function ProfileView({ user }: { user: Profile }) {
             {banner && (
               <Button
                 variant="secondary"
-                onClick={() => {
-                  setBanner(null);
-                }}
+                disabled={media.isPending}
+                onClick={() => media.mutate({ bannerUrl: null })}
               >
                 Quitar banner
               </Button>
@@ -171,18 +193,12 @@ function ProfileView({ user }: { user: Profile }) {
             aria-label="Elegir o ajustar foto de perfil"
             onClick={() => setImagePicker("photo")}
           >
-            {photo ? (
-              <img
-                src={photo.preview}
-                alt={`Vista previa de la foto de ${name || user.name}`}
-              />
-            ) : (
-              <Avatar
-                name={name || user.name}
-                size="lg"
-                className="profile-initials"
-              />
-            )}
+            <Avatar
+              name={name || user.name}
+              src={user.avatarUrl}
+              size="lg"
+              className="profile-initials"
+            />
           </button>
           <div className="profile-identity-details">
             <h2>{name || user.name}</h2>
@@ -217,8 +233,9 @@ function ProfileView({ user }: { user: Profile }) {
           <div className="profile-preview-note">
             <Settings2 size={17} aria-hidden="true" />
             <p>
-              Vista previa del perfil. Los cambios de datos, foto, banner y
-              preferencias no se guardan todavía.
+              Tu foto y tu banner se guardan al aplicarlos. Los ajustes de
+              Mensajería también se guardan. Los demás datos y preferencias son
+              una vista previa y no se guardan todavía.
             </p>
           </div>
           <section aria-labelledby={headingId} hidden={section !== "personal"}>
@@ -245,9 +262,8 @@ function ProfileView({ user }: { user: Profile }) {
                   {photo && (
                     <Button
                       variant="ghost"
-                      onClick={() => {
-                        setPhoto(null);
-                      }}
+                      disabled={media.isPending}
+                      onClick={() => media.mutate({ avatarUrl: null })}
                     >
                       Quitar
                     </Button>
@@ -496,6 +512,39 @@ function ProfileView({ user }: { user: Profile }) {
                 description="Tu avance y próximos pendientes en un solo correo."
               />
               <PreviewFooter label="Guardar preferencias" />
+            </Card>
+          </section>
+          <section
+            aria-labelledby={messagingHeadingId}
+            hidden={section !== "messaging"}
+          >
+            <Card className="profile-panel">
+              <div className="profile-section-heading">
+                <span>04 / COMUNICACIÓN</span>
+                <h2 id={messagingHeadingId}>Mensajería</h2>
+                <p>Tu estado, los avisos y tu presencia en el chat.</p>
+              </div>
+              {chatSettings.settings ? (
+                <ChatSettings
+                  settings={chatSettings.settings}
+                  onChange={(patch) => void chatSettings.update(patch)}
+                />
+              ) : chatSettings.query.isError ? (
+                <ErrorState
+                  title="No se pudieron cargar los ajustes"
+                  message={chatSettings.query.error.message}
+                  onRetry={() => void chatSettings.query.refetch()}
+                />
+              ) : (
+                <output
+                  className="flex flex-col gap-3"
+                  aria-label="Cargando ajustes de mensajería"
+                >
+                  <Skeleton className="h-10" />
+                  <Skeleton className="h-10" />
+                  <Skeleton className="h-10" />
+                </output>
+              )}
             </Card>
           </section>
           {section === "activity" && (
