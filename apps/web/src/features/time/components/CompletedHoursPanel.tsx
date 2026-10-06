@@ -1,4 +1,7 @@
 import { useState } from "react";
+import { toast } from "sonner";
+import type { HoursParticipantInput } from "@vexa/services";
+import { useAuth } from "@/features/auth/hooks/useAuth";
 import { Link } from "react-router-dom";
 import { CheckCheck } from "lucide-react";
 import { Card } from "@/components/ui/Card";
@@ -11,10 +14,14 @@ import { todayLima } from "@vexa/domain/dates";
 import { formatHours } from "@vexa/domain/format";
 import { useHoursDrafts, useSubmitDrafts } from "../hooks/useTime";
 import { DatePicker } from "./TimePickers";
+import { ParticipantsField } from "./ParticipantsField";
+import { hasParticipantErrors, participantErrors } from "../participants";
 
 export function CompletedHoursPanel() {
   const drafts = useHoursDrafts();
   const submit = useSubmitDrafts();
+  const { user } = useAuth();
+  const [participants, setParticipants] = useState<HoursParticipantInput[]>([]);
   const [values, setValues] = useState<Record<string, string>>({});
   const [selected, setSelected] = useState<string[]>([]);
   const [description, setDescription] = useState("");
@@ -61,6 +68,13 @@ export function CompletedHoursPanel() {
         <form
           onSubmit={async (e) => {
             e.preventDefault();
+            if (
+              user &&
+              hasParticipantErrors(participantErrors(user.id, participants))
+            ) {
+              toast.error("Revisa las personas etiquetadas.");
+              return;
+            }
             try {
               await submit.mutateAsync({
                 items: chosen.map((d) => ({
@@ -70,10 +84,12 @@ export function CompletedHoursPanel() {
                 })),
                 date,
                 description,
+                participants,
               });
               setSelected([]);
               setValues({});
               setDescription("");
+              setParticipants([]);
             } catch {
               /* Keep draft edits on failure. */
             }
@@ -177,6 +193,15 @@ export function CompletedHoursPanel() {
                 onChange={(e) => setDescription(e.target.value)}
                 placeholder="Se incluirán los nombres de las tareas si lo dejas vacío."
               />
+              {user ? (
+                <ParticipantsField
+                  ownerId={user.id}
+                  value={participants}
+                  onChange={setParticipants}
+                  hours={total}
+                  disabled={submit.isPending}
+                />
+              ) : null}
               <Button
                 type="submit"
                 disabled={

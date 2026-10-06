@@ -1,3 +1,6 @@
+import { useState } from "react";
+import { toast } from "sonner";
+import { X } from "lucide-react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Controller, useForm, useWatch } from "react-hook-form";
 import { Button } from "@/components/ui/Button";
@@ -9,7 +12,18 @@ import { useProjects } from "@/features/projects/hooks/useProjects";
 import { useTasks } from "@/features/tasks/hooks/useTasks";
 import { todayLima } from "@vexa/domain/dates";
 import { limaInstant } from "@vexa/domain/clock";
-import { useAddManualEntry, useEntries, useUpdateEntry } from "../hooks/useTime";
+import type { HoursParticipantInput } from "@vexa/services";
+import {
+  useAddEvidence,
+  useAddManualEntry,
+  useEntries,
+  useSetParticipants,
+  useUpdateEntry,
+} from "../hooks/useTime";
+import { hasParticipantErrors, participantErrors, sameParticipants } from "../participants";
+import { EVIDENCE_RETENTION_TEXT } from "../evidence-files";
+import { EvidenceFiles, EvidencePicker } from "./EvidenceFiles";
+import { ParticipantsField } from "./ParticipantsField";
 import { lastEndOnDate } from "../last-end";
 import { ClockTimeField } from "./ClockTimeField";
 import { ChoicePicker, DatePicker } from "./TimePickers";
@@ -34,6 +48,17 @@ function EntryForm({
   const projects = useProjects();
   const add = useAddManualEntry();
   const update = useUpdateEntry();
+  const setParticipants = useSetParticipants();
+  const addEvidence = useAddEvidence();
+  const [participants, setLocalParticipants] = useState<
+    HoursParticipantInput[]
+  >(() =>
+    (entry?.participants ?? []).map((p) => ({
+      userId: p.userId,
+      sharePercent: p.sharePercent,
+    })),
+  );
+  const [queued, setQueued] = useState<File[]>([]);
 
   const { register, handleSubmit, formState, control } =
     useForm<EntryFormValues>({
@@ -91,8 +116,15 @@ function EntryForm({
     }) => {
       // El horario ingresado corresponde a Lima (UTC-5).
       const startedAt = new Date(`${date}T${startTime}:00-05:00`).toISOString();
+      if (
+        user &&
+        hasParticipantErrors(participantErrors(user.id, participants))
+      ) {
+        toast.error("Revisa las personas etiquetadas.");
+        return;
+      }
       try {
-        if (entry)
+        if (entry) {
           await update.mutateAsync({
             id: entry.id,
             patch: {
@@ -104,8 +136,13 @@ function EntryForm({
               evidenceUrl: evidenceUrl || null,
             },
           });
-        else
-          await add.mutateAsync({
+          if (!sameParticipants(participants, entry.participants ?? []))
+            await setParticipants.mutateAsync({
+              entryId: entry.id,
+              participants,
+            });
+        } else {
+          const created = await add.mutateAsync({
             taskId: taskId || null,
             date,
             hours,
@@ -113,7 +150,26 @@ function EntryForm({
             description,
             evidenceUrl: evidenceUrl || null,
             startTime,
+            participants,
           });
+          let uploaded = 0;
+          for (const file of queued) {
+            try {
+              await addEvidence.mutateAsync({
+                entryId: created.id,
+                file,
+                silent: true,
+              });
+              uploaded += 1;
+            } catch {
+              /* The hook already reported this file; it can be attached again from the detail. */
+            }
+          }
+          if (uploaded)
+            toast.success(
+              uploaded === 1 ? "Archivo adjuntado" : `${uploaded} archivos adjuntados`,
+            );
+        }
         onClose();
       } catch {
         /* El hook muestra el error y conserva el formulario. */
@@ -121,7 +177,11 @@ function EntryForm({
     },
   );
 
-  const pending = add.isPending || update.isPending;
+  const pending =
+    add.isPending ||
+    update.isPending ||
+    setParticipants.isPending ||
+    addEvidence.isPending;
   return (
     <form onSubmit={submit} noValidate className="flex flex-col gap-4">
       <Controller
@@ -219,6 +279,54 @@ function EntryForm({
           />
         )}
       />
+      {user ? (
+        <ParticipantsField
+          ownerId={user.id}
+          value={participants}
+          onChange={setLocalParticipants}
+          hours={Number.isFinite(watchedHours) ? watchedHours : undefined}
+          disabled={pending}
+        />
+      ) : null}
+      {entry ? (
+        <EvidenceFiles
+          entryId={entry.id}
+          evidence={entry.evidence}
+          editable
+        />
+      ) : (
+        <div className="flex flex-col gap-2">
+          <EvidencePicker
+            existing={queued.length}
+            busy={pending}
+            onFiles={(files) => setQueued((prev) => [...prev, ...files])}
+          />
+          {queued.length ? (
+            <ul className="flex flex-col gap-1.5">
+              {queued.map((file, index) => (
+                <li
+                  key={`${file.name}-${index}`}
+                  className="flex items-center gap-2 text-sm"
+                >
+                  <span className="min-w-0 flex-1 truncate">{file.name}</span>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    aria-label={`Quitar ${file.name}`}
+                    onClick={() =>
+                      setQueued((prev) => prev.filter((_, i) => i !== index))
+                    }
+                  >
+                    <X size={16} aria-hidden="true" />
+                    Quitar
+                  </Button>
+                </li>
+              ))}
+            </ul>
+          ) : null}
+          <p className="text-xs text-muted">{EVIDENCE_RETENTION_TEXT}</p>
+        </div>
+      )}
       <p className="text-xs text-muted">
         Editar un registro aprobado lo devuelve a revisión. Queda pendiente de
         revisión por otro socio. El horario debe haber terminado y no

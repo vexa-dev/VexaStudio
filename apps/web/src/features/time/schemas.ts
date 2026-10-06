@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { MAX_PARTICIPANTS } from "@vexa/domain/hours-credit";
 
 export const entrySchema = z.object({
   taskId: z.string(),
@@ -29,3 +30,37 @@ export const voidSchema = z.object({
   reason: z.string().trim().min(3, "Escribe el motivo de la anulación"),
 });
 export type VoidFormValues = z.infer<typeof voidSchema>;
+
+/** People tagged on an entry. The owner never appears in the list and nobody repeats. */
+export const participantsSchema = (ownerId: string) =>
+  z
+    .array(
+      z.object({
+        userId: z.string().min(1, "Elige a la persona"),
+        sharePercent: z
+          .number({ error: "Escribe el porcentaje" })
+          .int("Usa un número entero")
+          .min(1, "El mínimo es 1 %")
+          .max(100, "El máximo es 100 %"),
+      }),
+    )
+    .max(MAX_PARTICIPANTS, `Puedes etiquetar hasta ${MAX_PARTICIPANTS} personas`)
+    .superRefine((list, ctx) => {
+      const seen = new Set<string>();
+      list.forEach((p, index) => {
+        if (p.userId === ownerId)
+          ctx.addIssue({
+            code: "custom",
+            path: [index, "userId"],
+            message: "No puedes etiquetarte a ti mismo",
+          });
+        if (seen.has(p.userId))
+          ctx.addIssue({
+            code: "custom",
+            path: [index, "userId"],
+            message: "No repitas a una persona",
+          });
+        seen.add(p.userId);
+      });
+    });
+export type ParticipantsValues = z.infer<ReturnType<typeof participantsSchema>>;

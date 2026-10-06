@@ -17,7 +17,7 @@ import { useAuth } from "@/features/auth/hooks/useAuth";
 import { useTasks } from "@/features/tasks/hooks/useTasks";
 import { useProjects } from "@/features/projects/hooks/useProjects";
 import { useTimeHistory } from "@/features/time/hooks/useTime";
-import { monthlyActivity } from "@/features/time/analytics";
+import { creditedActivity } from "@/features/time/analytics";
 import { ChoicePicker } from "@/features/time/components/TimePickers";
 import { todayLima } from "@vexa/domain/dates";
 import { formatHours } from "@vexa/domain/format";
@@ -56,7 +56,7 @@ function DayWorkspace({ userId, day }: { userId: string; day: string }) {
   );
   const pending = plan.filter((p) => !completed.includes(p));
   const own = (history.data ?? []).filter((e) => e.userId === userId);
-  const stats = monthlyActivity(own, day.slice(0, 7));
+  const stats = creditedActivity(history.data ?? [], userId, day.slice(0, 7));
   const todayHours = stats.daily[Number(day.slice(8)) - 1] ?? 0;
   const todayEntries = own.filter(
     (e) => !e.voidedAt && e.endedAt && todayLima(new Date(e.startedAt)) === day,

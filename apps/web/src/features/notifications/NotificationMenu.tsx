@@ -59,6 +59,8 @@ function notificationAction(item: Notification, user: Profile) {
         ? { label: "Revisar gastos", to: "/gastos" }
         : null;
     case "mention":
+      // Tagged in an hours entry (`entryId`): the entry lives in Horas.
+      if (item.payload.entryId) return { label: "Ver mis horas", to: "/horas" };
       if (!item.payload.taskId && item.payload.projectId)
         return {
           label: "Ver proyecto",
