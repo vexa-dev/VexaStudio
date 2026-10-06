@@ -930,4 +930,3 @@ export default function ChatPanel({
     </SidePanel>
   );
 }
-

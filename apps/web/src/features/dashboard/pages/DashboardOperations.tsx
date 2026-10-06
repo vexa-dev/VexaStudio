@@ -66,7 +66,13 @@ export function CardHeading({
 }
 
 /** "Ver más" link: always the last row of the card, with the arrow nudging on hover/focus. */
-export function CardLink({ to, children }: { to: string; children: ReactNode }) {
+export function CardLink({
+  to,
+  children,
+}: {
+  to: string;
+  children: ReactNode;
+}) {
   return (
     <div className="dashboard-card-foot">
       <Link to={to} className="dashboard-text-link">
@@ -123,7 +129,9 @@ export function QuickLinks({
           <Icon size={16} aria-hidden="true" />
           <span className="dashboard-quick-text">
             {label}
-            {value !== undefined ? <strong className="num">{value}</strong> : null}
+            {value !== undefined ? (
+              <strong className="num">{value}</strong>
+            ) : null}
           </span>
           <ArrowUpRight size={14} aria-hidden="true" />
         </Link>
@@ -269,7 +277,9 @@ export function DashboardOperations({
                 </span>
               ),
             },
-          ].filter(item => canManageExpenses || !item.to.startsWith("/gastos"))}
+          ].filter(
+            (item) => canManageExpenses || !item.to.startsWith("/gastos"),
+          )}
         />
       </div>
       <div className="dashboard-body">
@@ -287,7 +297,10 @@ export function DashboardOperations({
                 subtitle="Primero los sprints que cierran antes y las revisiones."
                 aside={
                   showScope ? (
-                    <div className="dashboard-scope" aria-label="Mostrar tareas">
+                    <div
+                      className="dashboard-scope"
+                      aria-label="Mostrar tareas"
+                    >
                       <button
                         type="button"
                         aria-pressed={!onlyMine}
@@ -329,7 +342,9 @@ export function DashboardOperations({
                       const project = summaries.find(
                         (p) => p.project.id === task.projectId,
                       );
-                      const sprint = sprints.find((s) => s.id === task.sprintId);
+                      const sprint = sprints.find(
+                        (s) => s.id === task.sprintId,
+                      );
                       const closeLabel = taskSprintLabel(sprint, today);
                       return (
                         <li
@@ -339,7 +354,9 @@ export function DashboardOperations({
                         >
                           <Link
                             to={
-                              sprint ? `/proyectos/${task.projectId}` : "/tareas"
+                              sprint
+                                ? `/proyectos/${task.projectId}`
+                                : "/tareas"
                             }
                           >
                             <span
@@ -393,91 +410,96 @@ export function DashboardOperations({
         </div>
         <div className="dashboard-side-col">
           {canManageExpenses && (
-          <section
-            aria-labelledby="dashboard-decisions"
-            className="dashboard-block dashboard-block-expenses enter"
-            style={stagger(4)}
-          >
-            <Card className="dashboard-decisions-card">
-              <CardHeading
-                icon={Receipt}
-                id="dashboard-decisions"
-                title="Gastos por revisar"
-                subtitle="Decisiones pendientes del estudio."
-              />
-              <div className="dashboard-list-slot">
-                {expenses.isError ? (
-                  <ErrorState
-                    message="No se pudieron cargar los gastos."
-                    onRetry={() => {
-                      void expenses.refetch();
-                    }}
-                  />
-                ) : expenses.isLoading ? (
-                  <Skeleton className="h-32" />
-                ) : review.total ? (
-                  <ul className="dashboard-expense-list">
-                    {review.items.map(({ expense, inFavor, voted }, i) => (
-                      <li
-                        key={expense.id}
-                        className={cn(animate && "enter")}
-                        style={stagger(i)}
-                      >
-                        <Link
-                          to={`/gastos?filter=pending&expense=${encodeURIComponent(expense.id)}`}
+            <section
+              aria-labelledby="dashboard-decisions"
+              className="dashboard-block dashboard-block-expenses enter"
+              style={stagger(4)}
+            >
+              <Card className="dashboard-decisions-card">
+                <CardHeading
+                  icon={Receipt}
+                  id="dashboard-decisions"
+                  title="Gastos por revisar"
+                  subtitle="Decisiones pendientes del estudio."
+                />
+                <div className="dashboard-list-slot">
+                  {expenses.isError ? (
+                    <ErrorState
+                      message="No se pudieron cargar los gastos."
+                      onRetry={() => {
+                        void expenses.refetch();
+                      }}
+                    />
+                  ) : expenses.isLoading ? (
+                    <Skeleton className="h-32" />
+                  ) : review.total ? (
+                    <ul className="dashboard-expense-list">
+                      {review.items.map(({ expense, inFavor, voted }, i) => (
+                        <li
+                          key={expense.id}
+                          className={cn(animate && "enter")}
+                          style={stagger(i)}
                         >
-                          <span className="dashboard-expense-meta">
-                            <span>Pendiente de aprobación</span>
-                            <strong className="num">
-                              {formatMoney(expense.amount, expense.currency)}
-                            </strong>
-                          </span>
-                          <strong>{expense.concept}</strong>
-                          <span className="dashboard-expense-votes">
-                            {inFavor} votos a favor ·{" "}
-                            {voted ? "Ya votaste" : "Sin tu voto"}
-                          </span>
-                          <span className="dashboard-row-cta">
-                            Revisar gasto{" "}
-                            <ArrowUpRight size={14} aria-hidden="true" />
-                          </span>
-                        </Link>
-                      </li>
-                    ))}
-                  </ul>
-                ) : (
-                  <p className={cn("dashboard-blank", animate && "dashboard-fade")}>
-                    No hay gastos pendientes de aprobación.
-                  </p>
+                          <Link
+                            to={`/gastos?filter=pending&expense=${encodeURIComponent(expense.id)}`}
+                          >
+                            <span className="dashboard-expense-meta">
+                              <span>Pendiente de aprobación</span>
+                              <strong className="num">
+                                {formatMoney(expense.amount, expense.currency)}
+                              </strong>
+                            </span>
+                            <strong>{expense.concept}</strong>
+                            <span className="dashboard-expense-votes">
+                              {inFavor} votos a favor ·{" "}
+                              {voted ? "Ya votaste" : "Sin tu voto"}
+                            </span>
+                            <span className="dashboard-row-cta">
+                              Revisar gasto{" "}
+                              <ArrowUpRight size={14} aria-hidden="true" />
+                            </span>
+                          </Link>
+                        </li>
+                      ))}
+                    </ul>
+                  ) : (
+                    <p
+                      className={cn(
+                        "dashboard-blank",
+                        animate && "dashboard-fade",
+                      )}
+                    >
+                      No hay gastos pendientes de aprobación.
+                    </p>
+                  )}
+                </div>
+                {upcoming.length > 0 && (
+                  <Link className="dashboard-renewal" to="/gastos">
+                    {upcoming[0].nextDate < today
+                      ? "Renovación vencida"
+                      : "Próxima renovación"}
+                    : {upcoming[0].concept} ·{" "}
+                    {formatIsoDate(upcoming[0].nextDate)}
+                  </Link>
                 )}
-              </div>
-              {upcoming.length > 0 && (
-                <Link className="dashboard-renewal" to="/gastos">
-                  {upcoming[0].nextDate < today
-                    ? "Renovación vencida"
-                    : "Próxima renovación"}
-                  : {upcoming[0].concept} ·{" "}
-                  {formatIsoDate(upcoming[0].nextDate)}
-                </Link>
-              )}
-              <p className="dashboard-local-note">
-                {isSupabaseSource()
-                  ? "Por ahora solo se pueden consultar los gastos; la votación aún no está habilitada."
-                  : "El módulo Gastos permite registrar propuestas, comprobantes e ingresos en este navegador. Este resumen conserva los movimientos de la fuente de datos."}
-              </p>
-              <CardLink
-                to={review.hidden > 0 ? "/gastos?filter=pending" : "/gastos"}
-              >
-                {review.hidden > 0
-                  ? `Ver ${review.hidden} ${
-                      review.hidden === 1
-                        ? "gasto pendiente más"
-                        : "gastos pendientes más"
-                    }`
-                  : "Ver gastos"}
-              </CardLink>
-            </Card>
-          </section>
+                <p className="dashboard-local-note">
+                  {isSupabaseSource()
+                    ? "Por ahora solo se pueden consultar los gastos; la votación aún no está habilitada."
+                    : "El módulo Gastos permite registrar propuestas, comprobantes e ingresos en este navegador. Este resumen conserva los movimientos de la fuente de datos."}
+                </p>
+                <CardLink
+                  to={review.hidden > 0 ? "/gastos?filter=pending" : "/gastos"}
+                >
+                  {review.hidden > 0
+                    ? `Ver ${review.hidden} ${
+                        review.hidden === 1
+                          ? "gasto pendiente más"
+                          : "gastos pendientes más"
+                      }`
+                    : "Ver gastos"}
+                </CardLink>
+              </Card>
+            </section>
           )}
           {team}
         </div>
@@ -565,4 +587,3 @@ export function DashboardProjects({ index = 6 }: { index?: number }) {
     </section>
   );
 }
-
