@@ -28,6 +28,7 @@ import {
   notificationChime,
   prepareNotificationSound,
 } from "./notification-audio";
+import { useNotifications } from "./hooks/useNotifications";
 import "../../app/user-menu.css";
 import "./notifications.css";
 
@@ -164,12 +165,16 @@ function examples(user: Profile): Notification[] {
   ];
 }
 
-/** Vista previa personal; la recepción remota se conectará con NotificationService. */
+/** Con Supabase muestra los avisos de la cuenta; con el mock, ejemplos locales de vista previa. */
 export function NotificationMenu({ user }: { user: Profile }) {
   const demo = !isSupabaseSource();
-  const [items, setItems] = useState<Notification[]>(() =>
+  const [localItems, setItems] = useState<Notification[]>(() =>
     demo ? examples(user) : [],
   );
+  const remote = useNotifications(demo ? undefined : user.id);
+  const items = demo ? localItems : remote.items;
+  // Con Supabase, la primera carga es la base: solo lo que llega después suena y mueve la campana.
+  const primed = useRef(demo);
   const [open, setOpen] = useState(false);
   const [selected, setSelected] = useState<Notification | null>(null);
   const navigate = useNavigate();
@@ -194,7 +199,28 @@ export function NotificationMenu({ user }: { user: Profile }) {
       document.removeEventListener("keydown", unlock);
     };
   }, [sound]);
+  const markRead = (id: string) => {
+    if (demo)
+      setItems((current) =>
+        current.map((entry) =>
+          entry.id === id ? { ...entry, read: true } : entry,
+        ),
+      );
+    else remote.markRead(id);
+  };
+  const markAllRead = () => {
+    if (demo)
+      setItems((current) => current.map((item) => ({ ...item, read: true })));
+    else remote.markAllRead();
+  };
+
   useEffect(() => {
+    if (!demo && !remote.loaded) return;
+    if (!primed.current) {
+      items.forEach((item) => seen.current.add(item.id));
+      primed.current = true;
+      return;
+    }
     const incoming = items.some(
       (item) => !seen.current.has(item.id) && !item.read,
     );
@@ -209,7 +235,7 @@ export function NotificationMenu({ user }: { user: Profile }) {
       { duration: motionTokens.duration.slow },
     );
     return () => animation.stop();
-  }, [items, sound, reduced, animate, scope]);
+  }, [items, demo, remote.loaded, sound, reduced, animate, scope]);
 
   return (
     <>
@@ -256,11 +282,7 @@ export function NotificationMenu({ user }: { user: Profile }) {
             <Button
               variant="ghost"
               disabled={!unread}
-              onClick={() =>
-                setItems((current) =>
-                  current.map((item) => ({ ...item, read: true })),
-                )
-              }
+              onClick={markAllRead}
             >
               <CheckCheck size={17} aria-hidden="true" />
               Revisar todas
@@ -282,11 +304,11 @@ export function NotificationMenu({ user }: { user: Profile }) {
               Sin revisar {unread > 0 && <span>{unread}</span>}
             </button>
           </div>
-          <p className="notification-preview-note">
-            {demo
-              ? "Notificaciones de ejemplo. Puedes probar cómo llega un aviso."
-              : "La conexión de notificaciones con tu cuenta está pendiente."}
-          </p>
+          {demo && (
+            <p className="notification-preview-note">
+              Notificaciones de ejemplo. Puedes probar cómo llega un aviso.
+            </p>
+          )}
           <div className="notification-list">
             {visible.length ? (
               visible.map((item) => {
@@ -306,13 +328,7 @@ export function NotificationMenu({ user }: { user: Profile }) {
                     aria-haspopup="dialog"
                     onClick={() => {
                       setSelected(item);
-                      setItems((current) =>
-                        current.map((entry) =>
-                          entry.id === item.id
-                            ? { ...entry, read: true }
-                            : entry,
-                        ),
-                      );
+                      if (!item.read) markRead(item.id);
                     }}
                   >
                     <span className="notification-item-icon">
@@ -386,7 +402,7 @@ export function NotificationMenu({ user }: { user: Profile }) {
       >
         {selected && (
           <div className="notification-detail">
-            <Badge>Vista previa</Badge>
+            {demo && <Badge>Vista previa</Badge>}
             <h3>{selected.payload.title}</h3>
             <div className="notification-detail-person">
               <Avatar name={selected.payload.actorName || "Usuario"} />
