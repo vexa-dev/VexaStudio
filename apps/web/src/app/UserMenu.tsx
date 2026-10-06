@@ -5,6 +5,7 @@ import {
   countUnread,
   incomingMessages,
   incomingNotice,
+  noticeTitle,
 } from "@/features/chat/chat-logic";
 import {
   useChatSettings,
@@ -20,6 +21,7 @@ import { MessageCircle } from "lucide-react";
 import { unreadLabel } from "./unread-label";
 import { nextChatMode, type ChatMode, type ChatModeAction } from "./chat-dock";
 import { useAuth } from "@/features/auth/hooks/useAuth";
+import { useMembers } from "@/features/team/hooks/useMembers";
 const ChatPanel = lazy(() => import("@/features/chat/ChatPanel"));
 export function UserMenu() {
   const { user } = useAuth();
@@ -29,6 +31,10 @@ function ChatEntry({ user }: { user: Profile }) {
   const [mode, setMode] = useState<ChatMode>("closed");
   // The panel mounts on first open and stays mounted while minimized to keep its state.
   const [mounted, setMounted] = useState(false);
+  const [openRequest, setOpenRequest] = useState<{
+    threadId: string;
+    nonce: number;
+  } | null>(null);
   const apply = (action: ChatModeAction) => {
     const next = nextChatMode(mode, action);
     if (next === mode) return;
@@ -41,6 +47,9 @@ function ChatEntry({ user }: { user: Profile }) {
   useChatSync();
   const threads = useChatThreads(user.id);
   const { settings } = useChatSettings(user.id);
+  // Read through a ref so a members refresh never re-runs the incoming-message effect.
+  const membersRef = useRef<Profile[]>([]);
+  membersRef.current = useMembers().data ?? [];
   // Until the settings load nobody is shown as online.
   const online = useChatPresence(settings?.presence ?? false);
   // Null until the first load, so history is never announced as new.
@@ -57,7 +66,29 @@ function ChatEntry({ user }: { user: Profile }) {
     );
     const notice = incomingNotice(incoming, settings);
     if (!notice) return;
-    toast("Nuevo mensaje de chat", { description: notice.body });
+    const latest = incoming.at(-1);
+    const author = membersRef.current.find(
+      (member) => member.id === latest?.authorId,
+    )?.name;
+    const source = loaded.find((thread) =>
+      thread.messages.some((message) => message.id === latest?.id),
+    );
+    const threadId = source?.id;
+    const openFromToast = () => {
+      // Closed, minimized or open: the toast always lands on an open panel.
+      setMode((current) => nextChatMode(current, "open"));
+      setMounted(true);
+      if (threadId)
+        setOpenRequest((prev) => ({ threadId, nonce: (prev?.nonce ?? 0) + 1 }));
+    };
+    toast(noticeTitle(author, source), {
+      description: notice.body,
+      action: {
+        label: "Abrir conversación",
+        onClick: openFromToast,
+        actionButtonStyle: { minHeight: 44, minWidth: 44 },
+      },
+    });
     if (notice.sound) notificationChime(notice.sound);
   }, [threads.data, settings, user.id]);
   useEffect(() => {
@@ -104,6 +135,7 @@ function ChatEntry({ user }: { user: Profile }) {
               if (!has && mode === "minimized") apply("restore");
             }}
             onClose={() => apply("close")}
+            openRequest={openRequest}
           />
         </Suspense>
       )}

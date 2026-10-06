@@ -5,6 +5,8 @@ import type {
   ChatThread,
 } from "@vexa/domain/chat";
 import type { Profile } from "@vexa/domain/types";
+import { dataUrlBytes } from "./attachment-kinds";
+import { attachmentStage, needsDelivery } from "./chat-logic";
 import { normalizeWallpaper } from "./chat-wallpaper";
 
 // Chat types live in the shared domain; re-exported so existing imports keep working.
@@ -180,6 +182,9 @@ export function sendMessage(
     authorId: user.id,
     text: input.text.trim(),
     attachment: input.attachment,
+    ...(input.attachment
+      ? { attachmentLife: { downloadedAt: {}, keep: {} } }
+      : {}),
     replyTo: input.replyTo,
     sentAt: Date.now(),
     reactions: {},
@@ -206,6 +211,8 @@ export function changeMessage(
     message.deleted = true;
     message.text = "";
     delete message.attachment;
+    delete message.attachmentLife;
+    delete message.purgedAttachment;
     message.reactions = {};
   } else {
     if (!text.trim() || text.length > 4000)
@@ -241,6 +248,17 @@ export function readThread(
   thread.readAt[user.id] = Date.now();
   return true;
 }
+/** Marks the thread's messages from others as received; false when already up to date. */
+export function deliverThread(
+  store: ChatStore,
+  user: Profile,
+  threadId: string,
+): boolean {
+  const thread = requireThread(store, user, threadId);
+  if (needsDelivery(thread, user.id) === null) return false;
+  thread.deliveredAt = { ...thread.deliveredAt, [user.id]: Date.now() };
+  return true;
+}
 /** Copies a message into another thread: "Reenviado: " text, same attachment, no reply. */
 export function forwardMessage(
   store: ChatStore,
@@ -258,4 +276,79 @@ export function forwardMessage(
     text: message.text ? `Reenviado: ${message.text}` : "",
     attachment: message.attachment ? { ...message.attachment } : undefined,
   });
+}
+
+/** The message with an attachment in a thread I can open, or the standard "gone" error. */
+function attachmentMessage(store: ChatStore, user: Profile, messageId: string) {
+  for (const thread of store.threads) {
+    if (!canOpenThread(thread, user)) continue;
+    const message = thread.messages.find((entry) => entry.id === messageId);
+    if (!message) continue;
+    if (message.deleted || (!message.attachment && !message.purgedAttachment))
+      throw new Error("Este mensaje no tiene un archivo adjunto.");
+    if (!thread.members.includes(user.id))
+      throw new Error(
+        "Solo los integrantes de la conversación pueden hacerlo.",
+      );
+    if (message.purgedAttachment)
+      throw new Error("El archivo ya fue eliminado para liberar espacio.");
+    return { thread, message };
+  }
+  throw new Error("El mensaje ya no está disponible.");
+}
+/** Records my download once (the sender's is implicit); false when nothing changed. */
+export function downloadAttachment(
+  store: ChatStore,
+  user: Profile,
+  messageId: string,
+): boolean {
+  const { thread, message } = attachmentMessage(store, user, messageId);
+  if (
+    user.id === message.authorId ||
+    attachmentStage(thread, message) === "none"
+  )
+    return false;
+  const life = (message.attachmentLife ??= { downloadedAt: {}, keep: {} });
+  if (user.id in life.downloadedAt) return false;
+  life.downloadedAt[user.id] = Date.now();
+  return true;
+}
+/**
+ * Removes the file once every member answered "release". Unanswered counts as
+ * keep, so nothing is ever removed without everybody's explicit release.
+ */
+export function purgeReleased(
+  store: ChatStore,
+  user: Profile,
+  messageId: string,
+): boolean {
+  const { thread, message } = attachmentMessage(store, user, messageId);
+  if (attachmentStage(thread, message) !== "ready" || !message.attachment)
+    return false;
+  const { name, type, data } = message.attachment;
+  message.purgedAttachment = {
+    name,
+    type,
+    size: message.attachment.size ?? dataUrlBytes(data),
+    purgedAt: Date.now(),
+  };
+  delete message.attachment;
+  return true;
+}
+/** One answer per member, only when everybody downloaded; the last release removes the file. */
+export function answerAttachment(
+  store: ChatStore,
+  user: Profile,
+  messageId: string,
+  keep: boolean,
+) {
+  const { thread, message } = attachmentMessage(store, user, messageId);
+  const stage = attachmentStage(thread, message);
+  if (stage === "downloading" || stage === "none")
+    throw new Error("Todavía falta que todos descarguen el archivo.");
+  const life = (message.attachmentLife ??= { downloadedAt: {}, keep: {} });
+  if (user.id in life.keep)
+    throw new Error("Ya respondiste sobre este archivo.");
+  life.keep[user.id] = keep;
+  purgeReleased(store, user, messageId);
 }

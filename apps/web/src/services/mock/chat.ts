@@ -4,13 +4,17 @@ import type { ChatService } from "@vexa/services";
 import {
   CHAT_KEY,
   CHAT_UPDATE_EVENT,
+  answerAttachment,
   canOpenThread,
   changeMessage,
   chatSettingsFor,
   deleteGroup,
+  deliverThread,
   directThread,
+  downloadAttachment,
   forwardMessage,
   patchChatSettings,
+  purgeReleased,
   reactToMessage,
   readChatStore,
   readThread,
@@ -211,6 +215,31 @@ export const chatService: ChatService = {
   async markRead(threadId) {
     mutate(
       (store, user) => readThread(store, user, threadId),
+      (changed) => changed,
+    );
+    return delay(undefined);
+  },
+  async markDelivered(threadId) {
+    mutate(
+      (store, user) => deliverThread(store, user, threadId),
+      (changed) => changed,
+    );
+    return delay(undefined);
+  },
+  async markAttachmentDownloaded(messageId) {
+    mutate(
+      (store, user) => downloadAttachment(store, user, messageId),
+      (changed) => changed,
+    );
+    return delay(undefined);
+  },
+  async answerAttachmentKeep(messageId, keep) {
+    mutate((store, user) => answerAttachment(store, user, messageId, keep));
+    return delay(undefined);
+  },
+  async purgeReleasedAttachment(messageId) {
+    mutate(
+      (store, user) => purgeReleased(store, user, messageId),
       (changed) => changed,
     );
     return delay(undefined);

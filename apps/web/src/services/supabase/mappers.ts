@@ -9,10 +9,12 @@ import type {
   Expense,
   ExpenseVote,
   HoursDraft,
+  HoursEvidence,
   IsoDateTime,
   MemberMonthlySummary,
   MemberPoints,
   Notification,
+  NotificationPreferences,
   Profile,
   Project,
   ProjectLabel,
@@ -57,6 +59,21 @@ export function mapProfile(row: Tables<"profiles">): Profile {
     weeklyHours: row.weekly_hours,
     active: row.active,
     joinedAt: isoInstant(row.created_at),
+    username: row.username ?? null,
+    bio: row.bio ?? null,
+  };
+}
+
+export function mapNotificationPreferences(
+  row: Pick<
+    Tables<"notification_preferences">,
+    "task_assigned" | "hours_reminder" | "weekly_summary"
+  >,
+): NotificationPreferences {
+  return {
+    taskAssigned: row.task_assigned,
+    hoursReminder: row.hours_reminder,
+    weeklySummary: row.weekly_summary,
   };
 }
 
@@ -156,7 +173,28 @@ function jsonArray<T>(value: Json | null): T[] | undefined {
   return Array.isArray(value) ? (value as T[]) : undefined;
 }
 
-export function mapTimeEntry(row: Tables<"time_entries">): TimeEntry {
+/** Selección de un registro de horas con sus etiquetas y su evidencia (relaciones por `entry_id`). */
+export const TIME_ENTRY_SELECT =
+  "*, time_entry_participants(*), time_entry_evidence(*)";
+
+export type TimeEntryRow = Tables<"time_entries"> & {
+  time_entry_participants?: Tables<"time_entry_participants">[] | null;
+  time_entry_evidence?: Tables<"time_entry_evidence">[] | null;
+};
+
+export function mapEvidence(row: Tables<"time_entry_evidence">): HoursEvidence {
+  return {
+    id: row.id,
+    name: row.name,
+    mime: row.mime,
+    size: row.size,
+    createdAt: isoInstant(row.created_at),
+    purgeAt: iso(row.purge_after),
+    purged: row.purged_at !== null,
+  };
+}
+
+export function mapTimeEntry(row: TimeEntryRow): TimeEntry {
   return {
     id: row.id,
     userId: row.user_id,
@@ -185,12 +223,22 @@ export function mapTimeEntry(row: Tables<"time_entries">): TimeEntry {
     allocations: jsonArray<NonNullable<TimeEntry["allocations"]>[number]>(
       row.allocations,
     ),
+    participants: [...(row.time_entry_participants ?? [])]
+      .sort((a, b) => a.user_id.localeCompare(b.user_id))
+      .map((p) => ({ userId: p.user_id, sharePercent: p.share_percent })),
+    evidence: [...(row.time_entry_evidence ?? [])]
+      .sort(
+        (a, b) =>
+          Date.parse(a.created_at) - Date.parse(b.created_at) ||
+          a.id.localeCompare(b.id),
+      )
+      .map(mapEvidence),
   };
 }
 
 /** Una RPC con registro compuesto puede devolver `null` o una fila con todo en `null`. */
 export function mapTimeEntryOrNull(
-  row: Tables<"time_entries"> | null,
+  row: TimeEntryRow | null,
 ): TimeEntry | null {
   return row && row.id ? mapTimeEntry(row) : null;
 }

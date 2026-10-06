@@ -37,6 +37,27 @@ const CANONICAL_MESSAGES = [
   "El archivo adjunto no existe en el almacenamiento.",
   "El tamaño del archivo no coincide con el subido.",
 
+  "No puedes aprobar horas en las que estás etiquetado",
+  "No puedes revisar horas en las que estás etiquetado",
+  "No puedes etiquetarte a ti mismo",
+  "La persona etiquetada no está disponible",
+  "Puedes etiquetar hasta 10 personas",
+  "No repitas a una persona",
+  "Las personas etiquetadas no son válidas",
+  "El porcentaje debe ser un entero entre 1 y 100",
+  "Solo se puede cambiar el porcentaje de una etiqueta",
+  "Confirma el registro antes de etiquetar a otras personas.",
+  "Confirma el registro antes de adjuntar archivos.",
+  "Este tipo de archivo no está permitido.",
+  "El archivo está vacío o pesa demasiado.",
+  "Cada registro admite hasta 5 archivos.",
+  "El archivo no corresponde a este registro.",
+  "Quita primero el archivo del almacenamiento.",
+  "Todavía no es momento de retirar el archivo.",
+  "El archivo todavía está en el almacenamiento.",
+  "El archivo ya fue eliminado para liberar espacio.",
+  "Solo se puede registrar el retiro del archivo",
+
   "Inicia sesión para continuar",
   "Tu rol no permite esta acción",
   "Solo un administrador puede gestionar proyectos y tareas",
@@ -104,6 +125,9 @@ const CANONICAL_MESSAGES = [
   "La imagen debe estar en tu carpeta",
   "La imagen no existe en el almacenamiento",
   "Operación de imagen no válida",
+  "El nombre debe tener de 1 a 80 caracteres",
+  "El usuario debe tener de 3 a 30 caracteres: letras, números, punto o guion bajo",
+  "La biografía puede tener hasta 280 caracteres",
 ];
 
 const fold = (text: string) =>
@@ -118,6 +142,11 @@ const CONSTRAINT_MESSAGES: Record<string, string> = {
   chat_messages_body_len_check: "El mensaje puede tener hasta 4000 caracteres.",
   chat_messages_attachment_size_check:
     "El archivo está vacío o pesa demasiado.",
+  time_entry_participants_share_percent_check:
+    "El porcentaje debe ser un entero entre 1 y 100",
+  time_entry_evidence_size_check: "El archivo está vacío o pesa demasiado.",
+  time_entry_evidence_name_check:
+    "El nombre del archivo debe tener de 1 a 255 caracteres.",
   tasks_link_check: "Usa un enlace http o https",
   time_entries_evidence_url_check: "Usa un enlace http o https",
   tasks_description_check: "Máximo 20,000 caracteres en la descripción",
@@ -134,7 +163,24 @@ const CONSTRAINT_MESSAGES: Record<string, string> = {
   sprints_check: "El fin del sprint no puede ser anterior al inicio",
   profiles_avatar_path_owner_check: "La imagen debe estar en tu carpeta",
   profiles_banner_path_owner_check: "La imagen debe estar en tu carpeta",
+  profiles_username_uidx: "Ese usuario ya está en uso",
+  profiles_username_format_check:
+    "El usuario debe tener de 3 a 30 caracteres: letras, números, punto o guion bajo",
+  profiles_bio_len_check: "La biografía puede tener hasta 280 caracteres",
 };
+
+/** GoTrue messages of the password change (it answers in English), in Spanish (Peru). */
+export function translatePasswordChange(message: string): string | undefined {
+  if (/current password required/i.test(message))
+    return "Escribe tu contraseña actual para cambiarla.";
+  if (
+    /(incorrect|invalid|wrong) current password|current password (is )?(incorrect|invalid|wrong)/i.test(
+      message,
+    )
+  )
+    return "La contraseña actual no es correcta.";
+  return undefined;
+}
 
 const NETWORK = /failed to fetch|networkerror|load failed|fetch failed/i;
 
@@ -149,6 +195,8 @@ export function toServiceError(error: unknown): Error {
     return keep("No se pudo conectar con el servidor. Revisa tu conexión.");
   for (const [constraint, mapped] of Object.entries(CONSTRAINT_MESSAGES))
     if (text.includes(`"${constraint}"`)) return keep(mapped);
+  const password = translatePasswordChange(message ?? "");
+  if (password) return keep(password);
   const canonical = message ? CANONICAL.get(fold(message)) : undefined;
   if (canonical) return keep(canonical);
   if (code === "PGRST301" || code === "PGRST303" || /jwt/i.test(message ?? ""))

@@ -7,7 +7,7 @@ import { getSupabase, newRequestId } from "@/lib/supabase";
 export function subscribeToAuditInserts(onInsert: () => void): () => void {
   const client = getSupabase();
   const channel = client
-    .channel(`activity-${newRequestId()}`)
+    .channel(`activity-${newRequestId()}`, { config: { private: true } })
     .on(
       "postgres_changes",
       { event: "INSERT", schema: "public", table: "audit_log" },
@@ -29,7 +29,7 @@ export function subscribeToNotifications(
 ): () => void {
   const client = getSupabase();
   const channel = client
-    .channel(`notifications-${newRequestId()}`)
+    .channel(`notifications-${newRequestId()}`, { config: { private: true } })
     .on(
       "postgres_changes",
       {

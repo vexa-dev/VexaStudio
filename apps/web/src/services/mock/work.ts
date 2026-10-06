@@ -10,6 +10,14 @@ import type {
 } from "@vexa/services";
 import { recordAudit, scoped } from "./audit";
 import { getDb, getSessionUserId, save } from "./db";
+import {
+  assertNotTagged,
+  buildParticipants,
+  clearRetention,
+  hoursExtrasService,
+  releaseEvidence,
+  retainEvidence,
+} from "./hours-extras";
 import { delay, pending } from "./utils";
 /**
  * Sprints, tareas y horas. Los permisos se aplican aquí igual que lo hará RLS en la etapa 2:
@@ -504,7 +512,10 @@ export const tasks: TaskService = scoped<TaskService>({
     return delay(task);
   },
 });
-const timeImplementation: TimeService = scoped<TimeService>({
+/** Everything except the tag/evidence methods, which live in `hours-extras.ts`. */
+type CoreTimeService = Omit<TimeService, keyof typeof hoursExtrasService>;
+
+const timeImplementation: CoreTimeService = scoped<CoreTimeService>({
   async pause() {
     const user = currentUser();
     const entry = getDb().timeEntries.find(
@@ -595,6 +606,7 @@ const timeImplementation: TimeService = scoped<TimeService>({
         hours: d.hours,
       }));
     const startedAt = new Date(`${input.date}T12:00:00-05:00`).toISOString();
+    const participants = buildParticipants(user.id, input.participants);
     const entry: TimeEntry = {
       id: newId("h"),
       userId: user.id,
@@ -613,6 +625,8 @@ const timeImplementation: TimeService = scoped<TimeService>({
       validatedAt: null,
       voidedAt: null,
       voidReason: null,
+      participants,
+      evidence: [],
     };
     // Keep real intervals only when their duration/date match the confirmed time.
     const measured = drafts
@@ -661,7 +675,9 @@ const timeImplementation: TimeService = scoped<TimeService>({
         const started = new Date(e.startedAt).getTime();
         return (
           !e.draft &&
-          (user.role !== "collaborator" || e.userId === user.id) &&
+          (user.role !== "collaborator" ||
+            e.userId === user.id ||
+            e.participants?.some((p) => p.userId === user.id)) &&
           (!filter.userId || e.userId === filter.userId) &&
           (!filter.taskId || e.taskId === filter.taskId) &&
           started >= from &&
@@ -714,6 +730,8 @@ const timeImplementation: TimeService = scoped<TimeService>({
       createdAt: now.toISOString(),
       voidedAt: null,
       voidReason: null,
+      participants: [],
+      evidence: [],
     };
     db.timeEntries.push(entry);
     recordAudit({
@@ -756,6 +774,7 @@ const timeImplementation: TimeService = scoped<TimeService>({
     description,
     evidenceUrl,
     startTime,
+    participants,
   }) {
     const user = currentUser();
     const task = taskId ? findTask(taskId) : null;
@@ -765,6 +784,7 @@ const timeImplementation: TimeService = scoped<TimeService>({
       throw new Error("Describe el trabajo realizado");
     assertActivity(projectId, evidenceUrl);
     assertHours(hours);
+    const tagged = buildParticipants(user.id, participants);
     if (date > todayLima())
       throw new Error("No puedes registrar horas en una fecha futura");
     // Lima no tiene horario de verano (UTC-5): el mediodía de ese día es una hora segura.
@@ -798,6 +818,8 @@ const timeImplementation: TimeService = scoped<TimeService>({
       createdAt: now,
       voidedAt: null,
       voidReason: null,
+      participants: tagged,
+      evidence: [],
     };
     getDb().timeEntries.push(entry);
     // Manual confirmation of a task replaces its pending suggestion, preventing double registration.
@@ -871,6 +893,8 @@ const timeImplementation: TimeService = scoped<TimeService>({
         new Date(startedAt).getTime() + hours * HOUR_MS,
       ).toISOString(),
     });
+    // Editing reopens the review: the kept files no longer have a due date.
+    clearRetention(entry);
     recordAudit({
       eventType: "hours.edited",
       table: "time_entries",
@@ -892,6 +916,7 @@ const timeImplementation: TimeService = scoped<TimeService>({
     const before = { ...entry };
     entry.voidedAt = new Date().toISOString();
     entry.voidReason = reason.trim();
+    releaseEvidence(entry);
     recordAudit({
       eventType: "hours.voided",
       table: "time_entries",
@@ -917,6 +942,7 @@ const timeImplementation: TimeService = scoped<TimeService>({
         throw new Error("Solo se revisan registros finalizados y vigentes");
       if (entry.userId === user.id)
         throw new Error("No puedes aprobar tus propias horas");
+      assertNotTagged(entry, user.id);
       if (entry.validated) throw new Error("El registro ya está aprobado");
       return entry;
     });
@@ -929,6 +955,7 @@ const timeImplementation: TimeService = scoped<TimeService>({
         reviewNote: null,
         reviewedBy: user.id,
       });
+      retainEvidence(entry);
       recordAudit({
         eventType: "hours.approved",
         table: "time_entries",
@@ -952,6 +979,7 @@ const timeImplementation: TimeService = scoped<TimeService>({
       !entry.endedAt
     )
       throw new Error("Este registro no está disponible para revisión");
+    assertNotTagged(entry, user.id);
     if (note.trim().length < 8)
       throw new Error("Explica qué necesita aclaración");
     const before = { ...entry };
@@ -977,6 +1005,7 @@ async function timerLock<T>(operation: () => Promise<T>): Promise<T> {
 
 export const time: TimeService = {
   ...timeImplementation,
+  ...hoursExtrasService,
   start: (taskId, activity) =>
     timerLock(() => timeImplementation.start(taskId, activity)),
   pause: () => timerLock(() => timeImplementation.pause()),

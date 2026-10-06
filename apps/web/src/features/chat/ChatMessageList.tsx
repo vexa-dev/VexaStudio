@@ -10,7 +10,6 @@ import {
   CheckCheck,
   Copy,
   Forward,
-  Download,
   Pencil,
   Reply,
   Smile,
@@ -20,22 +19,19 @@ import { toast } from "sonner";
 import type { Profile } from "@vexa/domain/types";
 import { formatDateTime } from "@vexa/domain/dates";
 import { Avatar } from "@/components/ui/Avatar";
-import type {
-  ChatAttachment,
-  ChatMessage,
-  ChatThread,
-} from "@vexa/domain/chat";
-import { isReadByOthers } from "./chat-logic";
+import type { ChatMessage, ChatThread } from "@vexa/domain/chat";
+import {
+  attachmentStage,
+  messageStatus,
+  shouldMarkDownload,
+  type MessageStatus,
+} from "./chat-logic";
+import { attachmentCopy } from "./chat-copy";
+import { AttachmentPrompt } from "./AttachmentPrompt";
+import { AttachmentView, PurgedAttachmentView } from "./AttachmentView";
 import { useChatActions } from "./hooks/useChatData";
 import { dayLabel, groupMessages } from "./chat-format";
 import { splitEmoji, toTextPresentation } from "./emoji-text";
-import { KIND_ICONS } from "./AttachMenu";
-import {
-  INLINE_VIDEO_BYTES,
-  dataUrlBytes,
-  formatBytes,
-  kindOfFile,
-} from "./attachment-kinds";
 import "@fontsource-variable/noto-emoji/index.css";
 
 /** Renders text with emoji runs drawn by the monochrome emoji font. */
@@ -55,51 +51,11 @@ function EmojiText({ text }: { text: string }) {
   );
 }
 
-function AttachmentView({ attachment }: { attachment: ChatAttachment }) {
-  const kind = kindOfFile(attachment);
-  const bytes = dataUrlBytes(attachment.data);
-  const Icon = KIND_ICONS[kind.id];
-  if (kind.id === "image" && attachment.type.startsWith("image/"))
-    return (
-      <a
-        href={attachment.data}
-        download={attachment.name}
-        className="chat-attachment"
-      >
-        <img src={attachment.data} alt={attachment.name} />
-        {attachment.name}
-      </a>
-    );
-  if (kind.id === "video" && bytes <= INLINE_VIDEO_BYTES)
-    return (
-      <div className="chat-attachment">
-        <video src={attachment.data} controls preload="metadata" />
-        <span>
-          {attachment.name} · {formatBytes(bytes)}
-        </span>
-      </div>
-    );
-  return (
-    <a
-      href={attachment.data}
-      download={attachment.name}
-      className="chat-attachment chat-attachment-card"
-      aria-label={`Descargar ${attachment.name}, ${kind.label}, ${formatBytes(bytes)}`}
-    >
-      <span className="chat-attachment-icon" aria-hidden="true">
-        <Icon size={20} />
-      </span>
-      <span className="chat-attachment-meta">
-        <strong>{attachment.name}</strong>
-        <small>
-          {kind.label} · {formatBytes(bytes)}
-        </small>
-      </span>
-      <Download size={16} aria-hidden="true" />
-    </a>
-  );
-}
-
+const TICK_LABEL: Record<MessageStatus, string> = {
+  sent: "Enviado",
+  delivered: "Recibido",
+  read: "Leído",
+};
 const timeFormat = new Intl.DateTimeFormat("es-PE", {
   hour: "2-digit",
   minute: "2-digit",
@@ -132,8 +88,42 @@ export function ChatMessageList({
   onReact: (message: ChatMessage) => void;
   onForward: (message: ChatMessage) => void;
 }) {
-  const { remove, react } = useChatActions(user.id);
+  const { remove, react, markDownloaded, answerKeep, purgeReleased } =
+    useChatActions(user.id);
   const box = useRef<HTMLDivElement>(null);
+  const reported = useRef(new Set<string>());
+  const retried = useRef(new Set<string>());
+  // Opening or downloading a file is my download; reported once per message and session.
+  const openFile = (message: ChatMessage) => {
+    if (
+      reported.current.has(message.id) ||
+      !shouldMarkDownload(thread, message, user.id)
+    )
+      return;
+    reported.current.add(message.id);
+    void markDownloaded(message.id).then((result) => {
+      if (!result.ok) reported.current.delete(message.id);
+    });
+  };
+  const answerFile = async (message: ChatMessage, keep: boolean) => {
+    const result = await answerKeep({ messageId: message.id, keep });
+    if (result.ok)
+      toast.success(
+        keep ? attachmentCopy.keptToast : attachmentCopy.releasedToast,
+      );
+  };
+  // Everybody released but the file is still there (the answering device went offline, or the
+  // removal failed): any member's open chat retries once per session; the server refuses otherwise.
+  useEffect(() => {
+    for (const message of thread.messages)
+      if (
+        attachmentStage(thread, message) === "ready" &&
+        !retried.current.has(message.id)
+      ) {
+        retried.current.add(message.id);
+        void purgeReleased(message.id);
+      }
+  }, [thread, purgeReleased]);
   useEffect(() => {
     if (box.current) box.current.scrollTop = box.current.scrollHeight;
   }, [thread.id, thread.messages.length]);
@@ -182,7 +172,7 @@ export function ChatMessageList({
                 const quoted = thread.messages.find(
                   (entry) => entry.id === message.replyTo,
                 );
-                const read = isReadByOthers(thread, message, user.id);
+                const status = messageStatus(thread, message, user.id);
                 return (
                   <article
                     key={message.id}
@@ -217,22 +207,38 @@ export function ChatMessageList({
                             </p>
                           )}
                           {message.attachment && (
-                            <AttachmentView attachment={message.attachment} />
+                            <AttachmentView
+                              attachment={message.attachment}
+                              onOpen={() => openFile(message)}
+                            />
                           )}
+                          {message.purgedAttachment && (
+                            <PurgedAttachmentView
+                              attachment={message.purgedAttachment}
+                            />
+                          )}
+                          <AttachmentPrompt
+                            thread={thread}
+                            message={message}
+                            userId={user.id}
+                            onAnswer={(keep) => answerFile(message, keep)}
+                          />
                         </>
                       )}
                       <footer>
                         {message.editedAt && <span>editado</span>}
                         <time>{timeFormat.format(message.sentAt)}</time>
                         {own && (
-                          <span className="chat-ticks">
-                            {read ? (
-                              <CheckCheck size={14} aria-hidden="true" />
-                            ) : (
+                          <span
+                            className={`chat-ticks${status === "read" ? " is-read" : ""}`}
+                          >
+                            {status === "sent" ? (
                               <Check size={14} aria-hidden="true" />
+                            ) : (
+                              <CheckCheck size={14} aria-hidden="true" />
                             )}
                             <span className="sr-only">
-                              {read ? "Leído" : "Enviado"}
+                              {TICK_LABEL[status]}
                             </span>
                           </span>
                         )}

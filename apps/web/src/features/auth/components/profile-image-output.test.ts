@@ -1,9 +1,15 @@
 import { describe, expect, it } from "vitest";
 import {
   MAX_IMAGE_DATA_URL_LENGTH,
+  MAX_SOURCE_PIXELS,
+  MOCK_OUTPUT_PROFILE,
   QUALITY_STEPS,
+  SUPABASE_OUTPUT_PROFILE,
   encodeWithinLimit,
+  exceedsPixelLimit,
+  fitOutputSize,
   fitsDataUrlLimit,
+  outputProfile,
   outputSize,
 } from "./profile-image-output";
 
@@ -71,5 +77,112 @@ describe("encodeWithinLimit", () => {
 
   it("returns null when no quality step fits", () => {
     expect(encodeWithinLimit((type) => big(type))).toBeNull();
+  });
+});
+
+describe("outputProfile", () => {
+  it("picks the profile by data source", () => {
+    expect(outputProfile(false)).toBe(MOCK_OUTPUT_PROFILE);
+    expect(outputProfile(true)).toBe(SUPABASE_OUTPUT_PROFILE);
+  });
+
+  it("keeps the mock profile identical to the legacy values", () => {
+    expect(MOCK_OUTPUT_PROFILE.qualitySteps).toEqual(QUALITY_STEPS);
+    expect(MOCK_OUTPUT_PROFILE.maxDataUrlLength).toEqual({
+      photo: 400_000,
+      banner: 400_000,
+      wallpaper: 400_000,
+    });
+  });
+});
+
+describe("Supabase output profile", () => {
+  const { sizes, maxDataUrlLength, qualitySteps } = SUPABASE_OUTPUT_PROFILE;
+
+  it("uses high-resolution sizes that keep the picker aspect", () => {
+    expect(outputSize("photo", SUPABASE_OUTPUT_PROFILE)).toEqual({
+      width: 768,
+      height: 768,
+    });
+    expect(sizes.banner).toEqual({ width: 2400, height: 480 });
+    expect(sizes.wallpaper).toEqual({ width: 1080, height: 1920 });
+  });
+
+  it("derives the caps from the bucket limits with base64 overhead", () => {
+    const binary = (length: number) => Math.floor(((length - 32) / 4) * 3);
+    expect(binary(maxDataUrlLength.photo)).toBeLessThanOrEqual(1_600_000);
+    expect(binary(maxDataUrlLength.photo)).toBeGreaterThan(1_599_000);
+    expect(maxDataUrlLength.banner).toBe(maxDataUrlLength.photo);
+    expect(binary(maxDataUrlLength.wallpaper)).toBeLessThanOrEqual(900_000);
+    // The 2 MiB / 1 MiB bucket limits always leave headroom.
+    expect(binary(maxDataUrlLength.photo)).toBeLessThan(2 * 1024 * 1024);
+    expect(binary(maxDataUrlLength.wallpaper)).toBeLessThan(1024 * 1024);
+  });
+
+  it("starts at 0.92 and never goes below 0.6", () => {
+    expect(qualitySteps[0]).toBe(0.92);
+    expect(Math.min(...qualitySteps)).toBe(0.6);
+    expect([...qualitySteps]).toEqual([...qualitySteps].sort((a, b) => b - a));
+  });
+
+  it("accepts a large result with the Supabase cap and rejects it for the mock", () => {
+    const large = `data:image/webp;base64,${"A".repeat(1_000_000)}`;
+    expect(fitsDataUrlLimit(large, 1_000_100)).toBe(true);
+    expect(fitsDataUrlLimit(large)).toBe(false);
+  });
+
+  it("returns null instead of dropping below the quality floor", () => {
+    const qualities: number[] = [];
+    const result = encodeWithinLimit(
+      (type, quality) => {
+        qualities.push(quality);
+        return `data:${type};base64,${"A".repeat(3_000_000)}`;
+      },
+      SUPABASE_OUTPUT_PROFILE,
+      "photo",
+    );
+    expect(result).toBeNull();
+    expect(Math.min(...qualities)).toBe(0.6);
+  });
+
+  it("encodes at 0.92 when the first attempt fits the kind cap", () => {
+    const calls: number[] = [];
+    const result = encodeWithinLimit(
+      (type, quality) => {
+        calls.push(quality);
+        return small(type);
+      },
+      SUPABASE_OUTPUT_PROFILE,
+      "wallpaper",
+    );
+    expect(result).toBe(small("image/webp"));
+    expect(calls).toEqual([0.92]);
+  });
+});
+
+describe("fitOutputSize", () => {
+  const target = { width: 2400, height: 480 };
+
+  it("never upscales a crop smaller than the target", () => {
+    expect(fitOutputSize(target, 1200, 240)).toEqual({
+      width: 1200,
+      height: 240,
+    });
+  });
+
+  it("uses the target when the crop is larger", () => {
+    expect(fitOutputSize(target, 4000, 800)).toEqual(target);
+  });
+
+  it("keeps at least one pixel", () => {
+    expect(fitOutputSize(target, 0, 0)).toEqual({ width: 1, height: 1 });
+  });
+});
+
+describe("exceedsPixelLimit", () => {
+  it("allows a 48 MP phone photo and blocks absurd dimensions", () => {
+    expect(MAX_SOURCE_PIXELS).toBe(64_000_000);
+    expect(exceedsPixelLimit(8000, 6000)).toBe(false);
+    expect(exceedsPixelLimit(12000, 8000)).toBe(true);
   });
 });

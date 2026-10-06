@@ -33,11 +33,25 @@ import { formatHours } from "@vexa/domain/format";
 import { EntryFormSheet } from "../components/EntryFormSheet";
 import { VoidEntrySheet } from "../components/VoidEntrySheet";
 import { EntityHistoryToggle } from "@/features/activity/components/EntityHistory";
-import { useTimeHistory, useReviewTime } from "../hooks/useTime";
+import {
+  useTimeHistory,
+  useReviewTime,
+  usePurgeExpiredEvidence,
+} from "../hooks/useTime";
+import { EntryParticipants } from "../components/EntryParticipants";
+import { EvidenceFiles } from "../components/EvidenceFiles";
+import { storedEvidence } from "../evidence-files";
 import { CompletedHoursPanel } from "../components/CompletedHoursPanel";
-import { monthlyActivity } from "../analytics";
+import {
+  creditedActivity,
+  creditedHours,
+  entriesVisibleTo,
+  isTaggedIn,
+} from "../analytics";
 import { ChoicePicker, DatePicker } from "../components/TimePickers";
 import "./time.css";
+
+const TAGGED_REASON = "No puedes aprobar horas en las que participas";
 
 const clock = (date: string) =>
   new Intl.DateTimeFormat("es-PE", {
@@ -108,7 +122,7 @@ export default function TimePage() {
   const [from, setFrom] = useState("");
   const [to, setTo] = useState("");
   const [formOpen, setFormOpen] = useState(false);
-  const [editing, setEditing] = useState<TimeEntry>();
+  const [editingId, setEditingId] = useState<string>();
   const [voiding, setVoiding] = useState<TimeEntry | null>(null);
   const [detailId, setDetailId] = useState<string | null>(null);
   const [asking, setAsking] = useState(false);
@@ -119,10 +133,13 @@ export default function TimePage() {
   const tasks = useTasks();
   const settings = useSettings();
   const review = useReviewTime();
-  const mine = (history.data ?? [])
-    .filter((e) => e.userId === user?.id)
-    .sort((a, b) => b.startedAt.localeCompare(a.startedAt));
-  const statistics = monthlyActivity(mine, month);
+  usePurgeExpiredEvidence();
+  const userId = user?.id ?? "";
+  const mine = entriesVisibleTo(history.data ?? [], userId).sort((a, b) =>
+    b.startedAt.localeCompare(a.startedAt),
+  );
+  const statistics = creditedActivity(history.data ?? [], userId, month);
+  const editing = history.data?.find((e) => e.id === editingId);
   const title = (entry: TimeEntry) =>
     entry.description ||
     tasks.data?.find((t) => t.id === entry.taskId)?.title ||
@@ -167,7 +184,7 @@ export default function TimePage() {
         .includes(search.toLowerCase()),
   );
   const openForm = (entry?: TimeEntry) => {
-    setEditing(entry);
+    setEditingId(entry?.id);
     setFormOpen(true);
   };
   const detail = history.data?.find((e) => e.id === detailId);
@@ -212,7 +229,14 @@ export default function TimePage() {
                       ? "Tareas confirmadas"
                       : "Registro anterior"}
                 {e.evidenceUrl ? " · Con respaldo" : ""}
+                {storedEvidence(e.evidence).length
+                  ? ` · ${storedEvidence(e.evidence).length} archivo(s)`
+                  : ""}
+                {e.evidence?.some((f) => f.purged)
+                  ? " · Archivos eliminados"
+                  : ""}
               </small>
+              <EntryParticipants entry={e} userId={userId} nameOf={name} />
             </span>
             <span className="hours-row-project">
               {reviewing ? <strong>{name(e.userId)}</strong> : null}
@@ -242,19 +266,23 @@ export default function TimePage() {
               </Badge>
             </span>
             <strong className="hours-row-duration num">
-              {e.endedAt ? formatHours(e.hours) : "En curso"}
+              {e.endedAt ? formatHours(creditedHours(e, userId)) : "En curso"}
             </strong>
           </button>
           <div className="hours-entry-actions">
             {reviewing ? (
-              <Button
-                size="sm"
-                disabled={review.isPending}
-                onClick={() => review.mutate({ id: e.id })}
-              >
-                Aprobar
-              </Button>
-            ) : (
+              isTaggedIn(e, userId) ? (
+                <span className="text-xs text-muted">{TAGGED_REASON}</span>
+              ) : (
+                <Button
+                  size="sm"
+                  disabled={review.isPending}
+                  onClick={() => review.mutate({ id: e.id })}
+                >
+                  Aprobar
+                </Button>
+              )
+            ) : e.userId !== userId ? null : (
               <>
                 {e.endedAt &&
                 settings.data &&
@@ -408,7 +436,7 @@ export default function TimePage() {
                 {formatHours(
                   filtered
                     .filter((e) => !e.voidedAt)
-                    .reduce((sum, e) => sum + e.hours, 0),
+                    .reduce((sum, e) => sum + creditedHours(e, userId), 0),
                 )}{" "}
                 · Fechas y horarios de Lima
               </p>
@@ -562,7 +590,7 @@ export default function TimePage() {
         </>
       )}
       <EntryFormSheet
-        key={editing?.id ?? "new"}
+        key={editingId ?? "new"}
         open={formOpen}
         onClose={() => setFormOpen(false)}
         entry={editing}
@@ -648,18 +676,31 @@ export default function TimePage() {
                 </dd>
               </div>
             </dl>
+            <EntryParticipants entry={detail} userId={userId} nameOf={name} />
             {detail.evidenceUrl && /^https?:\/\//i.test(detail.evidenceUrl) ? (
               <a
                 className="hours-evidence"
                 href={detail.evidenceUrl}
                 target="_blank"
-                rel="noreferrer"
+                rel="noopener noreferrer"
               >
                 Abrir respaldo ↗
               </a>
             ) : (
               <p className="hours-help">Sin enlace de respaldo.</p>
             )}
+            <EvidenceFiles
+              entryId={detail.id}
+              evidence={detail.evidence}
+              editable={
+                detail.userId === userId &&
+                Boolean(detail.endedAt) &&
+                !detail.voidedAt &&
+                Boolean(settings.data) &&
+                canEditEntry(detail, reference, settings.data!)
+              }
+            />
+
             {detail.reviewNote ? (
               <p className="hours-review-note">
                 {name(detail.reviewedBy)} pide aclarar: {detail.reviewNote}
@@ -677,7 +718,22 @@ export default function TimePage() {
               </p>
             ) : null}
             <EntityHistoryToggle table="time_entries" id={detail.id} />
+            {isTaggedIn(detail, userId) &&
+            user?.role !== "collaborator" &&
+            detail.endedAt &&
+            !detail.validated &&
+            !detail.voidedAt ? (
+              <div className="hours-detail-actions">
+                <Button disabled aria-describedby="tagged-reason">
+                  Aprobar horas
+                </Button>
+                <p id="tagged-reason" className="hours-help">
+                  {TAGGED_REASON}
+                </p>
+              </div>
+            ) : null}
             {detail.userId !== user?.id &&
+            !isTaggedIn(detail, userId) &&
             user?.role !== "collaborator" &&
             detail.endedAt &&
             !detail.validated &&

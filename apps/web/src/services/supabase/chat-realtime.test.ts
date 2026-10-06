@@ -14,13 +14,15 @@ function fixture() {
     presenceState: ReturnType<typeof vi.fn>;
   }[] = [];
   const unsubscribe = vi.fn();
-  let authChanged: (() => void) | undefined;
+  let authChanged:
+    | ((event: string, session: { user: { id: string } } | null) => void)
+    | undefined;
   const client = {
     auth: {
       getSession: vi.fn(async () => ({
         data: { session: { user: { id: "own" } } },
       })),
-      onAuthStateChange: vi.fn((callback: () => void) => {
+      onAuthStateChange: vi.fn((callback: NonNullable<typeof authChanged>) => {
         authChanged = callback;
         return { data: { subscription: { unsubscribe } } };
       }),
@@ -70,7 +72,10 @@ function fixture() {
     raw: client,
     channels,
     unsubscribe,
-    changeAuth: () => authChanged?.(),
+    changeAuth: (
+      event = "SIGNED_IN",
+      session: { user: { id: string } } | null = { user: { id: "own" } },
+    ) => authChanged?.(event, session),
   };
 }
 async function flush() {
@@ -82,7 +87,14 @@ describe("chat realtime lifecycle", () => {
       events = vi.fn(),
       realtime = createChatRealtime(f.client);
     const stop = realtime.subscribe(events);
-    expect(f.channels[0].on).toHaveBeenCalledTimes(6);
+    expect(f.channels[0].private).toBe(true);
+    expect(f.channels[0].on).toHaveBeenCalledTimes(7);
+    // The attachment answers (chat_attachment_states) arrive live, like reactions and reads.
+    expect(
+      vi
+        .mocked(f.channels[0].on)
+        .mock.calls.map((call) => (call[1] as { table: string }).table),
+    ).toContain("chat_attachment_states");
     f.channels[0].handlers[0]({ new: { thread_id: "thread" } });
     expect(events).toHaveBeenCalledWith({ threadId: "thread" });
     stop();
@@ -139,6 +151,18 @@ describe("chat realtime lifecycle", () => {
 });
 
 describe("presence auth cleanup", () => {
+  it("opens the status channel as private", async () => {
+    const f = fixture(),
+      realtime = createChatRealtime(f.client);
+    const stop = realtime.subscribePresence(vi.fn());
+    await flush();
+    const status = f.channels.find((channel) =>
+      channel.topic.startsWith("chat-presence-status:"),
+    );
+    expect(status?.private).toBe(true);
+    stop();
+    await flush();
+  });
   it("clears observations on sign out and removes its auth subscription", async () => {
     const f = fixture(),
       callback = vi.fn(),
@@ -148,7 +172,7 @@ describe("presence auth cleanup", () => {
     f.raw.auth.getSession.mockResolvedValue({
       data: { session: null },
     } as never);
-    f.changeAuth();
+    f.changeAuth("SIGNED_OUT", null);
     await flush();
     await new Promise((resolve) => setTimeout(resolve, 10));
     await flush();
@@ -157,6 +181,59 @@ describe("presence auth cleanup", () => {
     stop();
     await flush();
     expect(f.unsubscribe).toHaveBeenCalledOnce();
+  });
+  it("keeps channels on same-user SIGNED_IN, TOKEN_REFRESHED and INITIAL_SESSION", async () => {
+    const f = fixture(),
+      realtime = createChatRealtime(f.client);
+    const stop = realtime.subscribePresence(vi.fn());
+    await flush();
+    for (const event of ["SIGNED_IN", "TOKEN_REFRESHED", "INITIAL_SESSION"])
+      f.changeAuth(event);
+    await flush();
+    await new Promise((resolve) => setTimeout(resolve, 10));
+    await flush();
+    expect(f.raw.removeChannel).not.toHaveBeenCalled();
+    stop();
+    await flush();
+  });
+  it("tears channels down and rebuilds them when the session user changes", async () => {
+    const f = fixture(),
+      realtime = createChatRealtime(f.client);
+    const stop = realtime.subscribePresence(vi.fn());
+    await flush();
+    f.changeAuth("SIGNED_IN", { user: { id: "someone-else" } });
+    await flush();
+    await new Promise((resolve) => setTimeout(resolve, 10));
+    await flush();
+    expect(f.raw.removeChannel).toHaveBeenCalledTimes(2);
+    stop();
+    await flush();
+  });
+  it("keeps channels and published state when the profiles query fails", async () => {
+    vi.useFakeTimers();
+    try {
+      const f = fixture(),
+        callback = vi.fn(),
+        realtime = createChatRealtime(f.client);
+      const stop = realtime.subscribePresence(callback);
+      await vi.advanceTimersByTimeAsync(0);
+      const failing = {
+        select: () => ({
+          eq: async () => ({ data: null, error: { message: "boom" } }),
+          then: (resolve: (result: unknown) => unknown) =>
+            Promise.resolve({ data: null, error: { message: "boom" } }).then(
+              resolve,
+            ),
+        }),
+      };
+      f.raw.from.mockReturnValue(failing as never);
+      await vi.advanceTimersByTimeAsync(15_000);
+      expect(f.raw.removeChannel).not.toHaveBeenCalled();
+      stop();
+      await vi.advanceTimersByTimeAsync(0);
+    } finally {
+      vi.useRealTimers();
+    }
   });
   it("untracks and removes all channels when tracking alone is disabled", async () => {
     const f = fixture(),

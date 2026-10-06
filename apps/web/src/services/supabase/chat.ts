@@ -4,6 +4,7 @@ import type { VexaSupabase } from "@/lib/supabase";
 import { normalizeWallpaper } from "@/features/chat/chat-wallpaper";
 import {
   createChatMedia,
+  STORAGE_CACHE_CONTROL,
   decodeAttachment,
   CHAT_WALLPAPER_LIMIT,
   removeChatObject,
@@ -14,11 +15,14 @@ import { toServiceError, unwrap, unwrapMaybe } from "./errors";
 import { requireUserId } from "./session";
 
 type MessageRow = Tables<"chat_messages">;
+type StateRow = Tables<"chat_attachment_states">;
 export function mapChatMessage(
   row: MessageRow,
   reactions: Record<string, string> = {},
   signedUrl?: string,
+  states?: StateRow[],
 ): ChatMessage {
+  const hasFile = !row.deleted_at && !!row.attachment_path;
   return {
     id: row.id,
     authorId: row.author_id,
@@ -28,17 +32,61 @@ export function mapChatMessage(
     ...(row.edited_at ? { editedAt: Date.parse(row.edited_at) } : {}),
     ...(row.deleted_at ? { deleted: true } : {}),
     ...(row.reply_to ? { replyTo: row.reply_to } : {}),
-    ...(!row.deleted_at && row.attachment_path && signedUrl
+    ...(hasFile && !row.attachment_purged_at && signedUrl
       ? {
           attachment: {
             name: row.attachment_name!,
             type: row.attachment_mime!,
             data: signedUrl,
+            ...(row.attachment_size === null
+              ? {}
+              : { size: row.attachment_size }),
+          },
+        }
+      : {}),
+    // The row keeps name, type and size after a purge: they are the text placeholder.
+    ...(hasFile && row.attachment_purged_at
+      ? {
+          purgedAttachment: {
+            name: row.attachment_name ?? "Archivo",
+            type: row.attachment_mime ?? "",
+            size: row.attachment_size ?? 0,
+            purgedAt: Date.parse(row.attachment_purged_at),
+          },
+        }
+      : {}),
+    ...(hasFile && states
+      ? {
+          attachmentLife: {
+            downloadedAt: Object.fromEntries(
+              states.map((state) => [
+                state.user_id,
+                Date.parse(state.downloaded_at),
+              ]),
+            ),
+            keep: Object.fromEntries(
+              states.flatMap((state) =>
+                state.keep === null ? [] : [[state.user_id, state.keep]],
+              ),
+            ),
           },
         }
       : {}),
   };
 }
+/** `userId -> ms` for one chat_reads timestamp column; rows without it are skipped. */
+function timesByUser(
+  rows: Tables<"chat_reads">[],
+  column: "read_at" | "delivered_at",
+): Record<string, number> {
+  return Object.fromEntries(
+    rows.flatMap((row) => {
+      const value = row[column];
+      return value === null ? [] : [[row.user_id, Date.parse(value)]];
+    }),
+  );
+}
+
 const defaults: ChatSettings = {
   status: "Disponible",
   notifications: true,
@@ -95,11 +143,26 @@ export function createChatService(client: VexaSupabase): ChatService {
           rows.map((row) => row.id),
         ),
     );
+    const withFiles = rows.filter(
+      (row) => !row.deleted_at && row.attachment_path,
+    );
+    // A purged file has no object left to sign.
     const urls = await getMedia().sign(
-      rows
-        .filter((row) => !row.deleted_at && row.attachment_path)
+      withFiles
+        .filter((row) => !row.attachment_purged_at)
         .map((row) => row.attachment_path!),
     );
+    const states = withFiles.length
+      ? unwrap(
+          await client
+            .from("chat_attachment_states")
+            .select("*")
+            .in(
+              "message_id",
+              withFiles.map((row) => row.id),
+            ),
+        )
+      : [];
     return rows.map((row) =>
       mapChatMessage(
         row,
@@ -109,6 +172,7 @@ export function createChatService(client: VexaSupabase): ChatService {
             .map((reaction) => [reaction.user_id, reaction.emoji]),
         ),
         urls.get(row.attachment_path ?? ""),
+        states.filter((state) => state.message_id === row.id),
       ),
     );
   }
@@ -152,6 +216,43 @@ export function createChatService(client: VexaSupabase): ChatService {
     }
     realtime.notify({ threadId: row.thread_id });
     return (await mapRows([result.data]))[0];
+  }
+  /**
+   * Removes the file with the Storage API (SQL deletes on storage.objects would leave the real file
+   * behind) and then records the purge on the message. Best effort: any failure leaves the message
+   * untouched, so the next member to see it retries; a second concurrent purge is a no-op.
+   */
+  async function purgeAttachment(messageId: string) {
+    try {
+      const row = unwrapMaybe<
+        Pick<
+          MessageRow,
+          "id" | "thread_id" | "attachment_path" | "attachment_purged_at"
+        >
+      >(
+        await client
+          .from("chat_messages")
+          .select("id,thread_id,attachment_path,attachment_purged_at")
+          .eq("id", messageId)
+          .maybeSingle(),
+      );
+      if (!row?.attachment_path || row.attachment_purged_at) return;
+      const removed = await client.storage
+        .from("chat-attachments")
+        .remove([row.attachment_path]);
+      if (removed.error) return;
+      unwrap(
+        await client
+          .from("chat_messages")
+          .update({ attachment_purged_at: new Date().toISOString() })
+          .eq("id", messageId)
+          .is("attachment_purged_at", null)
+          .select("id"),
+      );
+      realtime.notify({ threadId: row.thread_id });
+    } catch {
+      /* The file stays; the server never records a purge while the object exists. */
+    }
   }
   async function preferenceRow() {
     const userId = await requireUserId(client);
@@ -242,18 +343,15 @@ export function createChatService(client: VexaSupabase): ChatService {
             client.from("chat_reads").select("*").eq("thread_id", thread.id),
             readAllMessages(thread.id).then((data) => ({ data, error: null })),
           ]);
+          const readRows = unwrap(reads);
           return {
             id: thread.id,
             kind: thread.kind,
             name: thread.name,
             description: thread.description,
             members: unwrap(members).map((member) => member.user_id),
-            readAt: Object.fromEntries(
-              unwrap(reads).map((read) => [
-                read.user_id,
-                Date.parse(read.read_at),
-              ]),
-            ),
+            readAt: timesByUser(readRows, "read_at"),
+            deliveredAt: timesByUser(readRows, "delivered_at"),
             messages: await mapRows(unwrap(rows).reverse()),
           };
         }),
@@ -386,6 +484,41 @@ export function createChatService(client: VexaSupabase): ChatService {
       if (result.error) throw toServiceError(result.error);
       realtime.notify({ threadId });
     },
+    async markDelivered(threadId) {
+      await requireUserId(client);
+      const result = await client.rpc("chat_mark_delivered", {
+        p_thread: threadId,
+      });
+      if (result.error) throw toServiceError(result.error);
+      realtime.notify({ threadId });
+    },
+    async markAttachmentDownloaded(messageId) {
+      await requireUserId(client);
+      const result = await client.rpc("chat_mark_attachment_downloaded", {
+        p_message: messageId,
+      });
+      if (result.error) throw toServiceError(result.error);
+      realtime.notify();
+    },
+    async answerAttachmentKeep(messageId, keep) {
+      await requireUserId(client);
+      const result = await client.rpc("chat_answer_attachment_keep", {
+        p_message: messageId,
+        p_keep: keep,
+      });
+      if (result.error) throw toServiceError(result.error);
+      realtime.notify();
+      // `data` is true when this answer completed everybody's "release".
+      if (!keep && result.data === true) await purgeAttachment(messageId);
+    },
+    async purgeReleasedAttachment(messageId) {
+      await requireUserId(client);
+      const result = await client.rpc("chat_attachment_purgeable", {
+        p_message: messageId,
+      });
+      if (result.error) throw toServiceError(result.error);
+      if (result.data === true) await purgeAttachment(messageId);
+    },
     async getSettings() {
       const userId = await requireUserId(client);
       const [status, prefs] = await Promise.all([
@@ -491,7 +624,11 @@ export function createChatService(client: VexaSupabase): ChatService {
       unwrap(
         await client.storage
           .from("chat-wallpapers")
-          .upload(path, blob, { contentType: mime, upsert: false }),
+          .upload(path, blob, {
+            contentType: mime,
+            upsert: false,
+            cacheControl: STORAGE_CACHE_CONTROL,
+          }),
       );
       try {
         await writePreferences({

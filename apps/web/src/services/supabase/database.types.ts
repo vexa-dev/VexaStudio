@@ -86,6 +86,37 @@ isOneToOne: false
       referencedColumns: ["id"]
     }
                   ]
+                },"chat_attachment_states": {
+                  Row: {
+                    "answered_at": string | null,"downloaded_at": string,"keep": boolean | null,"message_id": string,"user_id": string
+                  }
+                  Insert: {
+                    "answered_at"?: string | null,"downloaded_at"?: string,"keep"?: boolean | null,"message_id": string,"user_id": string
+                  }
+                  Update: {
+                    "answered_at"?: string | null,"downloaded_at"?: string,"keep"?: boolean | null,"message_id"?: string,"user_id"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "chat_attachment_states_message_id_fkey"
+      columns: ["message_id"]
+isOneToOne: false
+      referencedRelation: "chat_messages"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "chat_attachment_states_user_id_fkey"
+      columns: ["user_id"]
+isOneToOne: false
+      referencedRelation: "member_points"
+      referencedColumns: ["user_id"]
+    },{
+      foreignKeyName: "chat_attachment_states_user_id_fkey"
+      columns: ["user_id"]
+isOneToOne: false
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    }
+                  ]
                 },"chat_members": {
                   Row: {
                     "created_at": string,"thread_id": string,"user_id": string
@@ -119,13 +150,13 @@ isOneToOne: false
                   ]
                 },"chat_messages": {
                   Row: {
-                    "attachment_mime": string | null,"attachment_name": string | null,"attachment_path": string | null,"attachment_size": number | null,"author_id": string,"body": string,"created_at": string,"deleted_at": string | null,"edited_at": string | null,"id": string,"reply_to": string | null,"thread_id": string
+                    "attachment_mime": string | null,"attachment_name": string | null,"attachment_path": string | null,"attachment_purged_at": string | null,"attachment_size": number | null,"author_id": string,"body": string,"created_at": string,"deleted_at": string | null,"edited_at": string | null,"id": string,"reply_to": string | null,"thread_id": string
                   }
                   Insert: {
-                    "attachment_mime"?: string | null,"attachment_name"?: string | null,"attachment_path"?: string | null,"attachment_size"?: number | null,"author_id": string,"body"?: string,"created_at"?: string,"deleted_at"?: string | null,"edited_at"?: string | null,"id"?: string,"reply_to"?: string | null,"thread_id": string
+                    "attachment_mime"?: string | null,"attachment_name"?: string | null,"attachment_path"?: string | null,"attachment_purged_at"?: string | null,"attachment_size"?: number | null,"author_id": string,"body"?: string,"created_at"?: string,"deleted_at"?: string | null,"edited_at"?: string | null,"id"?: string,"reply_to"?: string | null,"thread_id": string
                   }
                   Update: {
-                    "attachment_mime"?: string | null,"attachment_name"?: string | null,"attachment_path"?: string | null,"attachment_size"?: number | null,"author_id"?: string,"body"?: string,"created_at"?: string,"deleted_at"?: string | null,"edited_at"?: string | null,"id"?: string,"reply_to"?: string | null,"thread_id"?: string
+                    "attachment_mime"?: string | null,"attachment_name"?: string | null,"attachment_path"?: string | null,"attachment_purged_at"?: string | null,"attachment_size"?: number | null,"author_id"?: string,"body"?: string,"created_at"?: string,"deleted_at"?: string | null,"edited_at"?: string | null,"id"?: string,"reply_to"?: string | null,"thread_id"?: string
                   }
                   Relationships: [
                     {
@@ -212,13 +243,13 @@ isOneToOne: false
                   ]
                 },"chat_reads": {
                   Row: {
-                    "read_at": string,"thread_id": string,"user_id": string
+                    "delivered_at": string | null,"read_at": string | null,"thread_id": string,"user_id": string
                   }
                   Insert: {
-                    "read_at": string,"thread_id": string,"user_id": string
+                    "delivered_at"?: string | null,"read_at"?: string | null,"thread_id": string,"user_id": string
                   }
                   Update: {
-                    "read_at"?: string,"thread_id"?: string,"user_id"?: string
+                    "delivered_at"?: string | null,"read_at"?: string | null,"thread_id"?: string,"user_id"?: string
                   }
                   Relationships: [
                     {
@@ -390,6 +421,31 @@ isOneToOne: false
       referencedColumns: ["id"]
     }
                   ]
+                },"notification_preferences": {
+                  Row: {
+                    "hours_reminder": boolean,"task_assigned": boolean,"updated_at": string,"user_id": string,"weekly_summary": boolean
+                  }
+                  Insert: {
+                    "hours_reminder"?: boolean,"task_assigned"?: boolean,"updated_at"?: string,"user_id": string,"weekly_summary"?: boolean
+                  }
+                  Update: {
+                    "hours_reminder"?: boolean,"task_assigned"?: boolean,"updated_at"?: string,"user_id"?: string,"weekly_summary"?: boolean
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "notification_preferences_user_id_fkey"
+      columns: ["user_id"]
+isOneToOne: true
+      referencedRelation: "member_points"
+      referencedColumns: ["user_id"]
+    },{
+      foreignKeyName: "notification_preferences_user_id_fkey"
+      columns: ["user_id"]
+isOneToOne: true
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    }
+                  ]
                 },"notifications": {
                   Row: {
                     "created_at": string,"id": string,"payload": NonNullable<Json>,"read_at": string | null,"type": Database["public"]['Enums']["notification_type"],"user_id": string
@@ -417,13 +473,13 @@ isOneToOne: false
                   ]
                 },"profiles": {
                   Row: {
-                    "active": boolean,"area": Database["public"]['Enums']["user_area"],"avatar_path": string | null,"banner_path": string | null,"created_at": string,"id": string,"name": string,"role": Database["public"]['Enums']["user_role"],"updated_at": string,"weekly_hours": number
+                    "active": boolean,"area": Database["public"]['Enums']["user_area"],"avatar_path": string | null,"banner_path": string | null,"bio": string | null,"created_at": string,"id": string,"name": string,"role": Database["public"]['Enums']["user_role"],"updated_at": string,"username": string | null,"weekly_hours": number
                   }
                   Insert: {
-                    "active"?: boolean,"area"?: Database["public"]['Enums']["user_area"],"avatar_path"?: string | null,"banner_path"?: string | null,"created_at"?: string,"id": string,"name": string,"role"?: Database["public"]['Enums']["user_role"],"updated_at"?: string,"weekly_hours"?: number
+                    "active"?: boolean,"area"?: Database["public"]['Enums']["user_area"],"avatar_path"?: string | null,"banner_path"?: string | null,"bio"?: string | null,"created_at"?: string,"id": string,"name": string,"role"?: Database["public"]['Enums']["user_role"],"updated_at"?: string,"username"?: string | null,"weekly_hours"?: number
                   }
                   Update: {
-                    "active"?: boolean,"area"?: Database["public"]['Enums']["user_area"],"avatar_path"?: string | null,"banner_path"?: string | null,"created_at"?: string,"id"?: string,"name"?: string,"role"?: Database["public"]['Enums']["user_role"],"updated_at"?: string,"weekly_hours"?: number
+                    "active"?: boolean,"area"?: Database["public"]['Enums']["user_area"],"avatar_path"?: string | null,"banner_path"?: string | null,"bio"?: string | null,"created_at"?: string,"id"?: string,"name"?: string,"role"?: Database["public"]['Enums']["user_role"],"updated_at"?: string,"username"?: string | null,"weekly_hours"?: number
                   }
                   Relationships: [
                     
@@ -671,6 +727,68 @@ isOneToOne: false
       referencedColumns: ["id"]
     }
                   ]
+                },"time_entry_evidence": {
+                  Row: {
+                    "created_at": string,"entry_id": string,"id": string,"mime": string,"name": string,"path": string,"purge_after": string | null,"purged_at": string | null,"size": number,"uploader_id": string
+                  }
+                  Insert: {
+                    "created_at"?: string,"entry_id": string,"id"?: string,"mime": string,"name": string,"path": string,"purge_after"?: string | null,"purged_at"?: string | null,"size": number,"uploader_id"?: string
+                  }
+                  Update: {
+                    "created_at"?: string,"entry_id"?: string,"id"?: string,"mime"?: string,"name"?: string,"path"?: string,"purge_after"?: string | null,"purged_at"?: string | null,"size"?: number,"uploader_id"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "time_entry_evidence_entry_id_fkey"
+      columns: ["entry_id"]
+isOneToOne: false
+      referencedRelation: "time_entries"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "time_entry_evidence_uploader_id_fkey"
+      columns: ["uploader_id"]
+isOneToOne: false
+      referencedRelation: "member_points"
+      referencedColumns: ["user_id"]
+    },{
+      foreignKeyName: "time_entry_evidence_uploader_id_fkey"
+      columns: ["uploader_id"]
+isOneToOne: false
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"time_entry_participants": {
+                  Row: {
+                    "created_at": string,"entry_id": string,"share_percent": number,"user_id": string
+                  }
+                  Insert: {
+                    "created_at"?: string,"entry_id": string,"share_percent"?: number,"user_id": string
+                  }
+                  Update: {
+                    "created_at"?: string,"entry_id"?: string,"share_percent"?: number,"user_id"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "time_entry_participants_entry_id_fkey"
+      columns: ["entry_id"]
+isOneToOne: false
+      referencedRelation: "time_entries"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "time_entry_participants_user_id_fkey"
+      columns: ["user_id"]
+isOneToOne: false
+      referencedRelation: "member_points"
+      referencedColumns: ["user_id"]
+    },{
+      foreignKeyName: "time_entry_participants_user_id_fkey"
+      columns: ["user_id"]
+isOneToOne: false
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    }
+                  ]
                 }
           }
           Views: {
@@ -692,7 +810,7 @@ isOneToOne: false
           }
           Functions: {
             "add_manual_hours":
-{ Args: { "p_date": string,"p_description"?: string,"p_evidence_url"?: string,"p_hours": number,"p_project"?: string,"p_start_time"?: string,"p_task": string }; Returns: {
+{ Args: { "p_date": string,"p_description"?: string,"p_evidence_url"?: string,"p_hours": number,"p_participants"?: Json,"p_project"?: string,"p_start_time"?: string,"p_task": string }; Returns: {
               "allocations": Json | null,
 "created_at": string,
 "description": string | null,
@@ -734,6 +852,15 @@ isOneToOne: false
 "can_view_task":
 { Args: { "p_task": string }; Returns: boolean
                            },
+"chat_answer_attachment_keep":
+{ Args: { "p_keep": boolean,"p_message": string }; Returns: boolean
+                           },
+"chat_attachment_all_downloaded":
+{ Args: { "p_message": string }; Returns: boolean
+                           },
+"chat_attachment_purgeable":
+{ Args: { "p_message": string }; Returns: boolean
+                           },
 "chat_can_access":
 { Args: { "p_thread": string }; Returns: boolean
                            },
@@ -748,6 +875,7 @@ isOneToOne: false
               "attachment_mime": string | null,
 "attachment_name": string | null,
 "attachment_path": string | null,
+"attachment_purged_at": string | null,
 "attachment_size": number | null,
 "author_id": string,
 "body": string,
@@ -764,6 +892,12 @@ isOneToOne: false
         isOneToOne: false
         isSetofReturn: true
       } },
+"chat_mark_attachment_downloaded":
+{ Args: { "p_message": string }; Returns: undefined
+                           },
+"chat_mark_delivered":
+{ Args: { "p_thread": string }; Returns: undefined
+                           },
 "chat_mark_read":
 { Args: { "p_thread": string }; Returns: undefined
                            },
@@ -810,6 +944,12 @@ isOneToOne: false
         isOneToOne: true
         isSetofReturn: false
       } },
+"hours_entry_tagged":
+{ Args: { "p_entry": string }; Returns: boolean
+                           },
+"hours_evidence_purgeable":
+{ Args: { "p_evidence": string }; Returns: boolean
+                           },
 "is_admin":
 { Args: Record<PropertyKey, never>; Returns: boolean
                            },
@@ -953,17 +1093,67 @@ isOneToOne: false
         isOneToOne: true
         isSetofReturn: false
       } },
+"set_hours_participants":
+{ Args: { "p_entry": string,"p_participants": Json }; Returns: {
+              "allocations": Json | null,
+"created_at": string,
+"description": string | null,
+"draft": boolean,
+"elapsed_ms": number,
+"ended_at": string | null,
+"evidence_url": string | null,
+"hours": number,
+"id": string,
+"paid": boolean,
+"project_id": string | null,
+"review_note": string | null,
+"reviewed_by": string | null,
+"segment_started_at": string | null,
+"segments": Json | null,
+"source": string | null,
+"started_at": string,
+"task_id": string | null,
+"timer_state": string | null,
+"user_id": string,
+"validated": boolean,
+"validated_at": string | null,
+"validated_by": string | null,
+"void_reason": string | null,
+"voided_at": string | null
+            }
+                          SetofOptions: {
+        from: "*"
+        to: "time_entries"
+        isOneToOne: true
+        isSetofReturn: false
+      } },
+"set_notification_preferences":
+{ Args: { "p_hours_reminder"?: boolean,"p_task_assigned"?: boolean,"p_weekly_summary"?: boolean }; Returns: {
+              "hours_reminder": boolean,
+"task_assigned": boolean,
+"updated_at": string,
+"user_id": string,
+"weekly_summary": boolean
+            }
+                          SetofOptions: {
+        from: "*"
+        to: "notification_preferences"
+        isOneToOne: true
+        isSetofReturn: false
+      } },
 "set_profile_media":
 { Args: { "p_avatar_path"?: string,"p_banner_path"?: string,"p_clear_avatar"?: boolean,"p_clear_banner"?: boolean }; Returns: {
               "active": boolean,
 "area": Database["public"]['Enums']["user_area"],
 "avatar_path": string | null,
 "banner_path": string | null,
+"bio": string | null,
 "created_at": string,
 "id": string,
 "name": string,
 "role": Database["public"]['Enums']["user_role"],
 "updated_at": string,
+"username": string | null,
 "weekly_hours": number
             }
                           SetofOptions: {
@@ -1047,7 +1237,7 @@ isOneToOne: false
         isSetofReturn: false
       } },
 "submit_hours_drafts":
-{ Args: { "p_date": string,"p_description"?: string,"p_items": Json }; Returns: {
+{ Args: { "p_date": string,"p_description"?: string,"p_items": Json,"p_participants"?: Json }; Returns: {
               "allocations": Json | null,
 "created_at": string,
 "description": string | null,
@@ -1111,6 +1301,27 @@ isOneToOne: false
                           SetofOptions: {
         from: "*"
         to: "time_entries"
+        isOneToOne: true
+        isSetofReturn: false
+      } },
+"update_my_profile":
+{ Args: { "p_bio"?: string,"p_name": string,"p_username"?: string }; Returns: {
+              "active": boolean,
+"area": Database["public"]['Enums']["user_area"],
+"avatar_path": string | null,
+"banner_path": string | null,
+"bio": string | null,
+"created_at": string,
+"id": string,
+"name": string,
+"role": Database["public"]['Enums']["user_role"],
+"updated_at": string,
+"username": string | null,
+"weekly_hours": number
+            }
+                          SetofOptions: {
+        from: "*"
+        to: "profiles"
         isOneToOne: true
         isSetofReturn: false
       } },

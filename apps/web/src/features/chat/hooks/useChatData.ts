@@ -17,7 +17,7 @@ import type { Id } from "@vexa/domain/types";
 import { services } from "@/services";
 import { isSupabaseSource } from "@/services/supabase/data-source";
 import { chatMediaRefresh } from "../chat-refresh";
-import { applyReaction } from "../chat-logic";
+import { applyReaction, needsDelivery } from "../chat-logic";
 
 /** Keys carry the user id so switching accounts never shows someone else's chat. */
 export const chatKeys = {
@@ -48,12 +48,48 @@ export function useChatSync() {
   );
 }
 
+/** Quiet period before delivery marks are written, so a burst becomes one write per thread. */
+export const DELIVERY_DEBOUNCE_MS = 1000;
+/** Newest message time already reported as received, per user and thread (shared by every caller). */
+const reportedDeliveries = new Map<string, number>();
+
+/**
+ * Tells the sender that my open app received their messages. Never marks
+ * them read (that stays with the open thread). A failed write is forgotten so
+ * the next refresh retries; nothing retries on its own.
+ */
+function useDeliveryReceipts(userId: Id, threads: ChatThread[] | undefined) {
+  useEffect(() => {
+    if (!threads) return;
+    const pending = threads.flatMap((thread) => {
+      const latest = needsDelivery(thread, userId);
+      const key = `${userId}:${thread.id}`;
+      return latest !== null && latest > (reportedDeliveries.get(key) ?? 0)
+        ? [{ key, threadId: thread.id, latest }]
+        : [];
+    });
+    if (pending.length === 0) return;
+    const timer = setTimeout(() => {
+      for (const { key, threadId, latest } of pending) {
+        if (latest <= (reportedDeliveries.get(key) ?? 0)) continue;
+        reportedDeliveries.set(key, latest);
+        services.chat.markDelivered(threadId).catch(() => {
+          reportedDeliveries.delete(key);
+        });
+      }
+    }, DELIVERY_DEBOUNCE_MS);
+    return () => clearTimeout(timer);
+  }, [threads, userId]);
+}
+
 export function useChatThreads(userId: Id) {
-  return useQuery({
+  const query = useQuery({
     queryKey: chatKeys.threads(userId),
     queryFn: () => services.chat.listThreads(),
     ...chatMediaRefresh(isSupabaseSource()),
   });
+  useDeliveryReceipts(userId, query.data);
+  return query;
 }
 
 /** Status, presence flag and pinned project of every member. */
@@ -255,6 +291,24 @@ export function useChatActions(userId: Id) {
     fallback: "No se pudo reenviar el mensaje.",
     refresh: threads,
   });
+  const markDownloaded = useChatAction({
+    run: (messageId: Id) => services.chat.markAttachmentDownloaded(messageId),
+    fallback: "No se pudo registrar la descarga.",
+    silent: true,
+    refresh: threads,
+  });
+  const answerKeep = useChatAction({
+    run: (v: { messageId: Id; keep: boolean }) =>
+      services.chat.answerAttachmentKeep(v.messageId, v.keep),
+    fallback: "No se pudo guardar tu respuesta.",
+    refresh: threads,
+  });
+  const purgeReleased = useChatAction({
+    run: (messageId: Id) => services.chat.purgeReleasedAttachment(messageId),
+    fallback: "No se pudo liberar el espacio del archivo.",
+    silent: true,
+    refresh: threads,
+  });
   const directThread = useChatAction({
     run: (otherId: Id) => services.chat.directThread(otherId),
     fallback: "No se pudo abrir la conversación.",
@@ -283,6 +337,9 @@ export function useChatActions(userId: Id) {
     react,
     forward,
     markRead,
+    markDownloaded,
+    answerKeep,
+    purgeReleased,
     directThread,
     saveGroup,
     deleteGroup,

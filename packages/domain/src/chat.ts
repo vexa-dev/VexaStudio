@@ -12,6 +12,31 @@ export interface ChatAttachment {
   name: string;
   type: string;
   data: string;
+  /** Bytes, when the source knows them (a data URL carries them implicitly). */
+  size?: number;
+}
+
+/**
+ * Who downloaded an attachment and what each member answered to "should the
+ * file stay in the chat?". The sender counts as an implicit download and is
+ * not listed in `downloadedAt`.
+ */
+export interface ChatAttachmentLife {
+  /** `userId -> ms` of each member's download (first one wins). */
+  downloadedAt: Record<Id, number>;
+  /** `userId -> keep`: true keeps the file, false releases its space. */
+  keep: Record<Id, boolean>;
+}
+
+/**
+ * Placeholder of an attachment whose file was removed to free space. The
+ * message stays; only name, type and size survive, as text.
+ */
+export interface ChatPurgedAttachment {
+  name: string;
+  type: string;
+  size: number;
+  purgedAt: number;
 }
 
 export interface ChatMessage {
@@ -25,6 +50,10 @@ export interface ChatMessage {
   deleted?: boolean;
   replyTo?: Id;
   attachment?: ChatAttachment;
+  /** Downloads and keep/release answers of `attachment` (also kept once purged). */
+  attachmentLife?: ChatAttachmentLife;
+  /** Set instead of `attachment` once everybody released the file. */
+  purgedAttachment?: ChatPurgedAttachment;
   /** One emoji per user: `userId -> emoji`. */
   reactions: Record<Id, string>;
 }
@@ -39,6 +68,11 @@ export interface ChatThread {
   messages: ChatMessage[];
   /** Last read time per member (and per admin who read a group): `userId -> ms`. */
   readAt: Record<Id, number>;
+  /**
+   * Last time each member's open app received the thread's messages (`userId -> ms`).
+   * Optional: chats stored before delivery ticks do not carry it.
+   */
+  deliveredAt?: Record<Id, number>;
   archived?: boolean;
 }
 

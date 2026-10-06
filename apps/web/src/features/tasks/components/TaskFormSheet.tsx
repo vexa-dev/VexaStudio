@@ -5,6 +5,7 @@ import { Controller, useForm } from "react-hook-form";
 import { Button } from "@/components/ui/Button";
 import { Field } from "@/components/ui/Field";
 import { ChoicePicker } from "@/components/ui/ChoicePicker";
+import { Eye, PencilLine } from "lucide-react";
 import { Link } from "react-router-dom";
 import { labelInk } from "@/lib/label-color";
 import { TaskMarkdown } from "./TaskContent";
@@ -16,6 +17,12 @@ import { EntityHistoryToggle } from "@/features/activity/components/EntityHistor
 import { useMembers } from "@/features/team/hooks/useMembers";
 import { useCreateTask, useUpdateTask } from "../hooks/useTasks";
 import { taskFormSchema, type TaskFormValues } from "../schemas";
+
+/** Grows the textarea to fit its content; CSS max-height caps it and scrolls. */
+function growTextarea(el: HTMLTextAreaElement) {
+  el.style.height = "auto";
+  el.style.height = `${el.scrollHeight}px`;
+}
 
 interface TaskFormSheetProps {
   open: boolean;
@@ -39,7 +46,6 @@ function TaskForm({
   const labels = useProjectLabels(chosenProject, user?.role === "admin");
   const [selectedLabels, setSelectedLabels] = useState(task?.labels ?? []);
   const [preview, setPreview] = useState(false);
-  const [formatHelp, setFormatHelp] = useState(false);
   const members = useMembers();
   const create = useCreateTask();
   const update = useUpdateTask();
@@ -92,78 +98,55 @@ function TaskForm({
           control={control}
           render={({ field }) => (
             <div className="grid gap-1.5">
-              <label htmlFor="task-description" className="text-sm font-medium">
-                Descripción (opcional)
-              </label>
+              <div className="task-description-head">
+                <label
+                  htmlFor="task-description"
+                  className="text-sm font-medium"
+                >
+                  Descripción (opcional)
+                </label>
+                <button
+                  type="button"
+                  className="task-preview-toggle"
+                  aria-pressed={preview}
+                  onClick={() => setPreview(!preview)}
+                >
+                  {preview ? (
+                    <PencilLine aria-hidden size={14} />
+                  ) : (
+                    <Eye aria-hidden size={14} />
+                  )}
+                  {preview ? "Editar" : "Vista previa"}
+                </button>
+              </div>
               <div className="task-description-editor">
-                <nav aria-label="Editor de descripción">
-                  <button
-                    type="button"
-                    aria-pressed={!preview}
-                    onClick={() => setPreview(false)}
-                  >
-                    Escribir
-                  </button>
-                  <button
-                    type="button"
-                    aria-pressed={preview}
-                    onClick={() => setPreview(true)}
-                  >
-                    Vista previa
-                  </button>
-                </nav>
                 {preview ? (
                   <div className="task-description-preview">
                     {field.value.trim() ? (
                       <TaskMarkdown text={field.value} />
                     ) : (
-                      <p className="text-sm text-muted">
-                        Añade una descripción para previsualizarla.
-                      </p>
+                      <p className="text-sm text-muted">Sin descripción.</p>
                     )}
                   </div>
                 ) : (
                   <textarea
                     id="task-description"
-                    rows={7}
+                    rows={2}
                     maxLength={20000}
-                    placeholder="Describe el objetivo, los pasos o el resultado esperado…"
+                    placeholder="Descripción (opcional)"
                     {...field}
+                    ref={(el) => {
+                      field.ref(el);
+                      if (el) growTextarea(el);
+                    }}
                     aria-invalid={Boolean(formState.errors.description)}
                     onChange={(e) => {
                       field.onChange(e);
-                      e.currentTarget.style.height = "auto";
-                      e.currentTarget.style.height = `${e.currentTarget.scrollHeight}px`;
+                      growTextarea(e.currentTarget);
                     }}
                   />
                 )}
               </div>
-              <div className="task-description-help">
-                <span>Admite Markdown</span>
-                <button
-                  type="button"
-                  aria-expanded={formatHelp}
-                  onClick={() => setFormatHelp(!formatHelp)}
-                >
-                  Guía de formato
-                </button>
-              </div>
-              {formatHelp && (
-                <div className="task-format-guide">
-                  <span>
-                    <code>**texto**</code> Negrita
-                  </span>
-                  <span>
-                    <code>- elemento</code> Lista
-                  </span>
-                  <span>
-                    <code>[texto](https://…)</code> Enlace
-                  </span>
-                  <span>
-                    <code>`código`</code> Código
-                  </span>
-                </div>
-              )}
               {formState.errors.description && (
                 <p role="alert" className="text-sm text-danger">
                   {formState.errors.description.message}
@@ -208,7 +191,24 @@ function TaskForm({
             />
           )}
         />
-        <fieldset className="grid gap-2">
+        <Field
+          label="Estimación (h)"
+          type="number"
+          inputMode="decimal"
+          step="0.5"
+          min="0"
+          error={formState.errors.estimateHours?.message}
+          {...register("estimateHours")}
+        />
+        <Field
+          label="Enlace"
+          type="url"
+          inputMode="url"
+          placeholder="https://"
+          error={formState.errors.link?.message}
+          {...register("link")}
+        />
+        <fieldset className="task-form-wide grid gap-2">
           <legend className="mb-2 text-sm font-medium">Etiquetas</legend>
           {!chosenProject ? (
             <p className="text-sm text-muted">
@@ -271,27 +271,11 @@ function TaskForm({
             </Link>
           )}
         </fieldset>
-        <div className="grid grid-cols-2 gap-3">
-          <Field
-            label="Estimación (h)"
-            type="number"
-            inputMode="decimal"
-            step="0.5"
-            min="0"
-            placeholder="Opcional"
-            error={formState.errors.estimateHours?.message}
-            {...register("estimateHours")}
-          />
-          <Field
-            label="Enlace"
-            type="url"
-            inputMode="url"
-            placeholder="PR o entregable"
-            error={formState.errors.link?.message}
-            {...register("link")}
-          />
-        </div>
-        {task ? <EntityHistoryToggle table="tasks" id={task.id} /> : null}
+        {task ? (
+          <div className="task-form-wide">
+            <EntityHistoryToggle table="tasks" id={task.id} />
+          </div>
+        ) : null}
       </aside>
       <div className="task-form-actions">
         <Button variant="secondary" onClick={onClose}>

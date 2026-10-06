@@ -1,5 +1,5 @@
 export type ChatMode = "closed" | "open" | "minimized";
-export type ChatModeAction = "toggle" | "minimize" | "restore" | "close";
+export type ChatModeAction = "toggle" | "open" | "minimize" | "restore" | "close";
 
 /**
  * Pure state machine for the chat panel; invalid transitions keep the mode.
@@ -9,6 +9,8 @@ export function nextChatMode(mode: ChatMode, action: ChatModeAction): ChatMode {
   switch (action) {
     case "toggle":
       return mode === "closed" ? "open" : "closed";
+    case "open":
+      return "open";
     case "minimize":
       return mode === "open" ? "minimized" : mode;
     case "restore":

@@ -25,7 +25,7 @@ import {
 import { useTasks } from "@/features/tasks/hooks/useTasks";
 import { useProjects } from "@/features/projects/hooks/useProjects";
 import { useTimeHistory, useHoursDrafts } from "@/features/time/hooks/useTime";
-import { monthlyActivity } from "@vexa/domain/time-activity";
+import { creditedActivity } from "@/features/time/analytics";
 import { formatMonthLabel, monthKey } from "@vexa/domain/dates";
 import { formatHours } from "@vexa/domain/format";
 import { taskStatusLabel } from "@/lib/labels";
@@ -43,10 +43,7 @@ export function CollaboratorDashboard({ user }: { user: Profile }) {
   const done = mine.length - open.length;
   const counts = { todo: 0, in_progress: 0, review: 0, done: 0 };
   for (const task of mine) counts[task.status]++;
-  const activity = monthlyActivity(
-    (history.data ?? []).filter((e) => e.userId === user.id),
-    month,
-  );
+  const activity = creditedActivity(history.data ?? [], user.id, month);
   const pendingDrafts = (drafts.data ?? []).filter((d) => d.userId === user.id);
   const assigned = (projects.data ?? []).filter((p) =>
     p.memberIds?.includes(user.id),

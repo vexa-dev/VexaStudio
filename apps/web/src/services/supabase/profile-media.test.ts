@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { argsOf, fakeClient, ok, profileRow, type FakeSpec } from "./fake-client";
 import { createAuthService } from "./auth";
 import { createMemberService } from "./members";
@@ -15,7 +15,7 @@ const WEBP = "data:image/webp;base64,UklGRg==";
 const U1 = "u1";
 
 interface StorageOp {
-  op: "upload" | "remove" | "sign";
+  op: "upload" | "remove" | "sign" | "list";
   bucket: string;
   args: unknown[];
 }
@@ -24,6 +24,10 @@ interface StorageSpec {
   uploadError?: { message: string } | null;
   removeError?: { message: string } | null;
   removeThrows?: boolean;
+  /** Nombres que devuelve el listado de la carpeta del usuario. */
+  listing?: string[];
+  listError?: { message: string } | null;
+  listThrows?: boolean;
   signError?: { message: string } | null;
   signThrows?: boolean;
   /** Rutas cuya firma individual falla. */
@@ -41,6 +45,15 @@ function setup(spec: FakeSpec = {}, storage: StorageSpec = {}) {
       return Promise.resolve({
         data: storage.uploadError ? null : { path },
         error: storage.uploadError ?? null,
+      });
+    },
+    list: (folder: string, options: unknown) => {
+      ops.push({ op: "list", bucket, args: [folder, options] });
+      if (storage.listThrows) return Promise.reject(new Error("sin red"));
+      if (storage.listError) return Promise.resolve({ data: null, error: storage.listError });
+      return Promise.resolve({
+        data: (storage.listing ?? []).map((name) => ({ name })),
+        error: null,
       });
     },
     remove: (paths: string[]) => {
@@ -197,6 +210,81 @@ describe("createSignedUrlResolver", () => {
   });
 });
 
+function memoryStorage(failing = false) {
+  const data = new Map<string, string>();
+  const fail = () => {
+    throw new Error("storage unavailable");
+  };
+  return {
+    data,
+    api: {
+      get length() {
+        return failing ? fail() : data.size;
+      },
+      key: (i: number) => (failing ? fail() : ([...data.keys()][i] ?? null)),
+      getItem: (k: string) => (failing ? fail() : (data.get(k) ?? null)),
+      setItem: (k: string, v: string) => (failing ? fail() : void data.set(k, v)),
+      removeItem: (k: string) => (failing ? fail() : void data.delete(k)),
+    },
+  };
+}
+
+describe("createSignedUrlResolver persisted cache", () => {
+  afterEach(() => vi.unstubAllGlobals());
+
+  it("reuses the signed URL after a reload within its TTL", async () => {
+    const store = memoryStorage();
+    vi.stubGlobal("localStorage", store.api);
+    let now = 1_000_000;
+    const a = setup({}, {});
+    const first = await createSignedUrlResolver(a.client, { now: () => now }).resolve("avatars", "u1/a.webp");
+    now += 1_000_000; // 1000 s of 3600 s
+    const b = setup({}, {});
+    const again = await createSignedUrlResolver(b.client, { now: () => now }).resolve("avatars", "u1/a.webp");
+    expect(again).toBe(first);
+    expect(b.ops.filter((o) => o.op === "sign")).toHaveLength(0);
+    expect([...store.data.values()].join("")).not.toMatch(/password|token_hash/i);
+  });
+
+  it("renews a persisted URL that has less than 10% of its life left", async () => {
+    vi.stubGlobal("localStorage", memoryStorage().api);
+    let now = 1_000_000;
+    const a = setup({}, {});
+    const first = await createSignedUrlResolver(a.client, { now: () => now }).resolve("avatars", "u1/a.webp");
+    now += 3_300_000; // 300 s left of 3600 s
+    const b = setup({}, {});
+    const renewed = await createSignedUrlResolver(b.client, { now: () => now }).resolve("avatars", "u1/a.webp");
+    expect(first).toContain("/avatars/u1/a.webp");
+    expect(renewed).toContain("/avatars/u1/a.webp");
+    expect(b.ops.filter((o) => o.op === "sign")).toHaveLength(1);
+  });
+
+  it("clear and forget also drop the persisted entry", async () => {
+    vi.stubGlobal("localStorage", memoryStorage().api);
+    const a = setup({}, {});
+    const resolver = createSignedUrlResolver(a.client);
+    await resolver.resolve("avatars", "u1/a.webp");
+    resolver.forget("avatars", "u1/a.webp");
+    const b = setup({}, {});
+    await createSignedUrlResolver(b.client).resolve("avatars", "u1/a.webp");
+    expect(b.ops.filter((o) => o.op === "sign")).toHaveLength(1);
+    resolver.clear();
+    const c = setup({}, {});
+    await createSignedUrlResolver(c.client).resolve("avatars", "u1/a.webp");
+    expect(c.ops.filter((o) => o.op === "sign")).toHaveLength(1);
+  });
+
+  it("works when storage throws", async () => {
+    vi.stubGlobal("localStorage", memoryStorage(true).api);
+    const { client, ops } = setup({}, {});
+    const resolver = createSignedUrlResolver(client);
+    const first = await resolver.resolve("avatars", "u1/a.webp");
+    expect(first).toContain("/avatars/u1/a.webp");
+    expect(await resolver.resolve("avatars", "u1/a.webp")).toBe(first);
+    expect(ops.filter((o) => o.op === "sign")).toHaveLength(1);
+  });
+});
+
 describe("uploadProfileImage", () => {
   const now = () => 1_700_000_000_000;
 
@@ -212,16 +300,57 @@ describe("uploadProfileImage", () => {
       now,
     });
     expect(row.avatar_path).toBe("u1/avatar-1700000000000.webp");
-    const [upload, remove] = ops;
+    const [upload, , remove] = ops;
     expect(upload).toMatchObject({ op: "upload", bucket: "avatars" });
     expect(upload?.args[0]).toBe("u1/avatar-1700000000000.webp");
-    expect(upload?.args[2]).toEqual({ contentType: "image/webp", upsert: false });
+    expect(upload?.args[2]).toEqual({
+      contentType: "image/webp",
+      upsert: false,
+      cacheControl: "31536000",
+    });
     expect(argsOf(calls, "rpc:set_profile_media", "call")).toEqual([
       [{ p_avatar_path: "u1/avatar-1700000000000.webp" }],
     ]);
     expect(remove).toMatchObject({ op: "remove", bucket: "avatars", args: [["u1/avatar-1.png"]] });
     // El orden importa: nunca se borra lo anterior antes de que la ruta nueva esté guardada.
-    expect(ops.map((o) => o.op)).toEqual(["upload", "remove"]);
+    expect(ops.map((o) => o.op)).toEqual(["upload", "list", "remove"]);
+  });
+
+  it("limpia sobrantes de la carpeta propia y conserva solo el objeto nuevo", async () => {
+    const { client, ops } = setup(
+      {
+        tables: { profiles: ok({ avatar_path: "u1/avatar-1.png" }) },
+        rpc: { set_profile_media: ok(rpcRow()) },
+      },
+      {
+        listing: [
+          "avatar-1.png",
+          "avatar-2.jpg",
+          "avatar-1700000000000.webp",
+          "banner-9.png",
+          "otro.txt",
+        ],
+      },
+    );
+    await uploadProfileImage(client, { userId: U1, kind: "avatar", dataUrl: WEBP, now });
+    expect(ops[1]).toMatchObject({ op: "list", bucket: "avatars" });
+    expect(ops[1]?.args[0]).toBe("u1");
+    const remove = ops.find((o) => o.op === "remove");
+    expect(remove?.args).toEqual([["u1/avatar-1.png", "u1/avatar-2.jpg"]]);
+  });
+
+  it("si el listado falla, igual retira el objeto anterior", async () => {
+    for (const storage of [{ listError: { message: "x" } }, { listThrows: true }]) {
+      const { client, ops } = setup(
+        {
+          tables: { profiles: ok({ avatar_path: "u1/viejo.png" }) },
+          rpc: { set_profile_media: ok(rpcRow()) },
+        },
+        storage,
+      );
+      await uploadProfileImage(client, { userId: U1, kind: "avatar", dataUrl: PNG, now });
+      expect(ops.find((o) => o.op === "remove")?.args).toEqual([["u1/viejo.png"]]);
+    }
   });
 
   it("usa el bucket banners y no retira nada si no había anterior", async () => {
@@ -230,7 +359,7 @@ describe("uploadProfileImage", () => {
       rpc: { set_profile_media: ok(rpcRow()) },
     });
     await uploadProfileImage(client, { userId: U1, kind: "banner", dataUrl: PNG, now });
-    expect(ops.map((o) => `${o.op}:${o.bucket}`)).toEqual(["upload:banners"]);
+    expect(ops.map((o) => `${o.op}:${o.bucket}`)).toEqual(["upload:banners", "list:banners"]);
     expect(argsOf(calls, "rpc:set_profile_media", "call")).toEqual([
       [{ p_banner_path: "u1/banner-1700000000000.png" }],
     ]);
@@ -268,12 +397,13 @@ describe("uploadProfileImage", () => {
     expect(ops[1]?.args).toEqual([["u1/avatar-1700000000000.png"]]);
   });
 
-  it("si la subida falla, no llama a la RPC", async () => {
-    const { client, calls } = setup({}, { uploadError: { message: "The object exceeded the maximum allowed size" } });
+  it("si la subida falla, no llama a la RPC ni toca el objeto anterior", async () => {
+    const { client, calls, ops } = setup({}, { uploadError: { message: "The object exceeded the maximum allowed size" } });
     await expect(
       uploadProfileImage(client, { userId: U1, kind: "avatar", dataUrl: PNG, now }),
     ).rejects.toThrow(INVALID);
     expect(argsOf(calls, "rpc:set_profile_media", "call")).toEqual([]);
+    expect(ops.map((o) => o.op)).toEqual(["upload"]);
   });
 
   it("no sube nada si el data URL no es válido", async () => {
@@ -293,9 +423,11 @@ describe("clearProfileImage", () => {
     });
     await clearProfileImage(client, { userId: U1, kind: "banner" });
     expect(argsOf(calls, "rpc:set_profile_media", "call")).toEqual([[{ p_clear_banner: true }]]);
-    expect(ops).toEqual([
-      { op: "remove", bucket: "banners", args: [["u1/banner-1.webp"]] },
-    ]);
+    expect(ops.find((o) => o.op === "remove")).toEqual({
+      op: "remove",
+      bucket: "banners",
+      args: [["u1/banner-1.webp"]],
+    });
   });
 });
 

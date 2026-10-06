@@ -13,6 +13,7 @@ import type {
 } from "@vexa/domain/chat";
 import type {
   HoursDraft,
+  HoursEvidence,
   ProjectLabel,
   Announcement,
   Comment,
@@ -27,8 +28,13 @@ import type {
   MemberPoints,
   Meeting,
   MeetingSlot,
+  MfaChallenge,
+  MfaEnrollment,
+  MfaFactor,
   Notification,
+  NotificationPreferences,
   Profile,
+  ProfileDetailsInput,
   Project,
   RecurringExpense,
   Settings,
@@ -58,6 +64,28 @@ export interface AuthService {
     avatarUrl?: string | null;
     bannerUrl?: string | null;
   }): Promise<Profile>;
+  /** Guarda nombre, usuario y bio propios (el correo es de solo lectura). Usuario único. */
+  updateProfile(input: ProfileDetailsInput): Promise<Profile>;
+  /**
+   * Cambia la contraseña tras comprobar la actual. Solo con Supabase; el mock responde
+   * "Disponible solo con la conexión a Supabase.".
+   */
+  updatePassword(input: { currentPassword: string; newPassword: string }): Promise<void>;
+  /** Cierra la sesión en los demás dispositivos y conserva esta. Solo con Supabase. */
+  signOutOthers(): Promise<void>;
+  /**
+   * Segundo paso con TOTP (solo con Supabase). Hoy se exige únicamente en el cliente: el RLS no
+   * pide aal2, así que un token aal1 aún puede llamar a la API REST (endurecer con aal2 queda
+   * como tarea aparte).
+   */
+  listMfaFactors(): Promise<MfaFactor[]>;
+  enrollMfa(): Promise<MfaEnrollment>;
+  verifyMfaEnrollment(factorId: Id, code: string): Promise<void>;
+  disableMfa(factorId: Id): Promise<void>;
+  /** ¿La sesión necesita el segundo paso? Úsalo tras entrar con contraseña y al restaurar la sesión. */
+  getMfaChallenge(): Promise<MfaChallenge>;
+  /** Completa el segundo paso con el código de la app y devuelve el perfil con sesión aal2. */
+  verifyMfaLogin(factorId: Id, code: string): Promise<Profile>;
 }
 
 export interface SettingsService {
@@ -117,6 +145,15 @@ export interface TimeEntryFilter {
   to?: IsoDateTime;
 }
 
+/** Person to tag on an entry; `sharePercent` is an integer 1-100 (default 100). */
+export interface HoursParticipantInput {
+  userId: Id;
+  sharePercent?: number;
+}
+
+/** File to attach as evidence. `data` is a data URL (`data:<mime>;base64,...`), like chat attachments. */
+export type HoursEvidenceFile = Pick<ChatAttachment, "name" | "type" | "data">;
+
 export interface ManualEntryInput {
   taskId: Id | null;
   projectId?: Id | null;
@@ -125,6 +162,8 @@ export interface ManualEntryInput {
   startTime?: string;
   date: IsoDate;
   hours: number;
+  /** People who helped; the owner always keeps 100 %. */
+  participants?: HoursParticipantInput[];
 }
 
 export interface TimeService {
@@ -135,6 +174,8 @@ export interface TimeService {
     items: { id: Id; hours: number }[];
     date: IsoDate;
     description?: string;
+    /** People who helped; the owner always keeps 100 %. */
+    participants?: HoursParticipantInput[];
   }): Promise<TimeEntry>;
   listEntries(filter?: TimeEntryFilter): Promise<TimeEntry[]>;
   /** Entrada con temporizador abierto del usuario actual, si existe. */
@@ -168,6 +209,26 @@ export interface TimeService {
   /** Aprueba registros finalizados de otras personas; solo socios/admin. */
   validate(entryIds: Id[]): Promise<TimeEntry[]>;
   requestClarification(id: Id, note: string): Promise<TimeEntry>;
+  /**
+   * Leaves exactly this set of tagged people (an empty list removes them all). Only the owner, while the
+   * entry is editable; a validated entry goes back to pending. Reviewers cannot approve entries where
+   * they are tagged.
+   */
+  setParticipants(
+    entryId: Id,
+    participants: HoursParticipantInput[],
+  ): Promise<TimeEntry>;
+  /** Attaches a file (max 5 per entry, 10 MiB in Supabase / 3 MiB in the mock). Owner only, while editable. */
+  addEvidence(entryId: Id, file: HoursEvidenceFile): Promise<HoursEvidence>;
+  /** Removes a file of an editable entry (owner only). */
+  removeEvidence(evidenceId: Id): Promise<void>;
+  /** Temporary URL (signed in Supabase, data URL in the mock) to open a file; fails if it was purged. */
+  getEvidenceUrl(evidenceId: Id): Promise<string>;
+  /**
+   * Best-effort sweep: removes the files already due (7 days after validation, or at once if the entry
+   * was voided) and records it. Never throws; resolves with how many files were removed.
+   */
+  purgeExpiredEvidence(): Promise<number>;
 }
 
 export interface NewExpenseInput {
@@ -244,6 +305,10 @@ export interface NotificationService {
   list(): Promise<Notification[]>;
   markRead(id: Id): Promise<void>;
   markAllRead(): Promise<void>;
+  /** Preferencias propias; sin fila guardada, todo activado. */
+  getPreferences(): Promise<NotificationPreferences>;
+  /** Cambia solo las preferencias indicadas y devuelve el resultado. */
+  updatePreferences(patch: Partial<NotificationPreferences>): Promise<NotificationPreferences>;
 }
 
 export interface AuditFilter {
@@ -322,6 +387,27 @@ export interface ChatService {
   ): Promise<ChatMessage>;
   /** Marca la conversación como leída hasta ahora (sin efecto si ya está al día). */
   markRead(threadId: Id): Promise<void>;
+  /**
+   * Marca que mi app abierta recibió los mensajes de la conversación (sin marcarlos como leídos;
+   * sin efecto si ya está al día).
+   */
+  markDelivered(threadId: Id): Promise<void>;
+  /**
+   * Registra mi descarga del adjunto (hora del servidor; repetirla no cambia nada). Solo integrantes;
+   * quien envió el archivo cuenta como descarga implícita.
+   */
+  markAttachmentDownloaded(messageId: Id): Promise<void>;
+  /**
+   * Respondo "¿debe quedarse este archivo en el chat?" (`keep`: conservar o liberar espacio), una sola
+   * vez y cuando todos descargaron. Si con mi respuesta todos liberaron, el archivo se retira
+   * (mejor esfuerzo: un fallo del almacenamiento no falla la respuesta).
+   */
+  answerAttachmentKeep(messageId: Id, keep: boolean): Promise<void>;
+  /**
+   * Retira el archivo de un adjunto que todos liberaron y aún no se retiró (reintento; sin efecto en
+   * cualquier otro caso). El mensaje se conserva con un marcador de texto.
+   */
+  purgeReleasedAttachment(messageId: Id): Promise<void>;
   getSettings(): Promise<ChatSettings>;
   /** Un parche conserva el resto de ajustes; el estado se recorta a 80 caracteres. */
   updateSettings(patch: Partial<ChatSettings>): Promise<ChatSettings>;
