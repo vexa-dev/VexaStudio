@@ -8,7 +8,7 @@ import type {
 import type { AuthService } from "@vexa/services";
 import { createSupabaseClient, type VexaSupabase } from "@/lib/supabase";
 import type { Tables } from "./database.types";
-import { toServiceError, unwrap, unwrapMaybe } from "./errors";
+import { toServiceError, translatePasswordChange, unwrap, unwrapMaybe } from "./errors";
 import { isoInstant } from "./mappers";
 import {
   clearProfileImage,
@@ -106,6 +106,8 @@ interface AuthErrorLike {
 export function toAuthError(error: AuthErrorLike): Error {
   const code = error.code ?? "";
   const message = error.message ?? "";
+  const password = translatePasswordChange(message);
+  if (password) return new Error(password, { cause: error });
   if (code === "invalid_credentials" || /invalid login credentials/i.test(message))
     return new Error("Correo o contraseña incorrectos", { cause: error });
   if (code === "email_not_confirmed" || /email not confirmed/i.test(message))
@@ -267,7 +269,10 @@ export function createAuthService(
           throw new Error("La contraseña actual no es correcta.", { cause: reauthError });
         throw toAuthError(reauthError);
       }
-      const { error } = await client.auth.updateUser({ password: newPassword });
+      const { error } = await client.auth.updateUser({
+        password: newPassword,
+        current_password: currentPassword,
+      });
       if (error) throw toAuthError(error);
     },
     async signOutOthers() {

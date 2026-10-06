@@ -8,6 +8,17 @@ import {
 } from "./errors";
 
 describe("toServiceError", () => {
+  it("traduce los mensajes de GoTrue del cambio de contraseña", () => {
+    expect(
+      toServiceError({ message: "Current password required when setting new password." }).message,
+    ).toBe("Escribe tu contraseña actual para cambiarla.");
+    expect(toServiceError({ message: "Incorrect current password" }).message).toBe(
+      "La contraseña actual no es correcta.",
+    );
+    expect(toServiceError({ message: "Invalid current password." }).message).toBe(
+      "La contraseña actual no es correcta.",
+    );
+  });
   it("restituye los acentos de los mensajes que la base escribe sin ellos", () => {
     expect(
       toServiceError({

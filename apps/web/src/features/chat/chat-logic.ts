@@ -54,6 +54,25 @@ export function noticeTitle(
     : author;
 }
 
+/**
+ * Threads by latest message, newest first (like a messaging app). Threads without
+ * messages go last in their original order; equal timestamps break by id.
+ * Returns a new array.
+ */
+export function sortThreadsByActivity(threads: ChatThread[]): ChatThread[] {
+  const latest = (thread: ChatThread) =>
+    thread.messages.reduce((max, message) => Math.max(max, message.sentAt), 0);
+  return threads
+    .map((thread) => ({ thread, at: thread.messages.length ? latest(thread) : null }))
+    .sort((a, b) => {
+      if (a.at === null || b.at === null)
+        return a.at === b.at ? 0 : a.at === null ? 1 : -1;
+      if (a.at !== b.at) return b.at - a.at;
+      return a.thread.id < b.thread.id ? -1 : a.thread.id > b.thread.id ? 1 : 0;
+    })
+    .map(({ thread }) => thread);
+}
+
 /** Read when another member's read time is at or after the send time. */
 export function isReadByOthers(
   thread: ChatThread,

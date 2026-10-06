@@ -169,6 +169,19 @@ const CONSTRAINT_MESSAGES: Record<string, string> = {
   profiles_bio_len_check: "La biografía puede tener hasta 280 caracteres",
 };
 
+/** GoTrue messages of the password change (it answers in English), in Spanish (Peru). */
+export function translatePasswordChange(message: string): string | undefined {
+  if (/current password required/i.test(message))
+    return "Escribe tu contraseña actual para cambiarla.";
+  if (
+    /(incorrect|invalid|wrong) current password|current password (is )?(incorrect|invalid|wrong)/i.test(
+      message,
+    )
+  )
+    return "La contraseña actual no es correcta.";
+  return undefined;
+}
+
 const NETWORK = /failed to fetch|networkerror|load failed|fetch failed/i;
 
 export function toServiceError(error: unknown): Error {
@@ -182,6 +195,8 @@ export function toServiceError(error: unknown): Error {
     return keep("No se pudo conectar con el servidor. Revisa tu conexión.");
   for (const [constraint, mapped] of Object.entries(CONSTRAINT_MESSAGES))
     if (text.includes(`"${constraint}"`)) return keep(mapped);
+  const password = translatePasswordChange(message ?? "");
+  if (password) return keep(password);
   const canonical = message ? CANONICAL.get(fold(message)) : undefined;
   if (canonical) return keep(canonical);
   if (code === "PGRST301" || code === "PGRST303" || /jwt/i.test(message ?? ""))

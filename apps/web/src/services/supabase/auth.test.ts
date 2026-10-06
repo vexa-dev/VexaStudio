@@ -258,7 +258,10 @@ describe("updatePassword", () => {
       newPassword: strong,
     });
     expect(verifyCurrentPassword).toHaveBeenCalledWith("jhony@vexa.test", "Actual-Clave-1");
-    expect(auth.updateUser).toHaveBeenCalledWith({ password: strong });
+    expect(auth.updateUser).toHaveBeenCalledWith({
+      password: strong,
+      current_password: "Actual-Clave-1",
+    });
   });
 
   it("rechaza una contraseña actual incorrecta sin tocar la nueva", async () => {
@@ -302,6 +305,20 @@ describe("updatePassword", () => {
         newPassword: strong,
       }),
     ).rejects.toThrow("contraseña actual");
+  });
+
+  it.each([
+    ["Current password required when setting new password.", "Escribe tu contraseña actual para cambiarla."],
+    ["Incorrect current password", "La contraseña actual no es correcta."],
+  ])("traduce el mensaje de GoTrue %s", async (message, expected) => {
+    const { client, auth } = richClient();
+    auth.updateUser.mockResolvedValue({ data: null, error: { message } });
+    await expect(
+      createAuthService(client, undefined, { verifyCurrentPassword: verify() }).updatePassword({
+        currentPassword: "Actual-Clave-1",
+        newPassword: strong,
+      }),
+    ).rejects.toThrow(expected);
   });
 
   it("traduce el rechazo de Supabase por contraseña débil o igual", async () => {

@@ -31,6 +31,10 @@ function ChatEntry({ user }: { user: Profile }) {
   const [mode, setMode] = useState<ChatMode>("closed");
   // The panel mounts on first open and stays mounted while minimized to keep its state.
   const [mounted, setMounted] = useState(false);
+  const [openRequest, setOpenRequest] = useState<{
+    threadId: string;
+    nonce: number;
+  } | null>(null);
   const apply = (action: ChatModeAction) => {
     const next = nextChatMode(mode, action);
     if (next === mode) return;
@@ -69,7 +73,22 @@ function ChatEntry({ user }: { user: Profile }) {
     const source = loaded.find((thread) =>
       thread.messages.some((message) => message.id === latest?.id),
     );
-    toast(noticeTitle(author, source), { description: notice.body });
+    const threadId = source?.id;
+    const openFromToast = () => {
+      // Closed, minimized or open: the toast always lands on an open panel.
+      setMode((current) => nextChatMode(current, "open"));
+      setMounted(true);
+      if (threadId)
+        setOpenRequest((prev) => ({ threadId, nonce: (prev?.nonce ?? 0) + 1 }));
+    };
+    toast(noticeTitle(author, source), {
+      description: notice.body,
+      action: {
+        label: "Abrir conversación",
+        onClick: openFromToast,
+        actionButtonStyle: { minHeight: 44, minWidth: 44 },
+      },
+    });
     if (notice.sound) notificationChime(notice.sound);
   }, [threads.data, settings, user.id]);
   useEffect(() => {
@@ -116,6 +135,7 @@ function ChatEntry({ user }: { user: Profile }) {
               if (!has && mode === "minimized") apply("restore");
             }}
             onClose={() => apply("close")}
+            openRequest={openRequest}
           />
         </Suspense>
       )}

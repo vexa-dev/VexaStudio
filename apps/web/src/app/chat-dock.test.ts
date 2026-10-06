@@ -17,6 +17,10 @@ describe("nextChatMode", () => {
     expect(nextChatMode("closed", "restore")).toBe("closed");
     expect(nextChatMode("open", "restore")).toBe("open");
   });
+  it("open shows the panel from closed or minimized and keeps it open", () => {
+    const modes: ChatMode[] = ["closed", "open", "minimized"];
+    for (const mode of modes) expect(nextChatMode(mode, "open")).toBe("open");
+  });
   it("close goes to closed from anywhere", () => {
     const modes: ChatMode[] = ["closed", "open", "minimized"];
     for (const mode of modes)

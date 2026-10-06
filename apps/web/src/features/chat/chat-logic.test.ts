@@ -14,6 +14,7 @@ import {
   needsDelivery,
   noticeBody,
   noticeTitle,
+  sortThreadsByActivity,
   unreadByThread,
 } from "./chat-logic";
 
@@ -413,5 +414,39 @@ describe("ciclo de vida de un adjunto", () => {
     expect(attachmentStage(room, purged)).toBe("purged");
     expect(shouldMarkDownload(room, purged, "beto")).toBe(false);
     expect(needsMyAnswer(room, purged, "beto")).toBe(false);
+  });
+});
+
+describe("sortThreadsByActivity", () => {
+  const at = (id: string, sentAt?: number) =>
+    thread({
+      id,
+      messages: sentAt === undefined ? [] : [message({ id: `${id}-m`, sentAt })],
+    });
+  it("puts the thread with the latest message first", () => {
+    const sorted = sortThreadsByActivity([at("a", 10), at("b", 30), at("c", 20)]);
+    expect(sorted.map((t) => t.id)).toEqual(["b", "c", "a"]);
+  });
+  it("uses the newest message of each thread", () => {
+    const busy = thread({
+      id: "busy",
+      messages: [message({ id: "1", sentAt: 5 }), message({ id: "2", sentAt: 50 })],
+    });
+    expect(sortThreadsByActivity([at("x", 20), busy]).map((t) => t.id)).toEqual(["busy", "x"]);
+  });
+  it("sends empty threads last, keeping their order", () => {
+    const sorted = sortThreadsByActivity([at("e1"), at("a", 10), at("e2"), at("b", 5)]);
+    expect(sorted.map((t) => t.id)).toEqual(["a", "b", "e1", "e2"]);
+  });
+  it("breaks ties by id", () => {
+    const sorted = sortThreadsByActivity([at("b", 10), at("a", 10), at("c", 10)]);
+    expect(sorted.map((t) => t.id)).toEqual(["a", "b", "c"]);
+  });
+  it("does not mutate the input", () => {
+    const input = [at("a", 10), at("b", 30)];
+    const copy = [...input];
+    const sorted = sortThreadsByActivity(input);
+    expect(input).toEqual(copy);
+    expect(sorted).not.toBe(input);
   });
 });

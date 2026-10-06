@@ -57,7 +57,11 @@ import type {
   ChatMessage,
   ChatThread,
 } from "@vexa/domain/chat";
-import { countUnread, unreadByThread } from "./chat-logic";
+import {
+  countUnread,
+  sortThreadsByActivity,
+  unreadByThread,
+} from "./chat-logic";
 import { defaultChatSettings } from "./chat-store";
 import {
   useChatActions,
@@ -81,6 +85,7 @@ export default function ChatPanel({
   onMinimize,
   onRestore,
   onConversationChange,
+  openRequest,
 }: {
   user: Profile;
   /** `userId -> last signal` of the people who are online. */
@@ -90,11 +95,16 @@ export default function ChatPanel({
   onMinimize?: () => void;
   onRestore?: () => void;
   onConversationChange?: (hasConversation: boolean) => void;
+  /** Selects a conversation from outside (e.g. a toast); a new `nonce` re-triggers it. */
+  openRequest?: { threadId: string; nonce: number } | null;
 }) {
   const membersQuery = useMembers();
   const members = membersQuery.data ?? [user];
   const threadsQuery = useChatThreads(user.id);
-  const threads = useMemo(() => threadsQuery.data ?? [], [threadsQuery.data]);
+  const threads = useMemo(
+    () => sortThreadsByActivity(threadsQuery.data ?? []),
+    [threadsQuery.data],
+  );
   const statusMap = useChatStatus(user.id).data;
   const { settings } = useChatSettings(user.id);
   const { image: wallpaperImage } = useWallpaperImage(user.id);
@@ -202,6 +212,15 @@ export default function ChatPanel({
     setSearchOpen(false);
     setFilesThreadId(null);
   }
+  // Opening a conversation from outside reuses selectThread; markRead follows from the active thread.
+  const requestedNonce = useRef<number | null>(null);
+  useEffect(() => {
+    if (!openRequest || requestedNonce.current === openRequest.nonce) return;
+    requestedNonce.current = openRequest.nonce;
+    setTab("chats");
+    selectThread(openRequest.threadId);
+    // selectThread only sets local state, so depending on the request alone is enough.
+  }, [openRequest]);
   function closeMessageSearch() {
     setMessageSearch("");
     setSearchOpen(false);
