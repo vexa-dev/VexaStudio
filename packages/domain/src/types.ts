@@ -16,6 +16,12 @@ export interface Profile {
   /** Horas comprometidas por semana. */
   weeklyHours: number;
   active: boolean;
+  /** Foto de perfil (data URL ya recortada y comprimida). */
+  avatarUrl?: string | null;
+  /** Banner del perfil (data URL ya recortada y comprimida). */
+  bannerUrl?: string | null;
+  /** Fecha de registro en la plataforma. */
+  joinedAt?: IsoDateTime;
 }
 
 /** Parámetros del acuerdo de socios (tabla `settings`, en camelCase). */
