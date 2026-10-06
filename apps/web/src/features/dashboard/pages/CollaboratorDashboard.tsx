@@ -12,7 +12,16 @@ import type { Profile } from "@vexa/domain/types";
 import { Card } from "@/components/ui/Card";
 import { ErrorState } from "@/components/ui/ErrorState";
 import { Skeleton } from "@/components/ui/Skeleton";
+import { CountUp } from "@/components/ui/CountUp";
 import { Meter } from "@/components/ui/Meter";
+import { useFirstPlay } from "@/lib/useFirstPlay";
+import { stagger } from "@/lib/utils";
+import {
+  CardHeading,
+  CardLink,
+  Figure,
+  QuickLinks,
+} from "./DashboardOperations";
 import { useTasks } from "@/features/tasks/hooks/useTasks";
 import { useProjects } from "@/features/projects/hooks/useProjects";
 import { useTimeHistory, useHoursDrafts } from "@/features/time/hooks/useTime";
@@ -24,6 +33,7 @@ import { taskStatusLabel } from "@/lib/labels";
 /** Personal workspace: no partner summaries, financial data or team queries. */
 export function CollaboratorDashboard({ user }: { user: Profile }) {
   const [month] = useState(() => monthKey(new Date()));
+  const animate = useFirstPlay("dashboard");
   const tasks = useTasks({ assigneeId: user.id });
   const projects = useProjects();
   const history = useTimeHistory();
@@ -70,37 +80,42 @@ export function CollaboratorDashboard({ user }: { user: Profile }) {
           Organizar mi día <ArrowUpRight size={16} aria-hidden="true" />
         </Link>
       </header>
-      <div className="dashboard-overview dashboard-metrics">
-        <section aria-labelledby="collaborator-hours">
-          <Card className="dashboard-personal-card">
-            <div className="dashboard-card-heading">
-              <h2 id="collaborator-hours">
-                <span className="dashboard-metric-icon">
-                  <Clock3 size={18} aria-hidden="true" />
-                </span>
-                Tus horas este mes
-              </h2>
-              <span className="dashboard-period-note">Personal</span>
-            </div>
-            {history.isError ? (
-              failure
-            ) : history.isLoading ? (
-              <Skeleton className="h-32" />
-            ) : (
-              <>
-                <div>
-                  <p className="dashboard-hours num">
-                    {Number(activity.total.toFixed(2))}
-                    <span> h</span>
-                  </p>
-                  <p className="dashboard-caption">
-                    Registradas en {activity.activeDays}{" "}
-                    {activity.activeDays === 1
-                      ? "día de actividad"
-                      : "días de actividad"}
-                  </p>
-                </div>
-                <div className="dashboard-personal-bottom">
+      <div className="dashboard-operations">
+        <div className="dashboard-hero">
+          <section
+            aria-labelledby="collaborator-hours"
+            className="dashboard-block enter"
+            style={stagger(1)}
+          >
+            <Card className="dashboard-personal-card dashboard-hero-card">
+              <CardHeading
+                icon={Clock3}
+                id="collaborator-hours"
+                title="Tus horas este mes"
+                subtitle="Personal"
+              />
+              {history.isError ? (
+                failure
+              ) : history.isLoading ? (
+                <Skeleton className="dashboard-hero-skeleton" />
+              ) : (
+                <>
+                  <div>
+                    <p className="dashboard-hours num">
+                      <CountUp
+                        value={activity.total}
+                        format={(v) => String(Number(v.toFixed(2)))}
+                        animate={animate}
+                      />
+                      <span> h</span>
+                    </p>
+                    <p className="dashboard-caption">
+                      Registradas en {activity.activeDays}{" "}
+                      {activity.activeDays === 1
+                        ? "día de actividad"
+                        : "días de actividad"}
+                    </p>
+                  </div>
                   <dl className="dashboard-personal-stats">
                     <div>
                       <dt>Aprobadas</dt>
@@ -115,228 +130,264 @@ export function CollaboratorDashboard({ user }: { user: Profile }) {
                       </dd>
                     </div>
                   </dl>
-                  <Link
-                    to="/horas?vista=resumen"
-                    className="dashboard-text-link"
-                  >
-                    Ver resumen <ArrowUpRight size={14} aria-hidden="true" />
-                  </Link>
-                </div>
-              </>
-            )}
-          </Card>
-        </section>
-        <section aria-labelledby="collaborator-progress">
-          <Card className="dashboard-personal-card">
-            <div className="dashboard-card-heading">
-              <h2 id="collaborator-progress">
-                <span className="dashboard-metric-icon">
-                  <ListChecks size={18} aria-hidden="true" />
-                </span>
-                Tu avance en tareas
-              </h2>
-            </div>
-            {tasks.isError ? (
-              failure
-            ) : tasks.isLoading ? (
-              <Skeleton className="h-32" />
-            ) : (
-              <>
-                <div>
-                  <p className="dashboard-hours num">
-                    {done}
-                    <span> / {mine.length}</span>
-                  </p>
-                  <p className="dashboard-caption">
-                    {mine.length
-                      ? "Tareas terminadas de las que tienes asignadas"
-                      : "Aún no tienes tareas asignadas"}
-                  </p>
-                </div>
-                <Meter
-                  value={done}
-                  max={Math.max(mine.length, 1)}
-                  label={`${done} de ${mine.length} tareas terminadas`}
-                />
-                <div className="collaborator-task-stats">
-                  <span>
-                    <strong>{counts.todo}</strong> pendientes
-                  </span>
-                  <span>
-                    <strong>{counts.in_progress}</strong> en progreso
-                  </span>
-                  <span>
-                    <strong>{counts.review}</strong> en revisión
-                  </span>
-                </div>
-              </>
-            )}
-          </Card>
-        </section>
-      </div>
-      <nav className="dashboard-module-strip" aria-label="Accesos personales">
-        <span className="dashboard-shortcuts-label">Tu espacio</span>
-        <Link to="/tareas">
-          <ListChecks size={15} aria-hidden="true" />
-          <span>
-            Mis tareas <strong>{tasks.isLoading ? "…" : open.length}</strong>
-          </span>
-        </Link>
-        <Link to="/proyectos">
-          <FolderKanban size={15} aria-hidden="true" />
-          <span>
-            Proyectos{" "}
-            <strong>{projects.isLoading ? "…" : assigned.length}</strong>
-          </span>
-        </Link>
-        <Link to="/horas">
-          <Clock3 size={15} aria-hidden="true" />
-          <span>Mis horas</span>
-        </Link>
-        <Link to="/mi-dia">
-          <Sun size={15} aria-hidden="true" />
-          <span>Mi día</span>
-        </Link>
-      </nav>
-      <div className="dashboard-action-grid">
-        <div className="dashboard-task-column">
-          <section aria-labelledby="collaborator-next">
-            <Card className="dashboard-attention-card">
-              <div className="dashboard-section-heading">
-                <div>
-                  <h2 id="collaborator-next">Tus próximas tareas</h2>
-                  <p>
-                    Continúa lo que tienes en marcha o elige tu siguiente tarea.
-                  </p>
-                </div>
-              </div>
+                  <CardLink to="/horas?vista=resumen">Ver resumen</CardLink>
+                </>
+              )}
+            </Card>
+          </section>
+          <section
+            aria-labelledby="collaborator-progress"
+            className="dashboard-block enter"
+            style={stagger(2)}
+          >
+            <Card className="dashboard-personal-card dashboard-hero-card">
+              <CardHeading
+                icon={ListChecks}
+                id="collaborator-progress"
+                title="Tu avance en tareas"
+                subtitle="Tareas asignadas a ti"
+              />
               {tasks.isError ? (
                 failure
               ) : tasks.isLoading ? (
-                <Skeleton className="h-40" />
-              ) : open.length ? (
-                <ul className="dashboard-focus-list">
-                  {[...open]
-                    .sort(
-                      (a, b) =>
-                        Number(b.status === "in_progress") -
-                          Number(a.status === "in_progress") ||
-                        a.title.localeCompare(b.title, "es"),
-                    )
-                    .slice(0, 4)
-                    .map((task) => (
-                      <li key={task.id}>
-                        <Link to="/tareas">
-                          <span
-                            className={`dashboard-task-mark is-${task.status}`}
-                          >
-                            <CheckCheck size={16} aria-hidden="true" />
-                          </span>
-                          <div>
-                            <strong>{task.title}</strong>
-                            <p>{projectName(task.projectId)}</p>
-                          </div>
-                          <span className="dashboard-task-state">
-                            {taskStatusLabel[task.status]}
-                            <ArrowUpRight size={14} aria-hidden="true" />
-                          </span>
-                        </Link>
-                      </li>
-                    ))}
-                </ul>
-              ) : (
-                <p className="dashboard-blank">
-                  No tienes tareas pendientes. Tu tablero está al día.
-                </p>
-              )}
-              <Link to="/tareas" className="dashboard-text-link">
-                Abrir mi tablero <ArrowUpRight size={14} aria-hidden="true" />
-              </Link>
-            </Card>
-          </section>
-        </div>
-        <div className="dashboard-pending-column">
-          <section aria-labelledby="collaborator-confirm">
-            <Card className="dashboard-decisions-card">
-              <div className="dashboard-section-heading">
-                <div>
-                  <h2 id="collaborator-confirm">Horas por confirmar</h2>
-                  <p>
-                    Revisa el tiempo preparado antes de enviarlo a aprobación.
-                  </p>
-                </div>
-              </div>
-              {drafts.isError ? (
-                failure
-              ) : drafts.isLoading ? (
-                <Skeleton className="h-24" />
+                <Skeleton className="dashboard-hero-skeleton" />
               ) : (
                 <>
-                  <p className="collaborator-draft-count num">
-                    {pendingDrafts.length}
+                  <div>
+                    <p className="dashboard-hours num">
+                      <CountUp value={done} animate={animate} />
+                      <span> / {mine.length}</span>
+                    </p>
+                    <p className="dashboard-caption">
+                      {mine.length
+                        ? "Tareas terminadas de las que tienes asignadas"
+                        : "Aún no tienes tareas asignadas"}
+                    </p>
+                  </div>
+                  <Meter
+                    value={done}
+                    max={Math.max(mine.length, 1)}
+                    label={`${done} de ${mine.length} tareas terminadas`}
+                    animate={animate}
+                  />
+                  <div className="collaborator-task-stats">
                     <span>
-                      {" "}
-                      {pendingDrafts.length === 1
-                        ? "registro preparado"
-                        : "registros preparados"}
+                      <strong className="num">{counts.todo}</strong> pendientes
                     </span>
-                  </p>
-                  <p className="dashboard-caption">
-                    {pendingDrafts.length
-                      ? "Tus tareas terminadas y sesiones detenidas están listas en Horas."
-                      : "Al terminar una tarea, encontrarás aquí sus horas para revisarlas."}
-                  </p>
+                    <span>
+                      <strong className="num">{counts.in_progress}</strong> en
+                      progreso
+                    </span>
+                    <span>
+                      <strong className="num">{counts.review}</strong> en
+                      revisión
+                    </span>
+                  </div>
                 </>
               )}
-              <Link to="/horas?vista=registro" className="dashboard-text-link">
-                Ir a mis horas <ArrowUpRight size={14} aria-hidden="true" />
-              </Link>
             </Card>
           </section>
-          <section aria-labelledby="collaborator-projects">
-            <Card className="dashboard-projects-card">
-              <div className="dashboard-section-heading">
-                <div>
-                  <h2 id="collaborator-projects">Tus proyectos</h2>
-                  <p>Proyectos en los que formas parte del equipo.</p>
+          <QuickLinks
+            ariaLabel="Accesos personales"
+            title="Tu espacio"
+            index={3}
+            items={[
+              {
+                to: "/tareas",
+                icon: ListChecks,
+                label: "Mis tareas",
+                value: (
+                  <Figure
+                    status={tasks.isLoading ? "loading" : "ready"}
+                    value={open.length}
+                    animate={animate}
+                  />
+                ),
+              },
+              {
+                to: "/proyectos",
+                icon: FolderKanban,
+                label: "Proyectos",
+                value: (
+                  <Figure
+                    status={projects.isLoading ? "loading" : "ready"}
+                    value={assigned.length}
+                    animate={animate}
+                  />
+                ),
+              },
+              { to: "/horas", icon: Clock3, label: "Mis horas" },
+              { to: "/mi-dia", icon: Sun, label: "Mi día" },
+            ]}
+          />
+        </div>
+        <div className="dashboard-body">
+          <div className="dashboard-main-col">
+            <section
+              aria-labelledby="collaborator-next"
+              className="dashboard-block enter"
+              style={stagger(4)}
+            >
+              <Card className="dashboard-attention-card">
+                <CardHeading
+                  icon={CheckCheck}
+                  id="collaborator-next"
+                  title="Tus próximas tareas"
+                  subtitle="Continúa lo que tienes en marcha o elige tu siguiente tarea."
+                />
+                <div className="dashboard-list-slot">
+                  {tasks.isError ? (
+                    failure
+                  ) : tasks.isLoading ? (
+                    <Skeleton className="h-40" />
+                  ) : open.length ? (
+                    <ul className="dashboard-focus-list">
+                      {[...open]
+                        .sort(
+                          (a, b) =>
+                            Number(b.status === "in_progress") -
+                              Number(a.status === "in_progress") ||
+                            a.title.localeCompare(b.title, "es"),
+                        )
+                        .slice(0, 4)
+                        .map((task, i) => (
+                          <li
+                            key={task.id}
+                            className={animate ? "enter" : undefined}
+                            style={stagger(i)}
+                          >
+                            <Link to="/tareas">
+                              <span
+                                className={`dashboard-task-mark is-${task.status}`}
+                              >
+                                <CheckCheck size={16} aria-hidden="true" />
+                              </span>
+                              <div>
+                                <strong>{task.title}</strong>
+                                <p>{projectName(task.projectId)}</p>
+                              </div>
+                              <span className="dashboard-task-state">
+                                {taskStatusLabel[task.status]}
+                                <ArrowUpRight size={14} aria-hidden="true" />
+                              </span>
+                            </Link>
+                          </li>
+                        ))}
+                    </ul>
+                  ) : (
+                    <p
+                      className={
+                        animate ? "dashboard-blank dashboard-fade" : "dashboard-blank"
+                      }
+                    >
+                      No tienes tareas pendientes. Tu tablero está al día.
+                    </p>
+                  )}
                 </div>
-              </div>
-              {projects.isError ? (
-                failure
-              ) : projects.isLoading ? (
-                <Skeleton className="h-24" />
-              ) : assigned.length ? (
-                <ul className="dashboard-project-list">
-                  {assigned.slice(0, 3).map((project) => (
-                    <li key={project.id}>
-                      <Link to={`/proyectos/${project.id}`}>
+                <CardLink to="/tareas">Abrir mi tablero</CardLink>
+              </Card>
+            </section>
+          </div>
+          <div className="dashboard-side-col">
+            <section
+              aria-labelledby="collaborator-confirm"
+              className="dashboard-block enter"
+              style={stagger(4)}
+            >
+              <Card className="dashboard-decisions-card">
+                <CardHeading
+                  icon={Clock3}
+                  id="collaborator-confirm"
+                  title="Horas por confirmar"
+                  subtitle="Revisa el tiempo preparado antes de enviarlo a aprobación."
+                />
+                <div className="dashboard-list-slot">
+                  {drafts.isError ? (
+                    failure
+                  ) : drafts.isLoading ? (
+                    <Skeleton className="h-24" />
+                  ) : (
+                    <>
+                      <p className="collaborator-draft-count num">
+                        <CountUp
+                          value={pendingDrafts.length}
+                          animate={animate}
+                        />
                         <span>
-                          <strong>{project.name}</strong>
-                          <span>
-                            {project.status === "active"
-                              ? "Activo"
-                              : project.status === "paused"
-                                ? "En pausa"
-                                : "Finalizado"}{" "}
-                            · Tablero de consulta
-                          </span>
+                          {" "}
+                          {pendingDrafts.length === 1
+                            ? "registro preparado"
+                            : "registros preparados"}
                         </span>
-                        <ArrowUpRight size={15} aria-hidden="true" />
-                      </Link>
-                    </li>
-                  ))}
-                </ul>
-              ) : (
-                <p className="dashboard-blank">
-                  Aún no formas parte de un proyecto. Tus tareas sin proyecto
-                  también aparecen en tu tablero.
-                </p>
-              )}
-              <Link to="/proyectos" className="dashboard-text-link">
-                Ver mis proyectos <ArrowUpRight size={14} aria-hidden="true" />
-              </Link>
-            </Card>
-          </section>
+                      </p>
+                      <p className="dashboard-caption">
+                        {pendingDrafts.length
+                          ? "Tus tareas terminadas y sesiones detenidas están listas en Horas."
+                          : "Al terminar una tarea, encontrarás aquí sus horas para revisarlas."}
+                      </p>
+                    </>
+                  )}
+                </div>
+                <CardLink to="/horas?vista=registro">Ir a mis horas</CardLink>
+              </Card>
+            </section>
+            <section
+              aria-labelledby="collaborator-projects"
+              className="dashboard-block enter"
+              style={stagger(5)}
+            >
+              <Card className="dashboard-projects-card">
+                <CardHeading
+                  icon={FolderKanban}
+                  id="collaborator-projects"
+                  title="Tus proyectos"
+                  subtitle="Proyectos en los que formas parte del equipo."
+                />
+                <div className="dashboard-list-slot">
+                  {projects.isError ? (
+                    failure
+                  ) : projects.isLoading ? (
+                    <Skeleton className="h-24" />
+                  ) : assigned.length ? (
+                    <ul className="dashboard-project-list">
+                      {assigned.slice(0, 3).map((project, i) => (
+                        <li
+                          key={project.id}
+                          className={animate ? "enter" : undefined}
+                          style={stagger(i)}
+                        >
+                          <Link to={`/proyectos/${project.id}`}>
+                            <span className="dashboard-project-name">
+                              <strong>{project.name}</strong>
+                              <span>
+                                {project.status === "active"
+                                  ? "Activo"
+                                  : project.status === "paused"
+                                    ? "En pausa"
+                                    : "Finalizado"}{" "}
+                                · Tablero de consulta
+                              </span>
+                            </span>
+                            <ArrowUpRight size={15} aria-hidden="true" />
+                          </Link>
+                        </li>
+                      ))}
+                    </ul>
+                  ) : (
+                    <p
+                      className={
+                        animate ? "dashboard-blank dashboard-fade" : "dashboard-blank"
+                      }
+                    >
+                      Aún no formas parte de un proyecto. Tus tareas sin
+                      proyecto también aparecen en tu tablero.
+                    </p>
+                  )}
+                </div>
+                <CardLink to="/proyectos">Ver mis proyectos</CardLink>
+              </Card>
+            </section>
+          </div>
         </div>
       </div>
     </div>

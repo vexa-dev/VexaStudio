@@ -1,10 +1,4 @@
-import {
-  ArrowUpRight,
-  Check,
-  Clock3,
-  ArrowRight,
-  ChartPie,
-} from "lucide-react";
+import { ArrowUpRight, Check, Clock3, ChartPie, Users } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useState } from "react";
 import { Avatar } from "@/components/ui/Avatar";
@@ -21,7 +15,8 @@ import { formatHours, formatInt, formatPercent } from "@vexa/domain/format";
 import { useFirstPlay } from "@/lib/useFirstPlay";
 import { stagger } from "@/lib/utils";
 import { useMonthlySummary, usePoints } from "../hooks/useDashboard";
-import { DashboardOperations } from "./DashboardOperations";
+import { teamMonthStats } from "../dashboard-selectors";
+import { CardHeading, CardLink, DashboardOperations } from "./DashboardOperations";
 import { CollaboratorDashboard } from "./CollaboratorDashboard";
 import "./dashboard.css";
 
@@ -78,15 +73,15 @@ function PartnerDashboard() {
     return (
       <div className="studio-dashboard">
         {header}
-        <div
-          className="dashboard-overview dashboard-metrics"
-          aria-busy="true"
-          aria-label="Cargando resumen"
-        >
-          <Skeleton className="h-72" />
-          <Skeleton className="h-72" />
-        </div>
-        <DashboardOperations userId={user?.id ?? ""} />
+        <DashboardOperations
+          userId={user?.id ?? ""}
+          hero={
+            <>
+              <Skeleton className="dashboard-hero-skeleton" />
+              <Skeleton className="dashboard-hero-skeleton" />
+            </>
+          }
+        />
       </div>
     );
 
@@ -97,9 +92,11 @@ function PartnerDashboard() {
   const partners = members.data
     .filter((m) => summaryOf(m.id))
     .sort((a, b) => Number(b.id === user.id) - Number(a.id === user.id));
-  const totalHours = summaries.reduce((sum, s) => sum + s.hours, 0);
   const totalPoints = pointSummaries.reduce((sum, p) => sum + p.totalPoints, 0);
-  const completed = summaries.filter((s) => s.meetsMinimum).length;
+  const team = teamMonthStats(
+    summaries,
+    partners.map((m) => m.id),
+  );
   const mine = summaryOf(user.id);
   const myPoints = pointsOf(user.id);
   const segments = members.data
@@ -116,19 +113,16 @@ function PartnerDashboard() {
   const teamPanel = (
     <section
       aria-labelledby="dashboard-team"
-      className="dashboard-team-section enter"
-      style={stagger(3)}
+      className="dashboard-block dashboard-team-section enter"
+      style={stagger(5)}
     >
       <Card className="dashboard-compact-team">
-        <div className="dashboard-section-heading">
-          <div>
-            <h2 id="dashboard-team">El equipo este mes</h2>
-            <p>
-              {formatHours(totalHours)} registradas · {completed}/
-              {partners.length} cumplen el mínimo
-            </p>
-          </div>
-        </div>
+        <CardHeading
+          icon={Users}
+          id="dashboard-team"
+          title="El equipo este mes"
+          subtitle={`${formatHours(team.hours)} registradas · ${team.completed}/${team.total} cumplen el mínimo`}
+        />
         <ul className="dashboard-mini-members">
           {partners.map((member) => {
             const s = summaryOf(member.id);
@@ -136,7 +130,7 @@ function PartnerDashboard() {
             return (
               <li key={member.id}>
                 <div className="dashboard-mini-person">
-                  <Avatar name={member.name} size="sm" />
+                  <Avatar name={member.name} src={member.avatarUrl} size="sm" />
                   <span>
                     {member.name.split(" ")[0]}
                     {member.id === user.id ? (
@@ -153,7 +147,7 @@ function PartnerDashboard() {
                     value={s.hours}
                     max={Math.max(s.minimumHours, s.hours, 1)}
                     label={`${member.name}: ${formatHours(s.hours)} de ${formatHours(s.minimumHours)} mínimas`}
-                    className="h-1"
+                    className="dashboard-mini-meter"
                     animate={animate}
                   />
                 </div>
@@ -166,31 +160,26 @@ function PartnerDashboard() {
             );
           })}
         </ul>
-        <Link to="/equipo" className="dashboard-text-link">
-          Ver equipo <ArrowUpRight size={15} aria-hidden="true" />
-        </Link>
+        <CardLink to="/equipo">Ver equipo</CardLink>
       </Card>
     </section>
   );
 
-  return (
-    <div className="studio-dashboard">
-      {header}
-      <div className="dashboard-overview dashboard-metrics">
-        {mine ? (
-          <section
-            aria-labelledby="dashboard-personal"
-            className="enter"
-            style={stagger(1)}
-          >
-            <Card className="dashboard-personal-card">
-              <div className="dashboard-card-heading">
-                <h2 id="dashboard-personal">
-                  <span className="dashboard-metric-icon">
-                    <Clock3 size={18} aria-hidden="true" />
-                  </span>{" "}
-                  Tus horas este mes
-                </h2>
+  const hero = (
+    <>
+      {mine ? (
+        <section
+          aria-labelledby="dashboard-personal"
+          className="dashboard-block enter"
+          style={stagger(1)}
+        >
+          <Card className="dashboard-personal-card dashboard-hero-card">
+            <CardHeading
+              icon={Clock3}
+              id="dashboard-personal"
+              title="Tus horas este mes"
+              subtitle="Mes en curso"
+              aside={
                 <span
                   className={`dashboard-status ${mine.meetsMinimum ? "is-complete" : ""}`}
                 >
@@ -199,130 +188,136 @@ function PartnerDashboard() {
                   ) : null}
                   {mine.meetsMinimum ? "Mínimo cumplido" : "En progreso"}
                 </span>
-              </div>
-              <div className="dashboard-personal-main">
-                <div>
-                  <p className="dashboard-hours num">
-                    <CountUp
-                      value={mine.hours}
-                      format={(v) => String(Number(v.toFixed(2)))}
-                      animate={animate}
-                    />
-                    <span> h</span>
-                  </p>
-                  <p className="dashboard-caption">
-                    de{" "}
-                    <strong className="num">
-                      {formatHours(mine.minimumHours)}
-                    </strong>{" "}
-                    mínimas este mes
-                  </p>
-                </div>
-                <div className="dashboard-dial">
-                  <svg viewBox="0 0 100 100" aria-hidden="true">
-                    <circle
-                      className="dashboard-dial-track"
-                      cx="50"
-                      cy="50"
-                      r="43"
-                    />
-                    <circle
-                      className="dashboard-dial-progress"
-                      cx="50"
-                      cy="50"
-                      r="43"
-                      strokeDasharray={2 * Math.PI * 43}
-                      strokeDashoffset={
-                        2 *
-                        Math.PI *
-                        43 *
-                        (1 - Math.min(Math.max(mine.compliance, 0), 1))
-                      }
-                    />
-                  </svg>
-                  <div>
-                    <strong className="num">
-                      {formatPercent(mine.compliance)}
-                    </strong>
-                    <span>del mínimo</span>
-                  </div>
-                </div>
-              </div>
-              <div className="dashboard-personal-bottom">
-                <dl className="dashboard-personal-stats">
-                  <div>
-                    <dt>
-                      {mine.meetsMinimum ? "Sobre el mínimo" : "Por completar"}
-                    </dt>
-                    <dd className="num">
-                      {formatHours(Math.abs(mine.minimumHours - mine.hours))}
-                    </dd>
-                  </div>
-                  <div>
-                    <dt>Compromiso semanal</dt>
-                    <dd className="num">{formatHours(user.weeklyHours)}</dd>
-                  </div>
-                </dl>
-                <Link to="/horas" className="dashboard-text-link">
-                  Ver mis horas <ArrowRight size={15} aria-hidden="true" />
-                </Link>
-              </div>
-            </Card>
-          </section>
-        ) : null}
-
-        <section
-          aria-labelledby="dashboard-share"
-          className="enter"
-          style={stagger(2)}
-        >
-          <Card className="dashboard-share-card">
-            <div className="dashboard-card-heading">
-              <h2 id="dashboard-share">
-                <span className="dashboard-metric-icon">
-                  <ChartPie size={18} aria-hidden="true" />
-                </span>
-                Tu participación
-              </h2>
-              <span className="dashboard-period-note">Acumulada</span>
-            </div>
-            {myPoints ? (
-              <div className="dashboard-share-value">
-                <p className="num">
+              }
+            />
+            <div className="dashboard-personal-main">
+              <div>
+                <p className="dashboard-hours num">
                   <CountUp
-                    value={myPoints.participation * 100}
-                    format={(v) => `${Math.round(v)}`}
+                    value={mine.hours}
+                    format={(v) => String(Number(v.toFixed(2)))}
                     animate={animate}
                   />
-                  <span className="dashboard-percentage-unit"> %</span>
+                  <span> h</span>
                 </p>
-                <dl className="dashboard-share-points">
-                  <div>
-                    <dt>Tus puntos</dt>
-                    <dd className="num">{formatInt(myPoints.totalPoints)}</dd>
-                  </div>
-                  <div>
-                    <dt>Total del equipo</dt>
-                    <dd className="num">{formatInt(totalPoints)}</dd>
-                  </div>
-                </dl>
+                <p className="dashboard-caption">
+                  de{" "}
+                  <strong className="num">
+                    {formatHours(mine.minimumHours)}
+                  </strong>{" "}
+                  mínimas este mes
+                </p>
               </div>
-            ) : (
-              <p className="dashboard-caption">
-                Aún no hay puntos asignados a tu perfil.
-              </p>
-            )}
-            <SegmentedBar
-              segments={segments}
-              summary={shareSummary}
-              animate={animate}
-              className="dashboard-share-distribution"
-            />
+              {/* The ring is static (stroke-dashoffset is not an allowed animated property): it fades in and the centre figure counts. */}
+              <div
+                className={`dashboard-dial ${animate ? "dashboard-fade" : ""}`}
+              >
+                <svg viewBox="0 0 100 100" aria-hidden="true">
+                  <circle
+                    className="dashboard-dial-track"
+                    cx="50"
+                    cy="50"
+                    r="43"
+                  />
+                  <circle
+                    className="dashboard-dial-progress"
+                    cx="50"
+                    cy="50"
+                    r="43"
+                    strokeDasharray={2 * Math.PI * 43}
+                    strokeDashoffset={
+                      2 *
+                      Math.PI *
+                      43 *
+                      (1 - Math.min(Math.max(mine.compliance, 0), 1))
+                    }
+                  />
+                </svg>
+                <div>
+                  <strong className="num">
+                    <CountUp
+                      value={mine.compliance * 100}
+                      format={(v) => formatPercent(Math.round(v) / 100)}
+                      animate={animate}
+                    />
+                  </strong>
+                  <span>del mínimo</span>
+                </div>
+              </div>
+            </div>
+            <dl className="dashboard-personal-stats">
+              <div>
+                <dt>
+                  {mine.meetsMinimum ? "Sobre el mínimo" : "Por completar"}
+                </dt>
+                <dd className="num">
+                  {formatHours(Math.abs(mine.minimumHours - mine.hours))}
+                </dd>
+              </div>
+              <div>
+                <dt>Compromiso semanal</dt>
+                <dd className="num">{formatHours(user.weeklyHours)}</dd>
+              </div>
+            </dl>
+            <CardLink to="/horas">Ver mis horas</CardLink>
           </Card>
         </section>
-      </div>
+      ) : null}
 
-      <DashboardOperations userId={user.id} team={teamPanel} />
+      <section
+        aria-labelledby="dashboard-share"
+        className="dashboard-block enter"
+        style={stagger(2)}
+      >
+        <Card className="dashboard-share-card dashboard-hero-card">
+          <CardHeading
+            icon={ChartPie}
+            id="dashboard-share"
+            title="Tu participación"
+            subtitle="Acumulada"
+          />
+          {myPoints ? (
+            <div className="dashboard-share-value">
+              <p className="num">
+                <CountUp
+                  value={myPoints.participation * 100}
+                  format={(v) => `${Math.round(v)}`}
+                  animate={animate}
+                />
+                <span className="dashboard-percentage-unit"> %</span>
+              </p>
+              <dl className="dashboard-share-points">
+                <div>
+                  <dt>Tus puntos</dt>
+                  <dd className="num">{formatInt(myPoints.totalPoints)}</dd>
+                </div>
+                <div>
+                  <dt>Total del equipo</dt>
+                  <dd className="num">{formatInt(totalPoints)}</dd>
+                </div>
+              </dl>
+            </div>
+          ) : (
+            <p className="dashboard-caption">
+              Aún no hay puntos asignados a tu perfil.
+            </p>
+          )}
+          <SegmentedBar
+            segments={segments}
+            summary={shareSummary}
+            animate={animate}
+            emptyLabel="Aún no hay puntos. Las horas suman cuando otro socio las valida."
+            className="dashboard-share-distribution"
+          />
+        </Card>
+      </section>
+    </>
+  );
+
+  return (
+    <div className="studio-dashboard">
+      {header}
+      <DashboardOperations userId={user.id} team={teamPanel} hero={hero} />
     </div>
   );
 }
