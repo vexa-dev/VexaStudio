@@ -177,7 +177,7 @@ export function ChatMessageList({
                   <article
                     key={message.id}
                     className={`chat-message${own ? " chat-message-own" : ""}${first ? " is-first" : ""}${last ? " is-last" : ""}`}
-                    title={formatDateTime(
+                    data-tooltip={formatDateTime(
                       new Date(message.sentAt).toISOString(),
                     )}
                   >
@@ -356,3 +356,4 @@ export function ChatMessageList({
     </div>
   );
 }
+

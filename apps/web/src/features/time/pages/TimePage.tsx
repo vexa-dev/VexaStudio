@@ -1,3 +1,4 @@
+/* oxlint-disable jsx-a11y/no-noninteractive-tabindex -- Las barras reciben foco para consultar sus datos con teclado. */
 import { useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import {
@@ -10,7 +11,8 @@ import {
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
-import { Field, TextareaField } from "@/components/ui/Field";
+import { TextareaField } from "@/components/ui/Field";
+import { SearchField } from "@/components/ui/SearchField";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { ErrorState } from "@/components/ui/ErrorState";
 import { Skeleton } from "@/components/ui/Skeleton";
@@ -89,7 +91,8 @@ function ActivityChart({
         <div
           key={i}
           className="hours-chart-column"
-          title={`${hourly ? `${i}:00–${i + 1}:00` : `Día ${i + 1}`}: ${formatHours(value)}`}
+          data-tooltip={`${hourly ? `${i}:00–${i + 1}:00` : `Día ${i + 1}`}: ${formatHours(value)}`}
+          tabIndex={0}
         >
           <div className="hours-chart-track">
             <span style={{ height: `${(value / max) * 100}%` }} />
@@ -399,8 +402,9 @@ export default function TimePage() {
           {selected === "historial" ? (
             <>
               <div className="hours-filters">
-                <Field
+                <SearchField
                   label="Buscar actividad"
+                  placeholder="Buscar actividad…"
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
                 />

@@ -404,7 +404,7 @@ export default function ChatPanel({
               </button>
             ))}
           </nav>
-          <div className="chat-search">
+          <div className="chat-search vexa-search">
             <Search size={16} aria-hidden="true" />
             <input
               ref={listSearchInput}
@@ -687,7 +687,7 @@ export default function ChatPanel({
                 )}
               </header>
               {searchOpen && (
-                <div className="chat-message-search" id="chat-message-search">
+                <div className="chat-message-search vexa-search" id="chat-message-search">
                   <Search size={14} aria-hidden="true" />
                   <input
                     ref={messageSearchInput}
@@ -930,3 +930,4 @@ export default function ChatPanel({
     </SidePanel>
   );
 }
+
