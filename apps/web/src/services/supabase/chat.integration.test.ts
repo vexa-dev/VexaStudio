@@ -382,7 +382,7 @@ describe.skipIf(!url || !key)("local chat integration", () => {
     expect(clients[1].getChannels()).toHaveLength(0);
     expect(clients[2].getChannels()).toHaveLength(0);
   }, 15000);
-  it("hides disabled presence and releases channel lifecycle", async () => {
+  it("keeps presence always on and releases channel lifecycle", async () => {
     let online: Record<string, number> = {};
     const stop = rober.subscribePresence((value) => {
       online = value;
@@ -391,10 +391,11 @@ describe.skipIf(!url || !key)("local chat integration", () => {
     try {
       for (let i = 0; i < 60 && !online[ALEX]; i++) await wait(100);
       expect(online[ALEX]).toBeGreaterThan(0);
-      await alex.updateSettings({ presence: false });
-      for (let i = 0; i < 170 && online[ALEX]; i++) await wait(100);
-      expect(online[ALEX]).toBeUndefined();
-      await alex.updateSettings({ presence: true });
+      // Presence can no longer be turned off: the request is ignored and the person stays online.
+      const next = await alex.updateSettings({ presence: false });
+      expect(next.presence).toBe(true);
+      await wait(1500);
+      expect(online[ALEX]).toBeGreaterThan(0);
     } finally {
       alex.trackPresence(false);
       stop();
