@@ -1,16 +1,17 @@
-import { Suspense, useState } from "react";
+import { lazy, Suspense, useState } from "react";
 import { BrandLogo } from "@/components/BrandLogo";
 import { PageTransition } from "@/components/ui/PageTransition";
 import { useLocation } from "react-router-dom";
 import { NavLink, Outlet } from "react-router-dom";
 import { LavaNav } from "./LavaNav";
 import { BackgroundLines } from "@/components/BackgroundLines";
-import { Skeleton } from "@/components/ui/Skeleton";
+import { RouteSkeleton } from "./RouteSkeleton";
 import { TimerAlerts } from "@/features/time/components/TimerAlerts";
 import { TimerBar, TimerChip } from "@/features/time/components/TimerBar";
 import { useRunningEntry } from "@/features/time/hooks/useTime";
 import { cn } from "@/lib/utils";
 import { navItems, navigationFor } from "./nav";
+import { prefetchHandlers } from "./route-loaders";
 import { ThemeToggle } from "./ThemeToggle";
 import { UserMenu } from "./UserMenu";
 import { ProfileLink } from "./ProfileLink";
@@ -18,8 +19,14 @@ import { NotificationMenu } from "@/features/notifications/NotificationMenu";
 import { useCardTilt } from "@/lib/useCardTilt";
 import { useAuth } from "@/features/auth/hooks/useAuth";
 import { useFocusRest } from "@/features/day/useFocusRest";
-import { MascotCompanion } from "@/components/MascotCompanion";
 import { readMascotPreference } from "@/lib/mascot-preference";
+
+// The mascot is decorative: it loads after first paint, outside the critical path.
+const MascotCompanion = lazy(() =>
+  import("@/components/MascotCompanion").then((m) => ({
+    default: m.MascotCompanion,
+  })),
+);
 
 function Brand() {
   return (
@@ -82,7 +89,7 @@ export function AppLayout() {
           hasTimer ? "pb-44" : "pb-28",
         )}
       >
-        <Suspense fallback={<Skeleton className="h-64" />}>
+        <Suspense fallback={<RouteSkeleton />}>
           <PageTransition key={pathname}>
             <Outlet />
           </PageTransition>
@@ -90,11 +97,15 @@ export function AppLayout() {
       </main>
 
       <TimerBar />
-      <MascotCompanion
-        hasTimer={hasTimer}
-        visible={mascotVisible}
-        resting={resting}
-      />
+      {mascotVisible && (
+        <Suspense fallback={null}>
+          <MascotCompanion
+            hasTimer={hasTimer}
+            visible={mascotVisible}
+            resting={resting}
+          />
+        </Suspense>
+      )}
 
       <nav
         aria-label="Principal móvil"
@@ -108,6 +119,7 @@ export function AppLayout() {
             key={to}
             to={to}
             end={to === "/"}
+            {...prefetchHandlers(to)}
             className={({ isActive }) =>
               cn(
                 "relative flex flex-col items-center gap-0.5 py-2.5 text-xs font-medium transition-colors duration-150",

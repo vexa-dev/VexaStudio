@@ -82,9 +82,13 @@ export default function LoginPage() {
     setError(null)
     setPendingId(userId)
     try {
-      await animate('.access-content',
-        { opacity: .15, ...(reduced ? {} : { y: -motionTokens.distance.sm, scale: motionTokens.scale.press }) },
-        { duration: reduced ? motionTokens.duration.fast : motionTokens.duration.normal, ease: motionTokens.easing.smooth })
+      // La animación nunca debe bloquear el acceso: en una pestaña en segundo plano el navegador la pausa.
+      await Promise.race([
+        animate('.access-content',
+          { opacity: .15, ...(reduced ? {} : { y: -motionTokens.distance.sm, scale: motionTokens.scale.press }) },
+          { duration: reduced ? motionTokens.duration.fast : motionTokens.duration.normal, ease: motionTokens.easing.smooth }),
+        new Promise((resolve) => setTimeout(resolve, 700)),
+      ])
       await signIn(userId)
       try {
         localStorage.setItem(LAST_USER_KEY, userId)

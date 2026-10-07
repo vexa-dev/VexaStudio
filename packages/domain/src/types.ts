@@ -28,6 +28,8 @@ export interface Profile {
   bio?: string | null;
   /** Correo de la cuenta (solo lectura); lo entrega la sesión de Supabase, no la tabla de perfiles. */
   email?: string | null;
+  /** Invitación enviada y aún sin aceptar (solo el mock lo marca; en Supabase la persona entra al fijar su contraseña). */
+  pendingInvite?: boolean;
 }
 
 /** Datos personales que la propia persona puede editar. */

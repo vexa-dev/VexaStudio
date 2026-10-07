@@ -24,6 +24,8 @@ export interface FakeSpec {
   userId?: string | null;
   /** Resultado de Storage por operación (`upload`, `remove`, `sign`); sin dato devuelve éxito vacío. */
   storage?: { upload?: FakeResult; remove?: FakeResult; sign?: FakeResult };
+  /** Resultado de `functions.invoke` por nombre de Edge Function; sin dato devuelve `{ data: null, error: null }`. */
+  functions?: Record<string, FakeResult>;
 }
 
 export const ok = (data: unknown): FakeResult => ({ data, error: null });
@@ -86,6 +88,12 @@ export function fakeClient(spec: FakeSpec = {}) {
               args,
             ),
         };
+      },
+    },
+    functions: {
+      invoke: (name: string, options?: unknown) => {
+        calls.push({ target: `fn:${name}`, method: "invoke", args: [options] });
+        return Promise.resolve(spec.functions?.[name] ?? ok(null));
       },
     },
     from: (table: string) => chain(table, spec.tables?.[table] ?? ok(null)),

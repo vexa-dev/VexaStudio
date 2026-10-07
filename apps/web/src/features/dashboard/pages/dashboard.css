@@ -10,8 +10,6 @@
   --dash-row: 56px;
   --dash-lift: 0px;
   --dash-press: 1;
-  max-width: 1280px;
-  margin-inline: auto;
 }
 @media (min-width: 768px) {
   .studio-dashboard {

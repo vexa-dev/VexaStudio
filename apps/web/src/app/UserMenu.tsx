@@ -22,6 +22,8 @@ import { unreadLabel } from "./unread-label";
 import { nextChatMode, type ChatMode, type ChatModeAction } from "./chat-dock";
 import { useAuth } from "@/features/auth/hooks/useAuth";
 import { useMembers } from "@/features/team/hooks/useMembers";
+import { useRunningEntry } from "@/features/time/hooks/useTime";
+import { ChatBubble } from "@/features/chat/ChatBubble";
 const ChatPanel = lazy(() => import("@/features/chat/ChatPanel"));
 export function UserMenu() {
   const { user } = useAuth();
@@ -51,6 +53,7 @@ function ChatEntry({ user }: { user: Profile }) {
   const membersRef = useRef<Profile[]>([]);
   membersRef.current = useMembers().data ?? [];
   const online = useChatPresence();
+  const hasTimer = Boolean(useRunningEntry().data);
   // Null until the first load, so history is never announced as new.
   const previousIds = useRef<Set<string> | null>(null);
   const unread = countUnread(threads.data ?? [], user.id);
@@ -102,8 +105,8 @@ function ChatEntry({ user }: { user: Profile }) {
       <button
         type="button"
         aria-haspopup="dialog"
-        aria-expanded={mode !== "closed"}
-        aria-label={`${mode === "closed" ? "Abrir chat" : "Cerrar chat"}${unread ? `, ${unread} ${unread === 1 ? "mensaje sin leer" : "mensajes sin leer"}` : ""}`}
+        aria-expanded={mode !== "closed" && mode !== "bubble"}
+        aria-label={`${mode === "closed" || mode === "bubble" ? "Abrir chat" : "Cerrar chat"}${unread ? `, ${unread} ${unread === 1 ? "mensaje sin leer" : "mensajes sin leer"}` : ""}`}
         onClick={() => apply("toggle")}
         className="relative flex size-11 items-center justify-center rounded-full hover:bg-surface-2"
       >
@@ -126,7 +129,9 @@ function ChatEntry({ user }: { user: Profile }) {
           <ChatPanel
             user={user}
             online={online}
-            minimized={mode !== "open"}
+            minimized={mode === "minimized"}
+            bubble={mode === "bubble"}
+            onBubble={() => apply("bubble")}
             onMinimize={() => apply("minimize")}
             onRestore={() => apply("restore")}
             onConversationChange={(has) => {
@@ -137,6 +142,13 @@ function ChatEntry({ user }: { user: Profile }) {
             openRequest={openRequest}
           />
         </Suspense>
+      )}
+      {mode === "bubble" && (
+        <ChatBubble
+          unread={unread}
+          raised={hasTimer}
+          onOpen={() => apply("restore")}
+        />
       )}
     </>
   );

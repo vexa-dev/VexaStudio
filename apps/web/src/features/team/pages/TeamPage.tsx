@@ -28,6 +28,8 @@ import { areaLabel, roleLabel, taskStatusLabel } from "@/lib/labels";
 import { useTeamOverview } from "../hooks/useTeamOverview";
 import { TeamAnalytics } from "../components/TeamAnalytics";
 import { CollaboratorForm } from "../components/CollaboratorForm";
+import { InviteCollaboratorSheet } from "@/features/members/components/InviteCollaboratorSheet";
+import { MemberAdminActions } from "@/features/members/components/MemberAdminActions";
 import {
   compensationLabels,
   workModeLabels,
@@ -55,6 +57,7 @@ export default function TeamPage() {
   const [pageSize, setPageSize] = useState(10);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [create, setCreate] = useState(false);
+  const [invite, setInvite] = useState(false);
   if (isPending) return <Skeleton className="h-80" />;
   if (error || !data)
     return (
@@ -125,14 +128,21 @@ export default function TeamPage() {
         description="Personas, trabajo y avances del estudio."
         actions={
           admin && (
-            <Button
-              onClick={() => {
-                setCreate(true);
-              }}
-            >
-              <Plus size={16} />
-              Agregar colaborador
-            </Button>
+            <div className="flex flex-wrap items-center justify-end gap-2">
+              <Button onClick={() => setInvite(true)}>
+                <Plus size={16} />
+                Invitar por correo
+              </Button>
+              <Button
+                variant="secondary"
+                onClick={() => {
+                  setCreate(true);
+                }}
+              >
+                <Plus size={16} />
+                Agregar colaborador
+              </Button>
+            </div>
           )
         }
       />
@@ -452,6 +462,7 @@ export default function TeamPage() {
           )}
         </Card>
       )}
+      <InviteCollaboratorSheet open={invite} onClose={() => setInvite(false)} />
       <Sheet
         open={Boolean(selected)}
         onClose={() => setSelectedId(null)}
@@ -488,6 +499,9 @@ export default function TeamPage() {
                 <span>Horas registradas</span>
               </div>
             </div>
+            {admin && !selectedLocal && (
+              <MemberAdminActions member={selected.profile} />
+            )}
             {admin && selectedLocal && (
               <section className="team-employment-detail">
                 <h3>Datos y condiciones</h3>

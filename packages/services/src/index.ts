@@ -13,6 +13,8 @@ import type {
   ChatThread,
 } from "@vexa/domain/chat";
 import type {
+  Area,
+  Role,
   HoursDraft,
   HoursEvidence,
   ProjectLabel,
@@ -109,9 +111,29 @@ export interface SettingsService {
   get(): Promise<Settings>;
 }
 
+/** Invitación de un colaborador. Los socios entran tras una votación y un administrador los promueve después. */
+export interface InviteMemberInput {
+  email: string;
+  name: string;
+  role?: "collaborator";
+  area?: Area;
+  weeklyHours?: number;
+  /** Proyectos a los que se une al aceptar (membresía explícita). */
+  projectIds?: Id[];
+}
+
 export interface MemberService {
   list(): Promise<Profile[]>;
   get(id: Id): Promise<Profile | null>;
+  /**
+   * Solo administrador. Envía la invitación por correo (Supabase) o crea un colaborador pendiente sin
+   * enviar nada (mock). Devuelve el perfil; si ya existe una cuenta con ese correo, falla con un aviso genérico.
+   */
+  invite?(input: InviteMemberInput): Promise<Profile>;
+  /** Solo administrador. No sobre sí mismo ni dejando al estudio sin administrador activo. */
+  setRole?(memberId: Id, role: Role, note?: string): Promise<Profile>;
+  /** Solo administrador. Desactivar exige motivo y cierra las sesiones de la persona; reactivar las deja entrar de nuevo. */
+  setActive?(memberId: Id, active: boolean, reason?: string): Promise<Profile>;
 }
 
 export interface ProjectService {

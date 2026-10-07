@@ -524,4 +524,33 @@ describe.skipIf(!url || !key)("Supabase local (integración)", () => {
     await expect(admin.services.meetings.markAttendance(proposed.meeting.id, [JHONY, ROBER])).rejects.toThrow("ya empezó");
     expect((await rober.services.meetings.getCurrent())?.meeting.id).toBe(proposed.meeting.id);
   });
+
+  it("gestiona miembros: solo admin cambia roles y (des)activa, no a sí mismo, y la persona inactiva pierde el acceso", async () => {
+    // Se usan los RPC directo: el cierre de sesiones es de la Edge Function (no corre en este stack local).
+    const JHONY_ID = "00000000-0000-4000-8000-000000000001";
+    const promoted = await admin.client.rpc("set_member_role", { p_member: ALEX, p_role: "partner", p_note: "Prueba" });
+    expect(promoted.error).toBeNull();
+    expect(promoted.data).toMatchObject({ id: ALEX, role: "partner" });
+    expect((await admin.services.members.get(ALEX))?.role).toBe("partner");
+    expect((await rober.client.rpc("set_member_role", { p_member: ALEX, p_role: "admin" })).error?.message).toMatch(
+      /administrador/i,
+    );
+    expect((await admin.client.rpc("set_member_role", { p_member: JHONY_ID, p_role: "partner" })).error?.message).toMatch(
+      /propio rol/i,
+    );
+    expect((await admin.client.rpc("set_member_active", { p_member: ALEX, p_active: false })).error?.message).toMatch(
+      /motivo/i,
+    );
+
+    const off = await admin.client.rpc("set_member_active", { p_member: ALEX, p_active: false, p_reason: "Prueba" });
+    expect(off.error).toBeNull();
+    expect(off.data).toMatchObject({ id: ALEX, active: false });
+    expect(await alex.services.members.list()).toEqual([]);
+    expect((await alex.client.rpc("set_member_active", { p_member: ALEX, p_active: true })).error).not.toBeNull();
+
+    // Se deja el estado como estaba.
+    expect((await admin.client.rpc("set_member_active", { p_member: ALEX, p_active: true })).error).toBeNull();
+    expect((await admin.client.rpc("set_member_role", { p_member: ALEX, p_role: "collaborator" })).error).toBeNull();
+    expect(await admin.services.members.get(ALEX)).toMatchObject({ role: "collaborator", active: true });
+  });
 });

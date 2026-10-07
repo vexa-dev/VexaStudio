@@ -7,6 +7,7 @@ import { BrandLogo } from "@/components/BrandLogo";
 import { motionTokens, springs } from "@/lib/motion-tokens";
 import { useAuth } from "@/features/auth/hooks/useAuth";
 import { navigationFor } from "./nav";
+import { prefetchHandlers } from "./route-loaders";
 import { useEffect, useRef } from "react";
 
 const dropSizes = [
@@ -177,6 +178,7 @@ export function LavaNav() {
             key={to}
             to={to}
             end={to === "/"}
+            {...prefetchHandlers(to)}
             className="lava-link"
             aria-label={label}
           >
@@ -202,6 +204,7 @@ export function LavaNav() {
       <nav className="lava-utilities" aria-label="Más opciones">
         <NavLink
           to="/perfil"
+          {...prefetchHandlers("/perfil")}
           className="lava-link lava-link--photo"
           aria-label="Mi perfil"
         >

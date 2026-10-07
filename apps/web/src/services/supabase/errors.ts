@@ -3,6 +3,8 @@
  * Las funciones SQL escriben sus mensajes en español sin acentos; aquí se restituyen comparando
  * con la lista de mensajes canónicos (los del mock y de las guardas de la base).
  */
+import { MEMBER_ADMIN_MESSAGES } from "@vexa/domain/member-admin";
+
 export interface ErrorLike {
   message?: string;
   code?: string;
@@ -150,6 +152,8 @@ const CANONICAL_MESSAGES = [
   "Esa transición de la convocatoria no está permitida",
   "La reunión confirmada no cambia",
   "La convocatoria no cambia de semana ni de autor",
+  // Gestión de miembros (RPC set_member_role / set_member_active y guarda de profiles).
+  ...Object.values(MEMBER_ADMIN_MESSAGES),
 ];
 
 const fold = (text: string) =>

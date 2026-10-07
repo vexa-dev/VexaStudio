@@ -1,6 +1,10 @@
-/** Retraso artificial de 150–300 ms para poder probar los estados de carga. */
+/**
+ * Retraso del mock: casi nulo por defecto (0–15 ms); con `VITE_MOCK_LATENCY` definido vuelve
+ * a 150–300 ms para poder probar los estados de carga.
+ */
 export function delay<T>(value: T): Promise<T> {
-  const ms = 150 + Math.random() * 150
+  const slow = Boolean(import.meta.env.VITE_MOCK_LATENCY)
+  const ms = slow ? 150 + Math.random() * 150 : Math.random() * 15
   // Copia profunda: quien consume no debe poder mutar la base simulada.
   const copy = structuredClone(value)
   return new Promise((resolve) => setTimeout(() => resolve(copy), ms))

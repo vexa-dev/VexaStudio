@@ -1,7 +1,6 @@
 import type {
   AuthService,
   DailyService,
-  MemberService,
   Services,
   SettingsService,
 } from "@vexa/services";
@@ -15,6 +14,7 @@ import { dashboard } from "./dashboard";
 import { expenseService } from "./expenses";
 import { projects, sprints, tasks, time } from "./work";
 import { meetingService } from "./meetings";
+import { memberService as members } from "./members";
 import { delay } from "./utils";
 import { profileAuth } from "./auth";
 import { notificationService, resetNotificationPreferences } from "./notifications";
@@ -53,16 +53,6 @@ const auth: AuthService = {
 const settings: SettingsService = {
   async get() {
     return delay(getDb().settings);
-  },
-};
-
-const members: MemberService = {
-  async list() {
-    return delay(withMediaAll(getDb().profiles));
-  },
-  async get(id) {
-    const profile = getDb().profiles.find((p) => p.id === id);
-    return delay(profile ? withMedia(profile) : null);
   },
 };
 

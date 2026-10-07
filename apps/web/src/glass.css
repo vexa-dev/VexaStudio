@@ -1168,10 +1168,10 @@ select:focus-visible {
 
 /* Liquid space: transparent foreground over a moving, dimensional backdrop. */
 .integrated-shell { isolation: isolate; }
-/* Todas las vistas de trabajo comparten el ancho disponible; Inicio conserva su distribución. */
-.integrated-shell main:not([data-view="inicio"]) { max-width: none; margin-inline: 0; }
+/* Todas las vistas, Inicio incluido, comparten el mismo ancho disponible y los mismos márgenes. */
+.integrated-shell main { max-width: none; margin-inline: 0; }
 @media (min-width: 1024px) {
-  .integrated-shell main:not([data-view="inicio"]) { padding-inline: 32px 48px; }
+  .integrated-shell main { padding-inline: 32px 48px; }
 }
 .background-lines { position: fixed; inset: 0; z-index: -1; pointer-events: none; overflow: hidden; color: var(--line-art); opacity: .1; }
 .background-lines svg { display: block; width: 100%; height: 100%; }

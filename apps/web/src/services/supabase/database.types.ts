@@ -1340,6 +1340,48 @@ isOneToOne: false
         isOneToOne: true
         isSetofReturn: false
       } },
+"set_member_active":
+{ Args: { "p_active": boolean,"p_member": string,"p_reason"?: string }; Returns: {
+              "active": boolean,
+"area": Database["public"]['Enums']["user_area"],
+"avatar_path": string | null,
+"banner_path": string | null,
+"bio": string | null,
+"created_at": string,
+"id": string,
+"name": string,
+"role": Database["public"]['Enums']["user_role"],
+"updated_at": string,
+"username": string | null,
+"weekly_hours": number
+            }
+                          SetofOptions: {
+        from: "*"
+        to: "profiles"
+        isOneToOne: true
+        isSetofReturn: false
+      } },
+"set_member_role":
+{ Args: { "p_member": string,"p_note"?: string,"p_role": Database["public"]['Enums']["user_role"] }; Returns: {
+              "active": boolean,
+"area": Database["public"]['Enums']["user_area"],
+"avatar_path": string | null,
+"banner_path": string | null,
+"bio": string | null,
+"created_at": string,
+"id": string,
+"name": string,
+"role": Database["public"]['Enums']["user_role"],
+"updated_at": string,
+"username": string | null,
+"weekly_hours": number
+            }
+                          SetofOptions: {
+        from: "*"
+        to: "profiles"
+        isOneToOne: true
+        isSetofReturn: false
+      } },
 "set_notification_preferences":
 { Args: { "p_hours_reminder"?: boolean,"p_task_assigned"?: boolean,"p_weekly_summary"?: boolean }; Returns: {
               "hours_reminder": boolean,
