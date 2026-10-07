@@ -358,4 +358,31 @@ describe.skipIf(!url || !key)("Supabase local (integración)", () => {
       .toEqual([]);
     await rober.services.time.void(created.id, "Prueba de integración");
   });
+  it("comparte el daily: un envío por día, visible para socios y solo propio para el colaborador", async () => {
+    const today = todayLima();
+    const first = await rober.services.daily.submit({ done: "  Avance de integración ", willDo: "Seguir", blockers: "" });
+    expect(first).toMatchObject({ userId: ROBER, date: today, done: "Avance de integración" });
+    // Reenviar el mismo día corrige la misma fila.
+    const second = await rober.services.daily.submit({ done: "Avance corregido", willDo: "Seguir", blockers: "Nada" });
+    expect(second.id).toBe(first.id);
+    expect(await rober.services.daily.list({ userId: ROBER, date: today })).toHaveLength(1);
+
+    // El admin lo ve; el colaborador no ve el de otra persona, pero sí el suyo.
+    const seenByAdmin = await admin.services.daily.list({ userId: ROBER, date: today });
+    expect(seenByAdmin.map((d) => d.done)).toEqual(["Avance corregido"]);
+    expect(await alex.services.daily.list({ userId: ROBER })).toEqual([]);
+    await alex.services.daily.submit({ done: "Lo mío", willDo: "", blockers: "" });
+    const mine = await alex.services.daily.list();
+    expect(mine.every((d) => d.userId === ALEX)).toBe(true);
+    expect(mine.length).toBeGreaterThan(0);
+
+    // La base rechaza otra fecha aunque el cliente la mande, y nadie borra.
+    const denied = await rober.client
+      .from("daily_updates")
+      .insert({ date: "2020-01-01", done: "viejo" });
+    expect(denied.error).not.toBeNull();
+    const removed = await rober.client.from("daily_updates").delete().eq("id", first.id);
+    expect(removed.error).not.toBeNull();
+    expect(typeof (await rober.services.daily.suggestDone())).toBe("string");
+  });
 });

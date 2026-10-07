@@ -328,6 +328,31 @@ isOneToOne: false
       referencedColumns: ["id"]
     }
                   ]
+                },"daily_updates": {
+                  Row: {
+                    "blockers": string,"created_at": string,"date": string,"done": string,"id": string,"updated_at": string,"user_id": string,"will_do": string
+                  }
+                  Insert: {
+                    "blockers"?: string,"created_at"?: string,"date": string,"done"?: string,"id"?: string,"updated_at"?: string,"user_id"?: string,"will_do"?: string
+                  }
+                  Update: {
+                    "blockers"?: string,"created_at"?: string,"date"?: string,"done"?: string,"id"?: string,"updated_at"?: string,"user_id"?: string,"will_do"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "daily_updates_user_id_fkey"
+      columns: ["user_id"]
+isOneToOne: false
+      referencedRelation: "member_points"
+      referencedColumns: ["user_id"]
+    },{
+      foreignKeyName: "daily_updates_user_id_fkey"
+      columns: ["user_id"]
+isOneToOne: false
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    }
+                  ]
                 },"expense_votes": {
                   Row: {
                     "created_at": string,"expense_id": string,"in_favor": boolean,"user_id": string

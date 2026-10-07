@@ -5,6 +5,7 @@ import type {
   AuditSnapshot,
   ClientPlatform,
 } from "@vexa/domain/audit";
+import type { DailyRecord } from "@vexa/domain/daily";
 import type {
   Expense,
   ExpenseVote,
@@ -380,5 +381,17 @@ export function mapNotification(row: Tables<"notifications">): Notification {
     payload,
     read: row.read_at !== null,
     createdAt: isoInstant(row.created_at),
+  };
+}
+
+export function mapDailyUpdate(row: Tables<"daily_updates">): DailyRecord {
+  return {
+    id: row.id,
+    userId: row.user_id,
+    date: row.date,
+    done: row.done,
+    willDo: row.will_do,
+    blockers: row.blockers,
+    updatedAt: isoInstant(row.updated_at),
   };
 }

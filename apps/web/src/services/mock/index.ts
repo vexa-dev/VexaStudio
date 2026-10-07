@@ -11,7 +11,7 @@ import type {
 import { auditService } from "./audit";
 import { chatService } from "./chat";
 import { getDb, getSessionUserId, setSessionUserId } from "./db";
-import { requireStudioAccess } from "./studio-access";
+import { createMockDailyService } from "./daily";
 import { dashboard } from "./dashboard";
 import { expenseService } from "./expenses";
 import { projects, sprints, tasks, time } from "./work";
@@ -66,17 +66,7 @@ const members: MemberService = {
   },
 };
 
-const daily: DailyService = {
-  async list(filter) {
-    requireStudioAccess();
-    return delay(getDb().dailyUpdates.filter((update) =>
-      (!filter?.userId || update.userId === filter.userId) &&
-      (!filter?.date || update.date === filter.date),
-    ));
-  },
-  submit: (...args) => notImplemented<DailyService>("DailyService").submit(...args),
-  suggestDone: (...args) => notImplemented<DailyService>("DailyService").suggestDone(...args),
-};
+const daily: DailyService = createMockDailyService(time, tasks);
 
 /** Servicios del mock. Los de F2–F4 se van implementando bloque a bloque. */
 export function createMockServices(): Services {

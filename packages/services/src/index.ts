@@ -3,6 +3,7 @@ import type {
   AuditEventType,
   AuditLogEntry,
 } from "@vexa/domain/audit";
+import type { DailyRecord } from "@vexa/domain/daily";
 import type {
   ChatAttachment,
   ChatEvent,
@@ -18,7 +19,6 @@ import type {
   Announcement,
   Comment,
   CommentEntity,
-  DailyUpdate,
   Expense,
   ExpenseVote,
   Id,
@@ -270,8 +270,13 @@ export interface NewDailyInput {
 }
 
 export interface DailyService {
-  list(filter?: { userId?: Id; date?: IsoDate }): Promise<DailyUpdate[]>;
-  submit(input: NewDailyInput): Promise<DailyUpdate>;
+  /**
+   * Dailies compartidos, del más reciente al más antiguo. Admin y socios ven todos; un colaborador
+   * solo los suyos.
+   */
+  list(filter?: { userId?: Id; date?: IsoDate }): Promise<DailyRecord[]>;
+  /** Envía el daily de hoy (Lima) de la persona con sesión; reenviar el mismo día lo corrige. */
+  submit(input: NewDailyInput): Promise<DailyRecord>;
   /** Tareas trabajadas desde el último daily, para autocompletar "qué hice". */
   suggestDone(): Promise<string>;
 }

@@ -4,19 +4,30 @@ import {
   ChevronDown,
   ChevronUp,
   History,
+  Send,
   Sparkles,
   Sun,
 } from "lucide-react";
+import { toast } from "sonner";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
+import { ErrorState } from "@/components/ui/ErrorState";
 import { ChoicePicker } from "@/features/time/components/TimePickers";
-import { formatIsoDate } from "@vexa/domain/dates";
+import type { DailyRecord } from "@vexa/domain/daily";
+import { formatDateTime, formatIsoDate } from "@vexa/domain/dates";
 import {
   dailyDates,
   readLocal,
   writeLocal,
   type DailyDraft,
 } from "./day-storage";
+import {
+  dailyToDraft,
+  draftToDaily,
+  isDraftEmpty,
+  matchesSent,
+} from "./daily-form";
+import { useSentDailies, useSubmitDaily, useSuggestDone } from "./hooks/useDaily";
 
 export function DayTextarea({
   label,
@@ -55,12 +66,12 @@ function DailyEditor({
   userId,
   date,
   today,
-  suggestions,
+  sent,
 }: {
   userId: string;
   date: string;
   today: string;
-  suggestions: string[];
+  sent: DailyRecord | undefined;
 }) {
   const key = `vexa.daily-draft.${userId}.${date}`;
   const [draft, setDraft] = useState<DailyDraft>(() => {
@@ -110,22 +121,56 @@ function DailyEditor({
       window.removeEventListener("pagehide", flush);
     };
   }, [key]);
-  function suggest() {
-    const lines = suggestions.filter((title) => !draft.done.includes(title));
-    if (lines.length)
+  const submit = useSubmitDaily();
+  const suggestion = useSuggestDone();
+  // Un daily ya enviado reaparece para corregirlo si este navegador no tiene borrador.
+  const adopted = useRef(false);
+  useEffect(() => {
+    if (adopted.current || !sent || dirty.current) return;
+    adopted.current = true;
+    if (isDraftEmpty(latest.current)) {
+      latest.current = dailyToDraft(sent);
+      setDraft(latest.current);
+    }
+  }, [sent]);
+  async function suggest() {
+    const text = await suggestion.mutateAsync();
+    const lines = text
+      .split("\n")
+      .filter((line) => line && !latest.current.done.includes(line));
+    if (!text) toast.info("No hay horas registradas desde tu último daily.");
+    else if (lines.length)
       update({
-        done: [draft.done, ...lines.map((title) => `• ${title}`)]
+        done: [latest.current.done, ...lines]
           .filter(Boolean)
           .join("\n")
           .slice(0, 2000),
       });
+    else toast.info("Ya incluiste ese trabajo en tu daily.");
   }
+  async function send() {
+    if (dirty.current && writeLocal(key, latest.current)) dirty.current = false;
+    await submit.mutateAsync(draftToDaily(latest.current));
+  }
+  const unchanged = sent ? matchesSent(draft, sent) : false;
+  const canSend =
+    date === today &&
+    !submit.isPending &&
+    !isDraftEmpty(draft) &&
+    !unchanged;
   return (
     <div className="day-daily-fields">
-      {date === today && suggestions.length > 0 && (
-        <button type="button" className="day-text-action" onClick={suggest}>
-          <Sparkles size={15} /> Usar trabajo de hoy
-        </button>
+      {date === today && (
+        <Button
+          variant="ghost"
+          size="sm"
+          className="justify-self-start"
+          onClick={() => void suggest().catch(() => undefined)}
+          disabled={suggestion.isPending}
+        >
+          <Sparkles size={15} />
+          {suggestion.isPending ? "Buscando tu trabajo…" : "Autocompletar qué hice"}
+        </Button>
       )}
       <DayTextarea
         label="¿Qué avanzaste?"
@@ -161,8 +206,36 @@ function DailyEditor({
         <Check size={14} />
         <output aria-live="polite">{status}</output>
       </div>
+      {sent && (
+        <output className="day-note">
+          <Check size={12} aria-hidden="true" /> Enviado el{" "}
+          <span className="num">{formatDateTime(sent.updatedAt ?? sent.date)}</span> (Lima).
+          {!unchanged && " Tienes cambios sin enviar."}
+        </output>
+      )}
+      {date === today ? (
+        <Button
+          onClick={() => void send().catch(() => undefined)}
+          disabled={!canSend}
+        >
+          <Send size={16} />
+          {submit.isPending
+            ? "Enviando…"
+            : sent
+              ? "Reenviar cambios"
+              : "Enviar daily"}
+        </Button>
+      ) : (
+        !sent && (
+          <p className="day-note">
+            Solo se puede enviar el daily de hoy. Este borrador es personal.
+          </p>
+        )
+      )}
       <p className="day-note">
-        Borrador personal. Todavía no se comparte con el equipo.
+        {sent
+          ? "Tu equipo ve lo que enviaste. Puedes corregirlo hoy."
+          : "Hasta que lo envíes, el borrador es personal y queda en este navegador."}
       </p>
     </div>
   );
@@ -170,12 +243,14 @@ function DailyEditor({
 export function DayDaily({
   userId,
   today,
-  suggestions,
 }: {
   userId: string;
   today: string;
-  suggestions: string[];
 }) {
+  const sentDailies = useSentDailies(userId);
+  const sentByDate = new Map(
+    (sentDailies.data ?? []).map((daily) => [daily.date, daily]),
+  );
   const [date, setDate] = useState(today);
   const [open, setOpen] = useState(false);
   const panelId = useId();
@@ -214,7 +289,7 @@ export function DayDaily({
               label="Fecha del daily"
               value={date}
               onChange={setDate}
-              options={dailyDates(userId, today).map((value) => ({
+              options={dailyDates(userId, today, [...sentByDate.keys()]).map((value) => ({
                 value,
                 label:
                   value === today
@@ -234,12 +309,21 @@ export function DayDaily({
               </button>
             </div>
           )}
+          {sentDailies.isLoading && (
+            <output className="day-note">Buscando tu daily enviado…</output>
+          )}
+          {sentDailies.isError && (
+            <ErrorState
+              message="No se pudo comprobar si ya enviaste tu daily."
+              onRetry={() => void sentDailies.refetch()}
+            />
+          )}
           <DailyEditor
             key={date}
             userId={userId}
             date={date}
             today={today}
-            suggestions={suggestions}
+            sent={sentByDate.get(date)}
           />
         </div>
       )}
