@@ -2,7 +2,7 @@ import { parseReceiptDataUrl, RECEIPT_MAX_BYTES } from "@vexa/domain/rules";
 import type { ExpenseService } from "@vexa/services";
 import type { VexaSupabase } from "@/lib/supabase";
 import { removeChatObject, STORAGE_CACHE_CONTROL } from "./chat-media";
-import { toServiceError, unwrap, unwrapMaybe } from "./errors";
+import { toServiceError, unwrap } from "./errors";
 import { mapExpense, mapRecurring, mapVote } from "./mappers";
 import { requireStudioAccess, requireUserId } from "./session";
 
@@ -100,9 +100,12 @@ export function createExpenseService(client: VexaSupabase): ExpenseService {
     },
     async getReceiptUrl(expenseId) {
       await requireStudioAccess(client);
-      const row = unwrapMaybe(
-        await client.from("expenses").select("receipt_url").eq("id", expenseId).maybeSingle(),
-      );
+      const { data: row, error } = await client
+        .from("expenses")
+        .select("receipt_url")
+        .eq("id", expenseId)
+        .maybeSingle();
+      if (error) throw toServiceError(error);
       if (!row?.receipt_url) return null;
       const signed = await client.storage
         .from(RECEIPT_BUCKET)

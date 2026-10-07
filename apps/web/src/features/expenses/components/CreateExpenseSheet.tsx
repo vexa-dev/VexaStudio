@@ -43,6 +43,7 @@ export function CreateExpenseSheet({
   pending,
   allowed,
   source,
+  initial,
 }: {
   open: boolean;
   onClose: () => void;
@@ -50,8 +51,13 @@ export function CreateExpenseSheet({
   pending: boolean;
   allowed: boolean;
   source: DataSource;
+  /** Valores sugeridos (por ejemplo, desde un registro de la vista previa local). */
+  initial?: Partial<ExpenseDraft>;
 }) {
-  const [draft, setDraft] = useState(emptyDraft);
+  const [draft, setDraft] = useState<ExpenseDraft>({
+    ...emptyDraft,
+    ...initial,
+  });
   const [file, setFile] = useState<File | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [reading, setReading] = useState(false);

@@ -4,7 +4,15 @@ import {
   RECEIPT_MAX_BYTES,
   RECEIPT_MIME_TYPES,
 } from "@vexa/domain/rules";
-import type { Expense, ExpenseVote, Profile } from "@vexa/domain/types";
+import { monthKey } from "@vexa/domain/dates";
+import type {
+  Currency,
+  Expense,
+  ExpenseCategory,
+  ExpenseStatus,
+  ExpenseVote,
+  Profile,
+} from "@vexa/domain/types";
 import type { NewExpenseInput } from "@vexa/services";
 import type { DataSource } from "@/services/supabase/data-source";
 
@@ -128,4 +136,124 @@ export function expenseErrorMessage(error: unknown): string {
   return error instanceof Error
     ? error.message
     : "No se pudo guardar el cambio. Inténtalo de nuevo.";
+}
+
+/** Votos a favor que aprueban un gasto por encima del límite (regla del PRD). */
+export const EXPENSE_APPROVALS_REQUIRED = 3;
+
+export const expenseStatusLabels: Record<ExpenseStatus, string> = {
+  pending: "Por aprobar",
+  approved: "Aprobado",
+  rejected: "Rechazado",
+  voided: "Anulado",
+};
+
+const inMonth = (expense: Expense, month: string | null) =>
+  month === null || monthKey(expense.createdAt) === month;
+
+/** Totales reales: solo gastos aprobados suman al gasto; los anulados no cuentan. */
+export function summarizeExpenses(
+  expenses: Expense[],
+  currency: Currency,
+  month: string | null,
+) {
+  let spent = 0;
+  let approvedCount = 0;
+  let pendingAmount = 0;
+  let pendingCount = 0;
+  for (const expense of expenses) {
+    if (expense.currency !== currency || !inMonth(expense, month)) continue;
+    if (expense.status === "approved") {
+      spent += expense.amount;
+      approvedCount += 1;
+    } else if (expense.status === "pending") {
+      pendingAmount += expense.amount;
+      pendingCount += 1;
+    }
+  }
+  return { spent, approvedCount, pendingAmount, pendingCount };
+}
+
+export function expenseMonthTotals(
+  expenses: Expense[],
+  currency: Currency,
+  months: string[],
+): number[] {
+  return months.map((month) =>
+    expenses
+      .filter(
+        (expense) =>
+          expense.status === "approved" &&
+          expense.currency === currency &&
+          monthKey(expense.createdAt) === month,
+      )
+      .reduce((sum, expense) => sum + expense.amount, 0),
+  );
+}
+
+export function expenseCategoryTotals(
+  expenses: Expense[],
+  currency: Currency,
+  month: string | null,
+): Record<ExpenseCategory, number> {
+  const totals: Record<ExpenseCategory, number> = {
+    infrastructure: 0,
+    software: 0,
+    marketing: 0,
+    legal: 0,
+    other: 0,
+  };
+  for (const expense of expenses)
+    if (
+      expense.status === "approved" &&
+      expense.currency === currency &&
+      inMonth(expense, month)
+    )
+      totals[expense.category] += expense.amount;
+  return totals;
+}
+
+export function filterExpenses(
+  expenses: Expense[],
+  search: string,
+  status: string,
+): Expense[] {
+  const needle = search.trim().toLowerCase();
+  return expenses
+    .filter(
+      (expense) =>
+        expense.concept.toLowerCase().includes(needle) &&
+        (status === "all" || expense.status === status),
+    )
+    .sort(
+      (a, b) =>
+        b.createdAt.localeCompare(a.createdAt) || a.id.localeCompare(b.id),
+    );
+}
+
+export function votesForExpense(
+  votes: ExpenseVote[],
+  expenseId: string,
+): ExpenseVote[] {
+  return votes.filter((vote) => vote.expenseId === expenseId);
+}
+
+const LOCAL_CATEGORY: Record<string, ExpenseCategory> = {
+  Publicidad: "marketing",
+  Software: "software",
+  Infraestructura: "infrastructure",
+};
+
+/** Borrador de gasto real a partir de un registro de la vista previa local. */
+export function expenseDraftFromLocal(
+  item: { title: string; category: string },
+  amount: number,
+  currency: Currency,
+): Partial<ExpenseDraft> {
+  return {
+    concept: item.title,
+    amount: String(amount),
+    currency,
+    category: LOCAL_CATEGORY[item.category] ?? "other",
+  };
 }

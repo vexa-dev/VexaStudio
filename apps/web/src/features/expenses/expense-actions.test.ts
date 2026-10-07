@@ -9,6 +9,14 @@ import {
   validateReceiptFile,
   receiptMaxBytes,
   selectedExpense,
+  summarizeExpenses,
+  expenseMonthTotals,
+  expenseCategoryTotals,
+  filterExpenses,
+  votesForExpense,
+  expenseDraftFromLocal,
+  expenseStatusLabels,
+  EXPENSE_APPROVALS_REQUIRED,
 } from "./expense-actions";
 
 const user = { id: "u1", role: "partner", active: true } as Profile;
@@ -136,5 +144,118 @@ describe("expense UI actions", () => {
     expect(selectedExpense([refreshed], "e1")).toBe(refreshed);
     expect(selectedExpense([], "e1")).toBeNull();
     expect(selectedExpense([expense], null)).toBeNull();
+  });
+});
+
+describe("expense overview rules", () => {
+  const at = (id: string, patch: Partial<Expense>): Expense => ({
+    ...expense,
+    id,
+    ...patch,
+  });
+  const list = [
+    at("a", {
+      status: "approved",
+      amount: 100,
+      createdAt: "2026-10-03T15:00:00Z",
+    }),
+    at("b", {
+      status: "approved",
+      amount: 40,
+      currency: "USD",
+      createdAt: "2026-10-04T15:00:00Z",
+    }),
+    at("c", {
+      status: "pending",
+      amount: 60,
+      createdAt: "2026-10-05T15:00:00Z",
+    }),
+    at("d", {
+      status: "voided",
+      amount: 500,
+      createdAt: "2026-10-05T16:00:00Z",
+    }),
+    at("e", {
+      status: "approved",
+      amount: 25,
+      category: "software",
+      createdAt: "2026-09-30T03:00:00Z",
+    }),
+  ];
+  it("sums only approved expenses of one currency and counts pending ones", () => {
+    expect(summarizeExpenses(list, "PEN", null)).toEqual({
+      spent: 125,
+      approvedCount: 2,
+      pendingAmount: 60,
+      pendingCount: 1,
+    });
+    expect(summarizeExpenses(list, "USD", null).spent).toBe(40);
+  });
+  it("applies the month filter in Lima time", () => {
+    // 2026-09-30T03:00Z is 22:00 of Sep 29 in Lima.
+    expect(summarizeExpenses(list, "PEN", "2026-10").spent).toBe(100);
+    expect(summarizeExpenses(list, "PEN", "2026-09").spent).toBe(25);
+  });
+  it("totals approved expenses per month and per category", () => {
+    expect(expenseMonthTotals(list, "PEN", ["2026-09", "2026-10"])).toEqual([
+      25, 100,
+    ]);
+    expect(expenseCategoryTotals(list, "PEN", null)).toEqual({
+      infrastructure: 100,
+      software: 25,
+      marketing: 0,
+      legal: 0,
+      other: 0,
+    });
+  });
+  it("filters by concept text and status, newest first", () => {
+    const named = [
+      at("x", { concept: "Dominio", createdAt: "2026-10-01T12:00:00Z" }),
+      at("y", {
+        concept: "Hosting",
+        createdAt: "2026-10-02T12:00:00Z",
+        status: "approved",
+      }),
+    ];
+    expect(filterExpenses(named, "", "all").map((e) => e.id)).toEqual([
+      "y",
+      "x",
+    ]);
+    expect(filterExpenses(named, "domi", "all").map((e) => e.id)).toEqual([
+      "x",
+    ]);
+    expect(filterExpenses(named, "", "approved").map((e) => e.id)).toEqual([
+      "y",
+    ]);
+  });
+  it("selects the votes of one expense and exposes the approval rule", () => {
+    const votes = [
+      { expenseId: "a", userId: "u1", inFavor: true },
+      { expenseId: "b", userId: "u2", inFavor: false },
+    ];
+    expect(votesForExpense(votes, "a")).toEqual([votes[0]]);
+    expect(EXPENSE_APPROVALS_REQUIRED).toBe(3);
+    expect(expenseStatusLabels.voided).toBe("Anulado");
+  });
+  it("builds a draft from a local preview item with a mapped category", () => {
+    expect(
+      expenseDraftFromLocal(
+        { title: "Figma", category: "Publicidad" },
+        60,
+        "USD",
+      ),
+    ).toMatchObject({
+      concept: "Figma",
+      amount: "60",
+      currency: "USD",
+      category: "marketing",
+    });
+    expect(
+      expenseDraftFromLocal(
+        { title: "X", category: "Operaciones" },
+        10.5,
+        "PEN",
+      ).category,
+    ).toBe("other");
   });
 });
