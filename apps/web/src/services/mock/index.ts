@@ -1,7 +1,6 @@
 import type {
   AuthService,
   DailyService,
-  MeetingService,
   MemberService,
   Services,
   SettingsService,
@@ -15,7 +14,8 @@ import { createMockDailyService } from "./daily";
 import { dashboard } from "./dashboard";
 import { expenseService } from "./expenses";
 import { projects, sprints, tasks, time } from "./work";
-import { delay, notImplemented } from "./utils";
+import { meetingService } from "./meetings";
+import { delay } from "./utils";
 import { profileAuth } from "./auth";
 import { notificationService, resetNotificationPreferences } from "./notifications";
 import {
@@ -83,7 +83,7 @@ export function createMockServices(): Services {
     daily,
     comments: commentService,
     announcements: announcementService,
-    meetings: notImplemented<MeetingService>("MeetingService"),
+    meetings: meetingService,
     notifications: notificationService,
     audit: auditService,
     chat: chatService,

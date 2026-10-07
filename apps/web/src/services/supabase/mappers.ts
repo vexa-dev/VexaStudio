@@ -8,6 +8,9 @@ import type {
 import type { DailyRecord } from "@vexa/domain/daily";
 import type {
   Announcement,
+  Meeting,
+  MeetingSlot,
+  SlotVote,
   Comment,
   Expense,
   ExpenseVote,
@@ -448,4 +451,24 @@ export function mapAnnouncement(row: Tables<"announcements">): Announcement {
     pinned: row.pinned,
     createdAt: isoInstant(row.created_at),
   };
+}
+
+export function mapMeeting(row: Tables<"meetings">): Meeting {
+  return {
+    id: row.id,
+    week: row.week,
+    status: row.status,
+    confirmedSlotId: row.confirmed_slot_id,
+    meetLink: row.meet_link,
+    attendeeIds: row.attendee_ids,
+    createdAt: isoInstant(row.created_at),
+  };
+}
+
+export function mapMeetingSlot(row: Tables<"meeting_slots">): MeetingSlot {
+  return { id: row.id, meetingId: row.meeting_id, startsAt: isoInstant(row.starts_at) };
+}
+
+export function mapSlotVote(row: Tables<"slot_votes">): SlotVote {
+  return { slotId: row.slot_id, userId: row.user_id, available: row.available };
 }

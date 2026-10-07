@@ -1,5 +1,6 @@
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { todayLima } from "@vexa/domain/dates";
+import { limaWeekMonday } from "@vexa/domain/meetings";
 import type { Services } from "@vexa/services";
 import { createSupabaseClient, type VexaSupabase } from "@/lib/supabase";
 import type { CredentialsAuthService } from "./auth";
@@ -483,5 +484,44 @@ describe.skipIf(!url || !key)("Supabase local (integración)", () => {
     expect((await rober.services.announcements.list())[0].id).toBe(note.id);
     expect(await alex.services.announcements.list()).toEqual([]);
     expect((await admin.services.announcements.setPinned(note.id, false)).pinned).toBe(false);
+  });
+  it("convoca la reunión: solo admin propone, socios votan, el enlace es https y la asistencia espera al inicio", async () => {
+    const JHONY = "00000000-0000-4000-8000-000000000001";
+    // Solo cabe una convocatoria por semana: si una corrida anterior ya dejó la suya, `npm run db:reset` la limpia.
+    if (await admin.services.meetings.getCurrent()) return;
+    const diego = await login("diego@vexa.test");
+    const noticesBefore = (await diego.services.notifications.list()).filter((n) => n.type === "meeting").length;
+    // Martes y miércoles de la semana siguiente (3:00 p. m. de Lima): válidos en cualquier día de hoy.
+    const monday = Date.parse(`${limaWeekMonday(new Date())}T20:00:00Z`);
+    const day = 24 * 3_600_000;
+    const slots = [new Date(monday + 8 * day).toISOString(), new Date(monday + 9 * day).toISOString()];
+
+    await expect(rober.services.meetings.propose(slots)).rejects.toThrow();
+    const proposed = await admin.services.meetings.propose(slots);
+    expect(proposed.meeting).toMatchObject({ status: "polling", attendeeIds: [] });
+    expect(proposed.slots).toHaveLength(2);
+    await expect(admin.services.meetings.propose(slots)).rejects.toThrow("Ya hay una convocatoria");
+
+    // Cada socio recibe un solo aviso; el colaborador no ve la convocatoria.
+    expect((await diego.services.notifications.list()).filter((n) => n.type === "meeting")).toHaveLength(noticesBefore + 1);
+    expect(await alex.services.meetings.getCurrent()).toBeNull();
+
+    const [first, second] = proposed.slots;
+    await rober.services.meetings.vote(first.id, true);
+    const changed = await rober.services.meetings.vote(first.id, false);
+    expect(changed.votes.filter((v) => v.userId === ROBER && v.slotId === first.id)).toEqual([
+      { slotId: first.id, userId: ROBER, available: false },
+    ]);
+    await expect(alex.services.meetings.vote(first.id, true)).rejects.toThrow();
+    await admin.services.meetings.vote(second.id, true);
+
+    await expect(rober.services.meetings.confirm(proposed.meeting.id, second.id, "https://meet.google.com/abc-defg-hij")).rejects.toThrow();
+    await expect(admin.services.meetings.confirm(proposed.meeting.id, second.id, "http://meet.google.com/abc")).rejects.toThrow("https");
+    const confirmed = await admin.services.meetings.confirm(proposed.meeting.id, second.id, "https://meet.google.com/abc-defg-hij");
+    expect(confirmed.meeting).toMatchObject({ status: "confirmed", confirmedSlotId: second.id });
+    expect((await diego.services.notifications.list()).filter((n) => n.type === "meeting")).toHaveLength(noticesBefore + 2);
+    await expect(rober.services.meetings.vote(second.id, true)).rejects.toThrow("votación ya terminó");
+    await expect(admin.services.meetings.markAttendance(proposed.meeting.id, [JHONY, ROBER])).rejects.toThrow("ya empezó");
+    expect((await rober.services.meetings.getCurrent())?.meeting.id).toBe(proposed.meeting.id);
   });
 });

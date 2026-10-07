@@ -335,6 +335,8 @@ export interface Meeting {
   confirmedSlotId: Id | null;
   meetLink: string | null;
   attendeeIds: Id[];
+  /** Cuándo se convocó; de aquí sale el aviso derivado "sin responder hace más de 24 h". */
+  createdAt: IsoDateTime;
 }
 
 export interface MeetingSlot {

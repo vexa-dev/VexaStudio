@@ -468,6 +468,7 @@ export function buildSeed(now: Date): MockDb {
         confirmedSlotId: null,
         meetLink: null,
         attendeeIds: [],
+        createdAt: ago(2),
       },
     ],
     meetingSlots: [

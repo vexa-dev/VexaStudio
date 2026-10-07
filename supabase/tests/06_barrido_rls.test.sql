@@ -10,8 +10,8 @@ select is(
   '', 'toda tabla de public tiene RLS activado');
 select is(
   (select count(*)::int from pg_class c join pg_namespace n on n.oid = c.relnamespace
-   where n.nspname = 'public' and c.relkind in ('r', 'p')), 31,
-  'las 31 tablas del alcance (si agregas una, agregale RLS y politicas y actualiza este numero)');
+   where n.nspname = 'public' and c.relkind in ('r', 'p')), 34,
+  'las 34 tablas del alcance (si agregas una, agregale RLS y politicas y actualiza este numero)');
 select is(
   (select coalesce(string_agg(c.relname, ', '), '') from pg_class c join pg_namespace n on n.oid = c.relnamespace
    where n.nspname = 'public' and c.relkind in ('r', 'p') and c.relname <> 'audit_chain_head'
@@ -62,7 +62,10 @@ select is(
      and p.proname not in ('close_timer_entry', 'prepare_task_hours',
        -- Implementaciones de los RPC del chat (B5b): los envoltorios publicos son SECURITY INVOKER y
        -- llaman a estas funciones, que validan permisos adentro y tienen `grant execute` explicito.
-       'chat_direct_thread', 'chat_save_group', 'chat_delete_group', 'chat_react')),
+       'chat_direct_thread', 'chat_save_group', 'chat_delete_group', 'chat_react',
+       -- Implementacion de proponer la reunion (M4): el envoltorio publico es SECURITY INVOKER y esta funcion
+       -- valida que quien llama sea admin; tiene `grant execute` explicito.
+       'propose_meeting')),
   '', 'las funciones SECURITY DEFINER internas no estan abiertas a authenticated (salvo las de reloj y las de los RPC del chat)');
 select is(
   (select coalesce(string_agg(p.proname, ', '), '') from pg_proc p join pg_namespace n on n.oid = p.pronamespace

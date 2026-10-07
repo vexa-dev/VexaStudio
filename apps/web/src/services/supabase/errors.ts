@@ -133,6 +133,23 @@ const CANONICAL_MESSAGES = [
   "No se encontró esa sesión.",
   "El anuncio no puede estar vacío",
   "Solo un administrador publica anuncios",
+  "Solo el product owner convoca la reunión",
+  "Propón 2 o 3 horarios",
+  "Los horarios deben ser distintos",
+  "Los horarios deben estar en el futuro",
+  "Los horarios deben ser de la misma semana",
+  "Los horarios deben ser de esta semana o la siguiente",
+  "Ya hay una convocatoria para esa semana",
+  "La votación ya terminó",
+  "El horario no existe o no tienes permiso",
+  "El horario no pertenece a esta convocatoria",
+  "El enlace debe ser una URL https",
+  "La asistencia se marca después de la reunión",
+  "La asistencia se marca cuando la reunión ya empezó",
+  "Solo admin y socios activos pueden asistir",
+  "Esa transición de la convocatoria no está permitida",
+  "La reunión confirmada no cambia",
+  "La convocatoria no cambia de semana ni de autor",
 ];
 
 const fold = (text: string) =>

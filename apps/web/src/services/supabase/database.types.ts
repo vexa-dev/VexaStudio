@@ -496,6 +496,56 @@ isOneToOne: false
       referencedColumns: ["id"]
     }
                   ]
+                },"meeting_slots": {
+                  Row: {
+                    "id": string,"meeting_id": string,"starts_at": string
+                  }
+                  Insert: {
+                    "id"?: string,"meeting_id": string,"starts_at": string
+                  }
+                  Update: {
+                    "id"?: string,"meeting_id"?: string,"starts_at"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "meeting_slots_meeting_id_fkey"
+      columns: ["meeting_id"]
+isOneToOne: false
+      referencedRelation: "meetings"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"meetings": {
+                  Row: {
+                    "attendee_ids": (string)[],"confirmed_slot_id": string | null,"created_at": string,"created_by": string,"id": string,"meet_link": string | null,"status": Database["public"]['Enums']["meeting_status"],"week": string
+                  }
+                  Insert: {
+                    "attendee_ids"?: (string)[],"confirmed_slot_id"?: string | null,"created_at"?: string,"created_by": string,"id"?: string,"meet_link"?: string | null,"status"?: Database["public"]['Enums']["meeting_status"],"week": string
+                  }
+                  Update: {
+                    "attendee_ids"?: (string)[],"confirmed_slot_id"?: string | null,"created_at"?: string,"created_by"?: string,"id"?: string,"meet_link"?: string | null,"status"?: Database["public"]['Enums']["meeting_status"],"week"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "meetings_confirmed_slot_fkey"
+      columns: ["confirmed_slot_id"]
+isOneToOne: false
+      referencedRelation: "meeting_slots"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "meetings_created_by_fkey"
+      columns: ["created_by"]
+isOneToOne: false
+      referencedRelation: "member_points"
+      referencedColumns: ["user_id"]
+    },{
+      foreignKeyName: "meetings_created_by_fkey"
+      columns: ["created_by"]
+isOneToOne: false
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    }
+                  ]
                 },"notification_preferences": {
                   Row: {
                     "hours_reminder": boolean,"task_assigned": boolean,"updated_at": string,"user_id": string,"weekly_summary": boolean
@@ -655,6 +705,37 @@ isOneToOne: false
     },{
       foreignKeyName: "settings_updated_by_fkey"
       columns: ["updated_by"]
+isOneToOne: false
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"slot_votes": {
+                  Row: {
+                    "available": boolean,"created_at": string,"slot_id": string,"user_id": string
+                  }
+                  Insert: {
+                    "available": boolean,"created_at"?: string,"slot_id": string,"user_id"?: string
+                  }
+                  Update: {
+                    "available"?: boolean,"created_at"?: string,"slot_id"?: string,"user_id"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "slot_votes_slot_id_fkey"
+      columns: ["slot_id"]
+isOneToOne: false
+      referencedRelation: "meeting_slots"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "slot_votes_user_id_fkey"
+      columns: ["user_id"]
+isOneToOne: false
+      referencedRelation: "member_points"
+      referencedColumns: ["user_id"]
+    },{
+      foreignKeyName: "slot_votes_user_id_fkey"
+      columns: ["user_id"]
 isOneToOne: false
       referencedRelation: "profiles"
       referencedColumns: ["id"]
@@ -1148,6 +1229,9 @@ isOneToOne: false
         isOneToOne: true
         isSetofReturn: false
       } },
+"propose_meeting":
+{ Args: { "p_slots": (string)[] }; Returns: string
+                           },
 "request_hours_clarification":
 { Args: { "p_id": string,"p_note": string }; Returns: {
               "allocations": Json | null,
@@ -1577,7 +1661,7 @@ isOneToOne: false
       } }
           }
           Enums: {
-            "audit_event_type": "task.created"|"task.edited"|"task.moved"|"task.assigned"|"project.created"|"project.updated"|"project.members_changed"|"project_label.created"|"project_label.updated"|"sprint.created"|"hours.created"|"hours.confirmed"|"hours.edited"|"hours.approved"|"hours.clarification_requested"|"hours.voided"|"timer.started"|"timer.stopped"|"timer.paused"|"timer.resumed"|"timer.recovered"|"member.created"|"member.updated"|"member.role_changed"|"member.deactivated"|"settings.changed","chat_sound": "soft"|"bell"|"none","chat_thread_kind": "direct"|"group","comment_entity": "task"|"expense"|"time_entry","currency_code": "PEN"|"USD","expense_category": "infrastructure"|"software"|"marketing"|"legal"|"other","expense_status": "pending"|"approved"|"rejected"|"voided","notification_type": "project_added"|"task_assigned"|"daily_pending"|"hours_missing"|"expense_vote"|"expense_result"|"mention"|"renewal"|"meeting","periodicity": "monthly"|"yearly","project_status": "active"|"paused"|"archived","project_type": "internal"|"product"|"client","sprint_status": "planned"|"active"|"closed","task_status": "todo"|"in_progress"|"review"|"done","user_area": "technical"|"management_finance"|"commercial"|"design_marketing","user_role": "admin"|"partner"|"collaborator"
+            "audit_event_type": "task.created"|"task.edited"|"task.moved"|"task.assigned"|"project.created"|"project.updated"|"project.members_changed"|"project_label.created"|"project_label.updated"|"sprint.created"|"hours.created"|"hours.confirmed"|"hours.edited"|"hours.approved"|"hours.clarification_requested"|"hours.voided"|"timer.started"|"timer.stopped"|"timer.paused"|"timer.resumed"|"timer.recovered"|"member.created"|"member.updated"|"member.role_changed"|"member.deactivated"|"settings.changed","chat_sound": "soft"|"bell"|"none","chat_thread_kind": "direct"|"group","comment_entity": "task"|"expense"|"time_entry","currency_code": "PEN"|"USD","expense_category": "infrastructure"|"software"|"marketing"|"legal"|"other","expense_status": "pending"|"approved"|"rejected"|"voided","meeting_status": "polling"|"confirmed"|"held"|"cancelled","notification_type": "project_added"|"task_assigned"|"daily_pending"|"hours_missing"|"expense_vote"|"expense_result"|"mention"|"renewal"|"meeting","periodicity": "monthly"|"yearly","project_status": "active"|"paused"|"archived","project_type": "internal"|"product"|"client","sprint_status": "planned"|"active"|"closed","task_status": "todo"|"in_progress"|"review"|"done","user_area": "technical"|"management_finance"|"commercial"|"design_marketing","user_role": "admin"|"partner"|"collaborator"
           }
           CompositeTypes: {
             [_ in never]: never
@@ -1697,7 +1781,7 @@ export const Constants = {
           }
         },"public": {
           Enums: {
-            "audit_event_type": ["task.created", "task.edited", "task.moved", "task.assigned", "project.created", "project.updated", "project.members_changed", "project_label.created", "project_label.updated", "sprint.created", "hours.created", "hours.confirmed", "hours.edited", "hours.approved", "hours.clarification_requested", "hours.voided", "timer.started", "timer.stopped", "timer.paused", "timer.resumed", "timer.recovered", "member.created", "member.updated", "member.role_changed", "member.deactivated", "settings.changed"],"chat_sound": ["soft", "bell", "none"],"chat_thread_kind": ["direct", "group"],"comment_entity": ["task", "expense", "time_entry"],"currency_code": ["PEN", "USD"],"expense_category": ["infrastructure", "software", "marketing", "legal", "other"],"expense_status": ["pending", "approved", "rejected", "voided"],"notification_type": ["project_added", "task_assigned", "daily_pending", "hours_missing", "expense_vote", "expense_result", "mention", "renewal", "meeting"],"periodicity": ["monthly", "yearly"],"project_status": ["active", "paused", "archived"],"project_type": ["internal", "product", "client"],"sprint_status": ["planned", "active", "closed"],"task_status": ["todo", "in_progress", "review", "done"],"user_area": ["technical", "management_finance", "commercial", "design_marketing"],"user_role": ["admin", "partner", "collaborator"]
+            "audit_event_type": ["task.created", "task.edited", "task.moved", "task.assigned", "project.created", "project.updated", "project.members_changed", "project_label.created", "project_label.updated", "sprint.created", "hours.created", "hours.confirmed", "hours.edited", "hours.approved", "hours.clarification_requested", "hours.voided", "timer.started", "timer.stopped", "timer.paused", "timer.resumed", "timer.recovered", "member.created", "member.updated", "member.role_changed", "member.deactivated", "settings.changed"],"chat_sound": ["soft", "bell", "none"],"chat_thread_kind": ["direct", "group"],"comment_entity": ["task", "expense", "time_entry"],"currency_code": ["PEN", "USD"],"expense_category": ["infrastructure", "software", "marketing", "legal", "other"],"expense_status": ["pending", "approved", "rejected", "voided"],"meeting_status": ["polling", "confirmed", "held", "cancelled"],"notification_type": ["project_added", "task_assigned", "daily_pending", "hours_missing", "expense_vote", "expense_result", "mention", "renewal", "meeting"],"periodicity": ["monthly", "yearly"],"project_status": ["active", "paused", "archived"],"project_type": ["internal", "product", "client"],"sprint_status": ["planned", "active", "closed"],"task_status": ["todo", "in_progress", "review", "done"],"user_area": ["technical", "management_finance", "commercial", "design_marketing"],"user_role": ["admin", "partner", "collaborator"]
           }
         }
 } as const
