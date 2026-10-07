@@ -90,3 +90,12 @@ describe("funciones solo de Supabase (mock)", () => {
     expect(await services.auth.getMfaChallenge()).toEqual({ required: false });
   });
 });
+
+describe("restablecer contraseña (mock)", () => {
+  const MESSAGE = "El restablecimiento de contraseña solo funciona con Supabase.";
+
+  it("avisa con honestidad y no simula correos", async () => {
+    await expect(services.auth.requestPasswordReset?.("alex@vexa.test")).rejects.toThrow(MESSAGE);
+    await expect(services.auth.completePasswordReset?.("Vexa-Studio-2026")).rejects.toThrow(MESSAGE);
+  });
+});

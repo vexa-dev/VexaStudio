@@ -6,6 +6,7 @@ import type {
   MfaFactor,
   Profile,
 } from "@vexa/domain/types";
+import { normalizeEmail, passwordProblem } from "@vexa/domain/password";
 import type { AuthService } from "@vexa/services";
 import { createSupabaseClient, type VexaSupabase } from "@/lib/supabase";
 import type { Tables } from "./database.types";
@@ -31,6 +32,15 @@ export interface CredentialsAuthService extends AuthService {
   signInWithPassword(email: string, password: string): Promise<Profile>;
   /** Avisa cuando la sesión cambia fuera de esta pestaña (cierre en otra pestaña, token vencido). */
   onSessionChange(listener: (profile: Profile | null) => void): () => void;
+  /**
+   * Abre la sesión de recuperación con los tokens del enlace del correo (`#access_token=…&type=recovery`).
+   * El cliente no detecta sesiones en la URL por sí solo, así que se hace aquí. `"invalid"` si el
+   * enlace venció, ya se usó o no es de recuperación.
+   */
+  beginPasswordRecovery(hash?: string): Promise<"ready" | "invalid">;
+  /** Con Supabase la recuperación siempre existe (en `AuthService` es opcional por el mock). */
+  requestPasswordReset(email: string): Promise<void>;
+  completePasswordReset(newPassword: string): Promise<void>;
 }
 
 /**
@@ -52,25 +62,21 @@ export class MfaRequiredError extends Error {
 
 /** Ayudas de prueba: cómo se comprueba la contraseña actual sin tocar la sesión en curso. */
 export interface AuthServiceDeps {
+  /** Origen al que vuelve el enlace de recuperación; por defecto el de la página (o el de desarrollo en Node). */
+  origin?: string;
   verifyCurrentPassword?: (
     email: string,
     password: string,
   ) => Promise<{ error: AuthErrorLike | null }>;
 }
 
-const PASSWORD_MIN_LENGTH = 12;
+const DEV_ORIGIN = "http://localhost:5173";
 const MFA_FRIENDLY_NAME = "Vexa Studio";
 
 /** Misma regla que `supabase/config.toml` (mínimo 12 con minúsculas, mayúsculas y dígitos). */
 export function validateNewPassword(password: string): void {
-  if (password.length < PASSWORD_MIN_LENGTH)
-    throw new Error(`La contraseña debe tener al menos ${PASSWORD_MIN_LENGTH} caracteres.`);
-  if (!/[a-z]/.test(password))
-    throw new Error("La contraseña debe incluir al menos una minúscula.");
-  if (!/[A-Z]/.test(password))
-    throw new Error("La contraseña debe incluir al menos una mayúscula.");
-  if (!/\d/.test(password))
-    throw new Error("La contraseña debe incluir al menos un número.");
+  const problem = passwordProblem(password);
+  if (problem) throw new Error(problem);
 }
 
 function normalizeMfaCode(code: string): string {
@@ -137,6 +143,14 @@ export function toAuthError(error: AuthErrorLike): Error {
   if (code === "mfa_totp_enroll_not_enabled" || code === "mfa_totp_verify_not_enabled")
     return new Error("El segundo paso no está disponible en este momento.", { cause: error });
   return toServiceError(error);
+}
+
+/** Fallos de "pedir enlace": límite de envíos o un mensaje genérico que no habla de la cuenta. */
+export function toPasswordResetRequestError(error: AuthErrorLike): Error {
+  const code = error.code ?? "";
+  if (code === "over_email_send_rate_limit" || code === "over_request_rate_limit" || error.status === 429)
+    return new Error("Demasiados intentos. Espera un momento e inténtalo de nuevo.", { cause: error });
+  return new Error("No pudimos enviar el enlace. Inténtalo de nuevo en unos minutos.", { cause: error });
 }
 
 export function createAuthService(
@@ -275,6 +289,36 @@ export function createAuthService(
         current_password: currentPassword,
       });
       if (error) throw toAuthError(error);
+    },
+    async requestPasswordReset(email) {
+      const clean = normalizeEmail(email);
+      if (!clean) throw new Error("Escribe un correo válido.");
+      const { error } = await client.auth.resetPasswordForEmail(clean, {
+        redirectTo: `${deps.origin ?? globalThis.location?.origin ?? DEV_ORIGIN}/restablecer`,
+      });
+      // GoTrue contesta lo mismo con un correo desconocido; aquí solo se traducen fallos genéricos.
+      if (error) throw toPasswordResetRequestError(error);
+    },
+    async beginPasswordRecovery(hash = globalThis.location?.hash ?? "") {
+      const params = new URLSearchParams(hash.replace(/^#/, ""));
+      const accessToken = params.get("access_token");
+      const refreshToken = params.get("refresh_token");
+      if (params.get("error") || params.get("error_code")) return "invalid";
+      if (params.get("type") !== "recovery" || !accessToken || !refreshToken) return "invalid";
+      const { error } = await client.auth.setSession({
+        access_token: accessToken,
+        refresh_token: refreshToken,
+      });
+      return error ? "invalid" : "ready";
+    },
+    async completePasswordReset(newPassword) {
+      validateNewPassword(newPassword);
+      const { data } = await client.auth.getSession();
+      if (!data.session) throw new Error("El enlace venció o ya se usó. Pide uno nuevo.");
+      const { error } = await client.auth.updateUser({ password: newPassword });
+      if (error) throw toAuthError(error);
+      // La contraseña cambió: se cierran todas las sesiones, incluida la de recuperación.
+      await client.auth.signOut({ scope: "global" });
     },
     async signOutOthers() {
       const { error } = await client.auth.signOut({ scope: "others" });

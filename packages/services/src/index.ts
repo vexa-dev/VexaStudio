@@ -73,6 +73,17 @@ export interface AuthService {
    * "Disponible solo con la conexión a Supabase.".
    */
   updatePassword(input: { currentPassword: string; newPassword: string }): Promise<void>;
+  /**
+   * Envía el enlace para restablecer la contraseña. NUNCA revela si el correo existe: responde igual
+   * para cualquier correo bien escrito; solo falla por correo mal formado o límite de envíos.
+   * Opcional: el mock no la implementa y avisa que requiere Supabase.
+   */
+  requestPasswordReset?(email: string): Promise<void>;
+  /**
+   * Fija la contraseña nueva desde la sesión de recuperación (enlace del correo) y cierra todas las
+   * sesiones. Opcional, solo con Supabase.
+   */
+  completePasswordReset?(newPassword: string): Promise<void>;
   /** Cierra la sesión en los demás dispositivos y conserva esta. Solo con Supabase. */
   signOutOthers(): Promise<void>;
   /** Sesiones activas de la persona (sin IP), la actual primero. Solo con Supabase. */

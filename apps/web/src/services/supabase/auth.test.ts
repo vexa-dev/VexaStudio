@@ -496,3 +496,127 @@ describe("segundo paso (TOTP)", () => {
     expect(profile).toMatchObject({ id: "u1", name: "Jhony" });
   });
 });
+
+const ORIGIN = "https://studio.vexa.test";
+
+describe("recuperación de contraseña", () => {
+  function resetClient(options: {
+    resetError?: { message: string; code?: string; status?: number } | null;
+    session?: boolean;
+    updateError?: { message: string; code?: string; status?: number } | null;
+    setSessionError?: { message: string } | null;
+  } = {}) {
+    const resetPasswordForEmail = vi
+      .fn()
+      .mockResolvedValue({ data: {}, error: options.resetError ?? null });
+    const updateUser = vi.fn().mockResolvedValue({ data: {}, error: options.updateError ?? null });
+    const signOut = vi.fn().mockResolvedValue({ error: null });
+    const setSession = vi
+      .fn()
+      .mockResolvedValue({ data: {}, error: options.setSessionError ?? null });
+    const client = {
+      auth: {
+        resetPasswordForEmail,
+        updateUser,
+        signOut,
+        setSession,
+        getSession: vi.fn().mockResolvedValue({
+          data: { session: options.session === false ? null : { user: { id: "u1" } } },
+        }),
+      },
+    } as unknown as VexaSupabase;
+    return { client, resetPasswordForEmail, updateUser, signOut, setSession };
+  }
+
+  it("pide el enlace con el correo normalizado y la ruta /restablecer", async () => {
+    const { client, resetPasswordForEmail } = resetClient();
+    await createAuthService(client, undefined, { origin: ORIGIN }).requestPasswordReset("  Jhony@Vexa.TEST ");
+    expect(resetPasswordForEmail).toHaveBeenCalledWith("jhony@vexa.test", {
+      redirectTo: `${ORIGIN}/restablecer`,
+    });
+  });
+
+  it("rechaza un correo mal escrito sin llamar a Supabase", async () => {
+    const { client, resetPasswordForEmail } = resetClient();
+    await expect(createAuthService(client).requestPasswordReset("nada")).rejects.toThrow(
+      "Escribe un correo válido.",
+    );
+    expect(resetPasswordForEmail).not.toHaveBeenCalled();
+  });
+
+  it("responde igual para cualquier correo: no revela si existe", async () => {
+    const { client } = resetClient();
+    const service = createAuthService(client);
+    await expect(service.requestPasswordReset("existe@vexa.test")).resolves.toBeUndefined();
+    await expect(service.requestPasswordReset("no-existe@vexa.test")).resolves.toBeUndefined();
+  });
+
+  it("traduce el límite de envíos y los demás fallos sin mencionar la cuenta", async () => {
+    const limited = resetClient({ resetError: { message: "email rate limit exceeded", code: "over_email_send_rate_limit", status: 429 } });
+    await expect(createAuthService(limited.client).requestPasswordReset("a@vexa.test")).rejects.toThrow(
+      "Demasiados intentos. Espera un momento e inténtalo de nuevo.",
+    );
+    const other = resetClient({ resetError: { message: "User not found", status: 400 } });
+    await expect(createAuthService(other.client).requestPasswordReset("a@vexa.test")).rejects.toThrow(
+      "No pudimos enviar el enlace. Inténtalo de nuevo en unos minutos.",
+    );
+  });
+
+  it("fija la contraseña nueva y cierra todas las sesiones", async () => {
+    const { client, updateUser, signOut } = resetClient();
+    await createAuthService(client).completePasswordReset("Vexa-Studio-2026");
+    expect(updateUser).toHaveBeenCalledWith({ password: "Vexa-Studio-2026" });
+    expect(signOut).toHaveBeenCalledWith({ scope: "global" });
+  });
+
+  it("no toca nada si la contraseña incumple la política", async () => {
+    const { client, updateUser } = resetClient();
+    await expect(createAuthService(client).completePasswordReset("corta")).rejects.toThrow(
+      "al menos 12 caracteres",
+    );
+    expect(updateUser).not.toHaveBeenCalled();
+  });
+
+  it("sin sesión de recuperación pide un enlace nuevo", async () => {
+    const { client, updateUser } = resetClient({ session: false });
+    await expect(
+      createAuthService(client).completePasswordReset("Vexa-Studio-2026"),
+    ).rejects.toThrow("El enlace venció o ya se usó. Pide uno nuevo.");
+    expect(updateUser).not.toHaveBeenCalled();
+  });
+
+  it("traduce la contraseña repetida y no cierra sesión si falla", async () => {
+    const { client, signOut } = resetClient({ updateError: { message: "x", code: "same_password" } });
+    await expect(
+      createAuthService(client).completePasswordReset("Vexa-Studio-2026"),
+    ).rejects.toThrow("distinta de la actual");
+    expect(signOut).not.toHaveBeenCalled();
+  });
+
+  describe("beginPasswordRecovery", () => {
+    it("abre la sesión de recuperación con los tokens del enlace", async () => {
+      const { client, setSession } = resetClient();
+      const outcome = await createAuthService(client).beginPasswordRecovery(
+        "#access_token=at&refresh_token=rt&type=recovery",
+      );
+      expect(outcome).toBe("ready");
+      expect(setSession).toHaveBeenCalledWith({ access_token: "at", refresh_token: "rt" });
+    });
+
+    it("marca inválido un enlace vencido, sin tokens o de otro tipo", async () => {
+      const { client, setSession } = resetClient();
+      const service = createAuthService(client);
+      expect(await service.beginPasswordRecovery("#error=access_denied&error_code=otp_expired")).toBe("invalid");
+      expect(await service.beginPasswordRecovery("")).toBe("invalid");
+      expect(await service.beginPasswordRecovery("#access_token=at&refresh_token=rt&type=signup")).toBe("invalid");
+      expect(setSession).not.toHaveBeenCalled();
+    });
+
+    it("marca inválido si Supabase rechaza los tokens", async () => {
+      const { client } = resetClient({ setSessionError: { message: "bad" } });
+      expect(
+        await createAuthService(client).beginPasswordRecovery("#access_token=at&refresh_token=rt&type=recovery"),
+      ).toBe("invalid");
+    });
+  });
+});

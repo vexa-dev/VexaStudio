@@ -7,6 +7,9 @@ import { navItems } from "@/app/nav";
 
 // Cada pantalla se carga al entrar en ella: el arranque no descarga el tablero ni el arrastre.
 const LoginPage = lazy(() => import("@/features/auth/pages/LoginPage"));
+const ResetPasswordPage = lazy(
+  () => import("@/features/auth/pages/ResetPasswordPage"),
+);
 const ProfilePage = lazy(() => import("@/features/auth/pages/ProfilePage"));
 const DashboardPage = lazy(
   () => import("@/features/dashboard/pages/DashboardPage"),
@@ -36,6 +39,8 @@ export default function App() {
         ? "Tablero"
         : pathname === "/login"
           ? "Acceso"
+          : pathname === "/restablecer"
+            ? "Restablecer contraseña"
           : pathname === "/perfil"
             ? "Perfil"
             : "Página no encontrada");
@@ -49,6 +54,14 @@ export default function App() {
         element={
           <Suspense fallback={null}>
             <LoginPage />
+          </Suspense>
+        }
+      />
+      <Route
+        path="/restablecer"
+        element={
+          <Suspense fallback={null}>
+            <ResetPasswordPage />
           </Suspense>
         }
       />
