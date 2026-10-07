@@ -131,6 +131,8 @@ const CANONICAL_MESSAGES = [
   "Debes iniciar sesión.",
   "No puedes cerrar la sesión de este dispositivo desde aquí.",
   "No se encontró esa sesión.",
+  "El anuncio no puede estar vacío",
+  "Solo un administrador publica anuncios",
 ];
 
 const fold = (text: string) =>
@@ -172,6 +174,9 @@ const CONSTRAINT_MESSAGES: Record<string, string> = {
   profiles_username_uidx: "Ese usuario ya está en uso",
   profiles_username_format_check:
     "El usuario debe tener de 3 a 30 caracteres: letras, números, punto o guion bajo",
+  comments_text_len_check: "El comentario debe tener de 1 a 2000 caracteres",
+  comments_mentions_len_check: "Puedes mencionar hasta 10 personas",
+  announcements_text_len_check: "El anuncio debe tener de 1 a 1000 caracteres",
   profiles_bio_len_check: "La biografía puede tener hasta 280 caracteres",
 };
 

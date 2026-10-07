@@ -7,6 +7,8 @@ import type {
 } from "@vexa/domain/audit";
 import type { DailyRecord } from "@vexa/domain/daily";
 import type {
+  Announcement,
+  Comment,
   Expense,
   ExpenseVote,
   HoursDraft,
@@ -423,5 +425,27 @@ export function mapDailyUpdate(row: Tables<"daily_updates">): DailyRecord {
     willDo: row.will_do,
     blockers: row.blockers,
     updatedAt: isoInstant(row.updated_at),
+  };
+}
+
+export function mapComment(row: Tables<"comments">): Comment {
+  return {
+    id: row.id,
+    entity: row.entity,
+    entityId: row.entity_id,
+    userId: row.user_id,
+    text: row.text,
+    mentions: row.mentions,
+    createdAt: isoInstant(row.created_at),
+  };
+}
+
+export function mapAnnouncement(row: Tables<"announcements">): Announcement {
+  return {
+    id: row.id,
+    authorId: row.author_id,
+    text: row.text,
+    pinned: row.pinned,
+    createdAt: isoInstant(row.created_at),
   };
 }

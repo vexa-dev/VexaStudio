@@ -292,17 +292,27 @@ export interface DailyService {
 }
 
 export interface CommentService {
+  /** Hilo de una entidad, del más antiguo al más nuevo. Solo lo que la persona puede leer de esa entidad. */
   list(entity: CommentEntity, entityId: Id): Promise<Comment[]>;
+  /**
+   * Comenta como la persona con sesión (texto de 1 a 2000 caracteres). `mentions` son los ids que la UI
+   * resolvió desde `@usuario`; la base descarta a quien no puede leer la entidad y avisa a los demás.
+   * Los comentarios no se editan ni se borran.
+   */
   add(input: {
     entity: CommentEntity;
     entityId: Id;
     text: string;
+    mentions?: Id[];
   }): Promise<Comment>;
 }
 
 export interface AnnouncementService {
+  /** Fijados primero y luego los más nuevos. Los leen admin y socios. */
   list(): Promise<Announcement[]>;
-  create(text: string): Promise<Announcement>;
+  /** Solo admin publica (texto de 1 a 1000 caracteres). */
+  create(text: string, options?: { pinned?: boolean }): Promise<Announcement>;
+  /** Solo admin fija o desfija; los anuncios no se borran. */
   setPinned(id: Id, pinned: boolean): Promise<Announcement>;
 }
 

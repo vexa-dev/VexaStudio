@@ -4,6 +4,7 @@ import type { ProjectLabel, Task } from "@vexa/domain/types";
 import "./task-content.css";
 
 import { labelInk } from "@/lib/label-color";
+import { CommentThread } from "@/features/comments/components/CommentThread";
 
 export function TaskLabels({ labels = [] }: { labels?: ProjectLabel[] }) {
   if (!labels.length) return null;
@@ -53,6 +54,7 @@ export function TaskContent({ task }: { task: Task }) {
           <p className="text-sm text-muted">Sin descripción.</p>
         )}
       </section>
+      <CommentThread entity="task" entityId={task.id} />
     </div>
   );
 }

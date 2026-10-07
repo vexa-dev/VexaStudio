@@ -48,6 +48,31 @@ isOneToOne: false
       referencedColumns: ["id"]
     }
                   ]
+                },"announcements": {
+                  Row: {
+                    "author_id": string,"created_at": string,"id": string,"pinned": boolean,"text": string
+                  }
+                  Insert: {
+                    "author_id"?: string,"created_at"?: string,"id"?: string,"pinned"?: boolean,"text": string
+                  }
+                  Update: {
+                    "author_id"?: string,"created_at"?: string,"id"?: string,"pinned"?: boolean,"text"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "announcements_author_id_fkey"
+      columns: ["author_id"]
+isOneToOne: false
+      referencedRelation: "member_points"
+      referencedColumns: ["user_id"]
+    },{
+      foreignKeyName: "announcements_author_id_fkey"
+      columns: ["author_id"]
+isOneToOne: false
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    }
+                  ]
                 },"audit_chain_head": {
                   Row: {
                     "hash": string,"id": boolean,"seq": number
@@ -323,6 +348,31 @@ isOneToOne: false
     },{
       foreignKeyName: "chat_threads_created_by_fkey"
       columns: ["created_by"]
+isOneToOne: false
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"comments": {
+                  Row: {
+                    "created_at": string,"entity": Database["public"]['Enums']["comment_entity"],"entity_id": string,"id": string,"mentions": (string)[],"text": string,"user_id": string
+                  }
+                  Insert: {
+                    "created_at"?: string,"entity": Database["public"]['Enums']["comment_entity"],"entity_id": string,"id"?: string,"mentions"?: (string)[],"text": string,"user_id"?: string
+                  }
+                  Update: {
+                    "created_at"?: string,"entity"?: Database["public"]['Enums']["comment_entity"],"entity_id"?: string,"id"?: string,"mentions"?: (string)[],"text"?: string,"user_id"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "comments_user_id_fkey"
+      columns: ["user_id"]
+isOneToOne: false
+      referencedRelation: "member_points"
+      referencedColumns: ["user_id"]
+    },{
+      foreignKeyName: "comments_user_id_fkey"
+      columns: ["user_id"]
 isOneToOne: false
       referencedRelation: "profiles"
       referencedColumns: ["id"]
@@ -892,6 +942,9 @@ isOneToOne: false
                            },
 "can_access_project":
 { Args: { "p_project": string }; Returns: boolean
+                           },
+"can_view_comment_entity":
+{ Args: { "p_entity": Database["public"]['Enums']["comment_entity"],"p_id": string }; Returns: boolean
                            },
 "can_view_task":
 { Args: { "p_task": string }; Returns: boolean
@@ -1524,7 +1577,7 @@ isOneToOne: false
       } }
           }
           Enums: {
-            "audit_event_type": "task.created"|"task.edited"|"task.moved"|"task.assigned"|"project.created"|"project.updated"|"project.members_changed"|"project_label.created"|"project_label.updated"|"sprint.created"|"hours.created"|"hours.confirmed"|"hours.edited"|"hours.approved"|"hours.clarification_requested"|"hours.voided"|"timer.started"|"timer.stopped"|"timer.paused"|"timer.resumed"|"timer.recovered"|"member.created"|"member.updated"|"member.role_changed"|"member.deactivated"|"settings.changed","chat_sound": "soft"|"bell"|"none","chat_thread_kind": "direct"|"group","currency_code": "PEN"|"USD","expense_category": "infrastructure"|"software"|"marketing"|"legal"|"other","expense_status": "pending"|"approved"|"rejected"|"voided","notification_type": "project_added"|"task_assigned"|"daily_pending"|"hours_missing"|"expense_vote"|"expense_result"|"mention"|"renewal"|"meeting","periodicity": "monthly"|"yearly","project_status": "active"|"paused"|"archived","project_type": "internal"|"product"|"client","sprint_status": "planned"|"active"|"closed","task_status": "todo"|"in_progress"|"review"|"done","user_area": "technical"|"management_finance"|"commercial"|"design_marketing","user_role": "admin"|"partner"|"collaborator"
+            "audit_event_type": "task.created"|"task.edited"|"task.moved"|"task.assigned"|"project.created"|"project.updated"|"project.members_changed"|"project_label.created"|"project_label.updated"|"sprint.created"|"hours.created"|"hours.confirmed"|"hours.edited"|"hours.approved"|"hours.clarification_requested"|"hours.voided"|"timer.started"|"timer.stopped"|"timer.paused"|"timer.resumed"|"timer.recovered"|"member.created"|"member.updated"|"member.role_changed"|"member.deactivated"|"settings.changed","chat_sound": "soft"|"bell"|"none","chat_thread_kind": "direct"|"group","comment_entity": "task"|"expense"|"time_entry","currency_code": "PEN"|"USD","expense_category": "infrastructure"|"software"|"marketing"|"legal"|"other","expense_status": "pending"|"approved"|"rejected"|"voided","notification_type": "project_added"|"task_assigned"|"daily_pending"|"hours_missing"|"expense_vote"|"expense_result"|"mention"|"renewal"|"meeting","periodicity": "monthly"|"yearly","project_status": "active"|"paused"|"archived","project_type": "internal"|"product"|"client","sprint_status": "planned"|"active"|"closed","task_status": "todo"|"in_progress"|"review"|"done","user_area": "technical"|"management_finance"|"commercial"|"design_marketing","user_role": "admin"|"partner"|"collaborator"
           }
           CompositeTypes: {
             [_ in never]: never
@@ -1644,7 +1697,7 @@ export const Constants = {
           }
         },"public": {
           Enums: {
-            "audit_event_type": ["task.created", "task.edited", "task.moved", "task.assigned", "project.created", "project.updated", "project.members_changed", "project_label.created", "project_label.updated", "sprint.created", "hours.created", "hours.confirmed", "hours.edited", "hours.approved", "hours.clarification_requested", "hours.voided", "timer.started", "timer.stopped", "timer.paused", "timer.resumed", "timer.recovered", "member.created", "member.updated", "member.role_changed", "member.deactivated", "settings.changed"],"chat_sound": ["soft", "bell", "none"],"chat_thread_kind": ["direct", "group"],"currency_code": ["PEN", "USD"],"expense_category": ["infrastructure", "software", "marketing", "legal", "other"],"expense_status": ["pending", "approved", "rejected", "voided"],"notification_type": ["project_added", "task_assigned", "daily_pending", "hours_missing", "expense_vote", "expense_result", "mention", "renewal", "meeting"],"periodicity": ["monthly", "yearly"],"project_status": ["active", "paused", "archived"],"project_type": ["internal", "product", "client"],"sprint_status": ["planned", "active", "closed"],"task_status": ["todo", "in_progress", "review", "done"],"user_area": ["technical", "management_finance", "commercial", "design_marketing"],"user_role": ["admin", "partner", "collaborator"]
+            "audit_event_type": ["task.created", "task.edited", "task.moved", "task.assigned", "project.created", "project.updated", "project.members_changed", "project_label.created", "project_label.updated", "sprint.created", "hours.created", "hours.confirmed", "hours.edited", "hours.approved", "hours.clarification_requested", "hours.voided", "timer.started", "timer.stopped", "timer.paused", "timer.resumed", "timer.recovered", "member.created", "member.updated", "member.role_changed", "member.deactivated", "settings.changed"],"chat_sound": ["soft", "bell", "none"],"chat_thread_kind": ["direct", "group"],"comment_entity": ["task", "expense", "time_entry"],"currency_code": ["PEN", "USD"],"expense_category": ["infrastructure", "software", "marketing", "legal", "other"],"expense_status": ["pending", "approved", "rejected", "voided"],"notification_type": ["project_added", "task_assigned", "daily_pending", "hours_missing", "expense_vote", "expense_result", "mention", "renewal", "meeting"],"periodicity": ["monthly", "yearly"],"project_status": ["active", "paused", "archived"],"project_type": ["internal", "product", "client"],"sprint_status": ["planned", "active", "closed"],"task_status": ["todo", "in_progress", "review", "done"],"user_area": ["technical", "management_finance", "commercial", "design_marketing"],"user_role": ["admin", "partner", "collaborator"]
           }
         }
 } as const

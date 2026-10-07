@@ -10,8 +10,8 @@ select is(
   '', 'toda tabla de public tiene RLS activado');
 select is(
   (select count(*)::int from pg_class c join pg_namespace n on n.oid = c.relnamespace
-   where n.nspname = 'public' and c.relkind in ('r', 'p')), 29,
-  'las 29 tablas del alcance (si agregas una, agregale RLS y politicas y actualiza este numero)');
+   where n.nspname = 'public' and c.relkind in ('r', 'p')), 31,
+  'las 31 tablas del alcance (si agregas una, agregale RLS y politicas y actualiza este numero)');
 select is(
   (select coalesce(string_agg(c.relname, ', '), '') from pg_class c join pg_namespace n on n.oid = c.relnamespace
    where n.nspname = 'public' and c.relkind in ('r', 'p') and c.relname <> 'audit_chain_head'

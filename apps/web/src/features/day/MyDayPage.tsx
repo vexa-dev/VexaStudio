@@ -22,6 +22,7 @@ import { ChoicePicker } from "@/features/time/components/TimePickers";
 import { todayLima } from "@vexa/domain/dates";
 import { formatHours } from "@vexa/domain/format";
 import { taskStatusLabel } from "@/lib/labels";
+import { AnnouncementsCard } from "@/features/announcements/components/AnnouncementsCard";
 import { DayDaily } from "./DayDaily";
 import { DayFocus } from "./DayFocus";
 import { readLocal, writeLocal, type DayPriority } from "./day-storage";
@@ -257,6 +258,7 @@ function DayWorkspace({ userId, day }: { userId: string; day: string }) {
           <DayDaily userId={userId} today={day} />
         </div>
         <div className="day-work-column">
+          <AnnouncementsCard />
           <Card className="day-summary-card">
             <div className="day-card-title">
               <h2>Hoy, en un vistazo</h2>

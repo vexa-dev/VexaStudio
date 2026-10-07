@@ -396,7 +396,7 @@ export function buildSeed(now: Date): MockDb {
         userId: USER.rober,
         text: "Sí, con corte a medianoche de Lima.",
         mentions: [],
-        createdAt: ago(1, -2),
+        createdAt: ago(1, 2),
       },
       {
         id: "c-3",

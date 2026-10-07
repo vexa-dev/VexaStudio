@@ -1,4 +1,4 @@
-import { CheckCheck, Lock } from "lucide-react";
+import { CheckCheck, Lock, MessageSquareWarning } from "lucide-react";
 import { useMemo, useState } from "react";
 import {
   closeEligibility,
@@ -13,6 +13,7 @@ import { ErrorState } from "@/components/ui/ErrorState";
 import { Meter } from "@/components/ui/Meter";
 import { Sheet } from "@/components/ui/Sheet";
 import { Skeleton } from "@/components/ui/Skeleton";
+import { CommentThread } from "@/features/comments/components/CommentThread";
 import { useMembers } from "@/features/team/hooks/useMembers";
 import { useCloseSprint, useSprintCloseReport } from "../hooks/useSprintClose";
 
@@ -68,6 +69,8 @@ function CloseSprintContent({
   const close = useCloseSprint();
   const [selected, setSelected] = useState<Id[]>([]);
   const [confirming, setConfirming] = useState(false);
+  // Registro con el hilo de objeción abierto (una objeción es un comentario sobre ese registro).
+  const [objecting, setObjecting] = useState<Id | null>(null);
 
   const nameOf = (id: Id | null) =>
     id === null
@@ -211,38 +214,66 @@ function CloseSprintContent({
                 {entries.map((entry) => {
                   const rule = closeEligibility(entry, viewerId);
                   const disabled = !canClose || !rule.eligible;
+                  const canObject = entry.userId !== viewerId;
                   return (
-                    <label
-                      key={entry.id}
-                      className="flex min-h-11 items-start gap-3 rounded-lg px-1 py-2"
-                    >
-                      {canClose && (
-                        <input
-                          type="checkbox"
-                          disabled={disabled}
-                          checked={selected.includes(entry.id)}
-                          onChange={(e) => toggle(entry.id, e.target.checked)}
-                          className="mt-0.5 size-4 accent-primary"
-                        />
-                      )}
-                      <span className="flex min-w-0 flex-1 flex-col gap-0.5">
-                        <span className="truncate text-sm">
-                          {entry.description || "Registro de horas"}
-                        </span>
-                        <span className="num text-xs text-muted">
-                          {formatDate(entry.startedAt)} ·{" "}
-                          {formatHours(entry.hoursInSprint)}
-                          {entry.clarificationRequested
-                            ? " · Aclaración solicitada"
-                            : ""}
-                        </span>
-                        {canClose && !rule.eligible && (
-                          <span className="text-xs text-warning">
-                            No puedes validarla: {rule.reason.toLowerCase()}.
+                    <div key={entry.id} className="flex flex-col gap-2">
+                      <div className="flex items-start gap-1">
+                        <label className="flex min-h-11 min-w-0 flex-1 items-start gap-3 rounded-lg px-1 py-2">
+                          {canClose && (
+                            <input
+                              type="checkbox"
+                              disabled={disabled}
+                              checked={selected.includes(entry.id)}
+                              onChange={(e) => toggle(entry.id, e.target.checked)}
+                              className="mt-0.5 size-4 accent-primary"
+                            />
+                          )}
+                          <span className="flex min-w-0 flex-1 flex-col gap-0.5">
+                            <span className="truncate text-sm">
+                              {entry.description || "Registro de horas"}
+                            </span>
+                            <span className="num text-xs text-muted">
+                              {formatDate(entry.startedAt)} ·{" "}
+                              {formatHours(entry.hoursInSprint)}
+                              {entry.clarificationRequested
+                                ? " · Aclaración solicitada"
+                                : ""}
+                            </span>
+                            {canClose && !rule.eligible && (
+                              <span className="text-xs text-warning">
+                                No puedes validarla: {rule.reason.toLowerCase()}.
+                              </span>
+                            )}
                           </span>
+                        </label>
+                        {canObject && (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            aria-expanded={objecting === entry.id}
+                            aria-label={`Objetar el registro de ${nameOf(userId)}: ${entry.description || "Registro de horas"}`}
+                            onClick={() =>
+                              setObjecting((id) => (id === entry.id ? null : entry.id))
+                            }
+                          >
+                            <MessageSquareWarning className="size-4" aria-hidden="true" />
+                            Objetar
+                          </Button>
                         )}
-                      </span>
-                    </label>
+                      </div>
+                      {objecting === entry.id && (
+                        <div className="rounded-lg border border-border bg-surface-2 p-3">
+                          <CommentThread
+                            entity="time_entry"
+                            entityId={entry.id}
+                            title="Objeciones de este registro"
+                            label="Describe tu objeción"
+                            placeholder="Explica qué no cuadra para que la persona pueda aclararlo"
+                            submitLabel="Objetar"
+                          />
+                        </div>
+                      )}
+                    </div>
                   );
                 })}
               </fieldset>

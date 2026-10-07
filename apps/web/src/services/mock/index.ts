@@ -1,14 +1,14 @@
 import type {
-  AnnouncementService,
   AuthService,
-  CommentService,
   DailyService,
   MeetingService,
   MemberService,
   Services,
   SettingsService,
 } from "@vexa/services";
+import { announcementService } from "./announcements";
 import { auditService } from "./audit";
+import { commentService } from "./comments";
 import { chatService } from "./chat";
 import { getDb, getSessionUserId, setSessionUserId } from "./db";
 import { createMockDailyService } from "./daily";
@@ -81,8 +81,8 @@ export function createMockServices(): Services {
     expenses: expenseService,
     dashboard,
     daily,
-    comments: notImplemented<CommentService>("CommentService"),
-    announcements: notImplemented<AnnouncementService>("AnnouncementService"),
+    comments: commentService,
+    announcements: announcementService,
     meetings: notImplemented<MeetingService>("MeetingService"),
     notifications: notificationService,
     audit: auditService,

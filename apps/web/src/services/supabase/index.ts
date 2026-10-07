@@ -1,10 +1,10 @@
 import type {
-  AnnouncementService,
-  CommentService,
   MeetingService,
   Services,
 } from "@vexa/services";
 import { getSupabase, type VexaSupabase } from "@/lib/supabase";
+import { createAnnouncementService } from "./announcements";
+import { createCommentService } from "./comments";
 import { createChatService } from "./chat";
 import { createAuditService } from "./audit";
 import { createAuthService } from "./auth";
@@ -22,7 +22,7 @@ import { createTimeService } from "./time";
 
 /**
  * Servicios respaldados por Supabase. Lo que ni el mock ni la base implementan todavía
- * (comentarios, anuncios, reuniones) falla con un mensaje claro, igual que el mock.
+ * (reuniones) falla con un mensaje claro, igual que el mock.
  */
 export function createSupabaseServices(
   client: VexaSupabase = getSupabase(),
@@ -42,8 +42,8 @@ export function createSupabaseServices(
     expenses: createExpenseService(client),
     dashboard: createDashboardService(client),
     daily: createDailyService(client, { time, tasks }),
-    comments: notImplemented<CommentService>("CommentService"),
-    announcements: notImplemented<AnnouncementService>("AnnouncementService"),
+    comments: createCommentService(client),
+    announcements: createAnnouncementService(client),
     meetings: notImplemented<MeetingService>("MeetingService"),
     notifications: createNotificationService(client),
     audit: createAuditService(client),

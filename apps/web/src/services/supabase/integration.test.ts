@@ -449,4 +449,39 @@ describe.skipIf(!url || !key)("Supabase local (integración)", () => {
     expect(removed.error).not.toBeNull();
     expect(typeof (await rober.services.daily.suggestDone())).toBe("string");
   });
+  it("comenta con @mención: avisa una vez, respeta la visibilidad y el anuncio es solo de admin", async () => {
+    const DIEGO = "00000000-0000-4000-8000-000000000004";
+    const diego = await login("diego@vexa.test");
+    const before = (await diego.services.notifications.list()).filter((n) => n.type === "mention").length;
+
+    const comment = await rober.services.comments.add({
+      entity: "task",
+      entityId: TASK_ROBER,
+      text: "  Integración @diego y @alex  ",
+      mentions: [DIEGO, DIEGO, ALEX, ROBER],
+    });
+    expect(comment).toMatchObject({ userId: ROBER, text: "Integración @diego y @alex" });
+    expect(comment.mentions.sort()).toEqual([ALEX, DIEGO].sort());
+
+    // Diego recibe un solo aviso `mention` que apunta a la tarea; Rober (autor) no recibe ninguno.
+    const mentions = (await diego.services.notifications.list()).filter((n) => n.type === "mention");
+    expect(mentions).toHaveLength(before + 1);
+    expect(mentions[0].payload.taskId).toBe(TASK_ROBER);
+
+    // Alex es miembro del proyecto y lee el hilo; nadie edita ni borra.
+    expect((await alex.services.comments.list("task", TASK_ROBER)).map((c) => c.id)).toContain(comment.id);
+    expect((await rober.client.from("comments").delete().eq("id", comment.id)).error).not.toBeNull();
+    expect((await rober.client.from("comments").update({ text: "x" }).eq("id", comment.id)).error).not.toBeNull();
+    await expect(
+      rober.services.comments.add({ entity: "task", entityId: "99999999-0000-4000-8000-000000000000", text: "x" }),
+    ).rejects.toThrow();
+
+    // Anuncios: solo admin publica; socios leen; el colaborador no ve ninguno.
+    const note = await admin.services.announcements.create("  Anuncio de integración ", { pinned: true });
+    expect(note).toMatchObject({ text: "Anuncio de integración", pinned: true });
+    await expect(rober.services.announcements.create("no")).rejects.toThrow();
+    expect((await rober.services.announcements.list())[0].id).toBe(note.id);
+    expect(await alex.services.announcements.list()).toEqual([]);
+    expect((await admin.services.announcements.setPinned(note.id, false)).pinned).toBe(false);
+  });
 });
