@@ -58,10 +58,10 @@ export function EvidencePicker({
           if (accepted.length) onFiles(accepted);
         }}
       />
-      <p id={`${id}-hint`} className="text-sm text-muted">
+      <p id={`${id}-hint`} className="text-xs text-muted">
         {full
           ? `Llegaste al máximo de ${EVIDENCE_MAX_FILES} archivos.`
-          : `Hasta ${EVIDENCE_MAX_FILES} archivos de ${formatBytes(limit)} cada uno: imágenes, PDF, Office, ZIP, texto o CSV.`}
+          : `Hasta ${EVIDENCE_MAX_FILES} archivos de ${formatBytes(limit)} cada uno.`}
       </p>
     </div>
   );

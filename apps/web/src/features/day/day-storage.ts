@@ -26,9 +26,13 @@ export function writeLocal(key: string, value: unknown): boolean {
     return false;
   }
 }
-export function dailyDates(userId: string, today: string) {
+export function dailyDates(
+  userId: string,
+  today: string,
+  sentDates: readonly string[] = [],
+) {
   const prefix = `vexa.daily-draft.${userId}.`;
-  const dates = new Set([today]);
+  const dates = new Set([today, ...sentDates]);
   try {
     for (let i = 0; i < localStorage.length; i++) {
       const key = localStorage.key(i);

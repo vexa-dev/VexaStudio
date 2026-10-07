@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/Button";
 import { ParticipantPicker } from "./ParticipantPicker";
 import { Field } from "@/components/ui/Field";
 import { useMembers } from "@/features/team/hooks/useMembers";
-import { creditExample, participantErrors } from "../participants";
+import { creditHint, participantErrors } from "../participants";
 
 interface ParticipantsFieldProps {
   /** The person registering: never taggable. */
@@ -38,9 +38,8 @@ export function ParticipantsField({
         Personas que te ayudaron (opcional)
       </legend>
       <p className="text-sm text-muted">
-        Etiqueta a quien colaboró y define qué porcentaje de las horas cuenta
-        para esa persona. Tú siempre conservas el 100 %. Ejemplo:{" "}
-        <span className="num">2 h al 75 % = 1.5 h para Rober</span>.
+        Define qué porcentaje de las horas cuenta para cada persona. Tú
+        conservas el 100 %.
       </p>
       <ParticipantPicker
         people={(members.data ?? []).filter(
@@ -117,7 +116,7 @@ export function ParticipantsField({
                   className="num"
                   value={Number.isNaN(share) ? "" : share}
                   error={errors.rows[index]}
-                  hint={creditExample(hours, share, name)}
+                  hint={creditHint(hours, share)}
                   onChange={(e) =>
                     onChange(
                       value.map((x) =>

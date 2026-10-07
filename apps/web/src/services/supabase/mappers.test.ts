@@ -6,6 +6,9 @@ import {
   mapDraft,
   mapExpense,
   mapLabel,
+  mapMeeting,
+  mapMeetingSlot,
+  mapSlotVote,
   mapMemberPoints,
   mapMonthlySummary,
   mapNotification,
@@ -41,6 +44,7 @@ const timeRow: Tables<"time_entries"> = {
   validated: false,
   validated_at: null,
   validated_by: null,
+  locked_by_sprint: null,
   review_note: null,
   reviewed_by: null,
   draft: false,
@@ -621,5 +625,39 @@ describe("mapNotification", () => {
   it("una carga que no es objeto queda vacía", () => {
     expect(mapNotification({ ...row, payload: ["x"] }).payload).toEqual({});
     expect(mapNotification({ ...row, payload: null as never }).payload).toEqual({});
+  });
+});
+
+describe("reuniones", () => {
+  it("convierte la convocatoria, el horario y el voto al dominio", () => {
+    const meeting: Tables<"meetings"> = {
+      id: "m1",
+      week: "2026-10-12",
+      status: "confirmed",
+      confirmed_slot_id: "s1",
+      meet_link: "https://meet.google.com/abc-defg-hij",
+      attendee_ids: ["u1"],
+      created_by: "u1",
+      created_at: "2026-10-07T15:00:00.123456+00:00",
+    };
+    expect(mapMeeting(meeting)).toEqual({
+      id: "m1",
+      week: "2026-10-12",
+      status: "confirmed",
+      confirmedSlotId: "s1",
+      meetLink: "https://meet.google.com/abc-defg-hij",
+      attendeeIds: ["u1"],
+      createdAt: "2026-10-07T15:00:00.123Z",
+    });
+    expect(mapMeetingSlot({ id: "s1", meeting_id: "m1", starts_at: "2026-10-13T20:00:00+00:00" })).toEqual({
+      id: "s1",
+      meetingId: "m1",
+      startsAt: "2026-10-13T20:00:00.000Z",
+    });
+    expect(mapSlotVote({ slot_id: "s1", user_id: "u1", available: false, created_at: "2026-10-07T15:00:00+00:00" })).toEqual({
+      slotId: "s1",
+      userId: "u1",
+      available: false,
+    });
   });
 });

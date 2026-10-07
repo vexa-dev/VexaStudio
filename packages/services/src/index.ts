@@ -3,6 +3,7 @@ import type {
   AuditEventType,
   AuditLogEntry,
 } from "@vexa/domain/audit";
+import type { DailyRecord } from "@vexa/domain/daily";
 import type {
   ChatAttachment,
   ChatEvent,
@@ -12,13 +13,14 @@ import type {
   ChatThread,
 } from "@vexa/domain/chat";
 import type {
+  Area,
+  Role,
   HoursDraft,
   HoursEvidence,
   ProjectLabel,
   Announcement,
   Comment,
   CommentEntity,
-  DailyUpdate,
   Expense,
   ExpenseVote,
   Id,
@@ -30,6 +32,7 @@ import type {
   MeetingSlot,
   MfaChallenge,
   MfaEnrollment,
+  AuthSession,
   MfaFactor,
   Notification,
   NotificationPreferences,
@@ -40,6 +43,7 @@ import type {
   Settings,
   SlotVote,
   Sprint,
+  SprintCloseReport,
   Task,
   TaskStatus,
   TimeEntry,
@@ -71,8 +75,23 @@ export interface AuthService {
    * "Disponible solo con la conexión a Supabase.".
    */
   updatePassword(input: { currentPassword: string; newPassword: string }): Promise<void>;
+  /**
+   * Envía el enlace para restablecer la contraseña. NUNCA revela si el correo existe: responde igual
+   * para cualquier correo bien escrito; solo falla por correo mal formado o límite de envíos.
+   * Opcional: el mock no la implementa y avisa que requiere Supabase.
+   */
+  requestPasswordReset?(email: string): Promise<void>;
+  /**
+   * Fija la contraseña nueva desde la sesión de recuperación (enlace del correo) y cierra todas las
+   * sesiones. Opcional, solo con Supabase.
+   */
+  completePasswordReset?(newPassword: string): Promise<void>;
   /** Cierra la sesión en los demás dispositivos y conserva esta. Solo con Supabase. */
   signOutOthers(): Promise<void>;
+  /** Sesiones activas de la persona (sin IP), la actual primero. Solo con Supabase. */
+  listSessions(): Promise<AuthSession[]>;
+  /** Cierra una sesión propia que no sea la actual. Solo con Supabase. */
+  revokeSession(id: Id): Promise<void>;
   /**
    * Segundo paso con TOTP (solo con Supabase). Hoy se exige únicamente en el cliente: el RLS no
    * pide aal2, así que un token aal1 aún puede llamar a la API REST (endurecer con aal2 queda
@@ -92,9 +111,29 @@ export interface SettingsService {
   get(): Promise<Settings>;
 }
 
+/** Invitación de un colaborador. Los socios entran tras una votación y un administrador los promueve después. */
+export interface InviteMemberInput {
+  email: string;
+  name: string;
+  role?: "collaborator";
+  area?: Area;
+  weeklyHours?: number;
+  /** Proyectos a los que se une al aceptar (membresía explícita). */
+  projectIds?: Id[];
+}
+
 export interface MemberService {
   list(): Promise<Profile[]>;
   get(id: Id): Promise<Profile | null>;
+  /**
+   * Solo administrador. Envía la invitación por correo (Supabase) o crea un colaborador pendiente sin
+   * enviar nada (mock). Devuelve el perfil; si ya existe una cuenta con ese correo, falla con un aviso genérico.
+   */
+  invite?(input: InviteMemberInput): Promise<Profile>;
+  /** Solo administrador. No sobre sí mismo ni dejando al estudio sin administrador activo. */
+  setRole?(memberId: Id, role: Role, note?: string): Promise<Profile>;
+  /** Solo administrador. Desactivar exige motivo y cierra las sesiones de la persona; reactivar las deja entrar de nuevo. */
+  setActive?(memberId: Id, active: boolean, reason?: string): Promise<Profile>;
 }
 
 export interface ProjectService {
@@ -117,8 +156,17 @@ export interface SprintService {
   listByProject(projectId: Id): Promise<Sprint[]>;
   getActive(projectId: Id): Promise<Sprint | null>;
   create(input: Omit<Sprint, "id" | "status">): Promise<Sprint>;
-  /** Cierra el sprint: valida en bloque las horas y las bloquea. */
+  /**
+   * Cierra el sprint (solo admin, sprint activo) en una sola operación: valida en bloque las horas
+   * elegidas y las bloquea, guarda el reporte de entrega y manda al backlog lo que no se terminó.
+   * Todo o nada: si una hora no es elegible no se cambia nada.
+   */
   close(sprintId: Id, validatedEntryIds: Id[]): Promise<Sprint>;
+  /**
+   * Entregado vs comprometido por persona y horas pendientes de validar. En un sprint cerrado
+   * devuelve el reporte guardado al cerrar.
+   */
+  getCloseReport?(sprintId: Id): Promise<SprintCloseReport>;
 }
 
 export interface TaskFilter {
@@ -236,6 +284,7 @@ export interface NewExpenseInput {
   currency: Expense["currency"];
   concept: string;
   category: Expense["category"];
+  /** Comprobante como data URL (jpeg, png, webp o pdf); `null` si no hay. */
   receiptUrl: string | null;
   beforeSigning?: boolean;
 }
@@ -247,6 +296,8 @@ export interface ExpenseService {
   vote(expenseId: Id, inFavor: boolean): Promise<Expense>;
   void(id: Id, reason: string): Promise<Expense>;
   listRecurring(): Promise<RecurringExpense[]>;
+  /** Dirección para mostrar el comprobante (data URL en el mock, URL firmada en Supabase). */
+  getReceiptUrl(expenseId: Id): Promise<string | null>;
 }
 
 export interface DashboardService {
@@ -262,24 +313,39 @@ export interface NewDailyInput {
 }
 
 export interface DailyService {
-  list(filter?: { userId?: Id; date?: IsoDate }): Promise<DailyUpdate[]>;
-  submit(input: NewDailyInput): Promise<DailyUpdate>;
+  /**
+   * Dailies compartidos, del más reciente al más antiguo. Admin y socios ven todos; un colaborador
+   * solo los suyos.
+   */
+  list(filter?: { userId?: Id; date?: IsoDate }): Promise<DailyRecord[]>;
+  /** Envía el daily de hoy (Lima) de la persona con sesión; reenviar el mismo día lo corrige. */
+  submit(input: NewDailyInput): Promise<DailyRecord>;
   /** Tareas trabajadas desde el último daily, para autocompletar "qué hice". */
   suggestDone(): Promise<string>;
 }
 
 export interface CommentService {
+  /** Hilo de una entidad, del más antiguo al más nuevo. Solo lo que la persona puede leer de esa entidad. */
   list(entity: CommentEntity, entityId: Id): Promise<Comment[]>;
+  /**
+   * Comenta como la persona con sesión (texto de 1 a 2000 caracteres). `mentions` son los ids que la UI
+   * resolvió desde `@usuario`; la base descarta a quien no puede leer la entidad y avisa a los demás.
+   * Los comentarios no se editan ni se borran.
+   */
   add(input: {
     entity: CommentEntity;
     entityId: Id;
     text: string;
+    mentions?: Id[];
   }): Promise<Comment>;
 }
 
 export interface AnnouncementService {
+  /** Fijados primero y luego los más nuevos. Los leen admin y socios. */
   list(): Promise<Announcement[]>;
-  create(text: string): Promise<Announcement>;
+  /** Solo admin publica (texto de 1 a 1000 caracteres). */
+  create(text: string, options?: { pinned?: boolean }): Promise<Announcement>;
+  /** Solo admin fija o desfija; los anuncios no se borran. */
   setPinned(id: Id, pinned: boolean): Promise<Announcement>;
 }
 

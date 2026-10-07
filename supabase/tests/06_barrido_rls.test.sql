@@ -10,8 +10,8 @@ select is(
   '', 'toda tabla de public tiene RLS activado');
 select is(
   (select count(*)::int from pg_class c join pg_namespace n on n.oid = c.relnamespace
-   where n.nspname = 'public' and c.relkind in ('r', 'p')), 28,
-  'las 28 tablas del alcance (si agregas una, agregale RLS y politicas y actualiza este numero)');
+   where n.nspname = 'public' and c.relkind in ('r', 'p')), 34,
+  'las 34 tablas del alcance (si agregas una, agregale RLS y politicas y actualiza este numero)');
 select is(
   (select coalesce(string_agg(c.relname, ', '), '') from pg_class c join pg_namespace n on n.oid = c.relnamespace
    where n.nspname = 'public' and c.relkind in ('r', 'p') and c.relname <> 'audit_chain_head'
@@ -62,14 +62,20 @@ select is(
      and p.proname not in ('close_timer_entry', 'prepare_task_hours',
        -- Implementaciones de los RPC del chat (B5b): los envoltorios publicos son SECURITY INVOKER y
        -- llaman a estas funciones, que validan permisos adentro y tienen `grant execute` explicito.
-       'chat_direct_thread', 'chat_save_group', 'chat_delete_group', 'chat_react')),
+       'chat_direct_thread', 'chat_save_group', 'chat_delete_group', 'chat_react',
+       -- Implementacion de proponer la reunion (M4): el envoltorio publico es SECURITY INVOKER y esta funcion
+       -- valida que quien llama sea admin; tiene `grant execute` explicito.
+       'propose_meeting')),
   '', 'las funciones SECURITY DEFINER internas no estan abiertas a authenticated (salvo las de reloj y las de los RPC del chat)');
 select is(
   (select coalesce(string_agg(p.proname, ', '), '') from pg_proc p join pg_namespace n on n.oid = p.pronamespace
    where n.nspname = 'public' and p.prosecdef and p.proname not in (
      'auth_role', 'is_admin', 'is_partner_or_admin', 'is_project_member', 'can_access_project',
-     'can_view_task', 'chat_can_access', 'hours_entry_tagged', 'verify_audit_chain')),
+     'can_view_task', 'chat_can_access', 'hours_entry_tagged', 'verify_audit_chain',
+     'list_my_sessions', 'revoke_my_session')),
   -- chat_can_access es un ayudante de permisos (integrante del hilo, o admin en grupos), igual que can_view_task.
+  -- list_my_sessions y revoke_my_session no son ayudantes de permisos: son definers porque el esquema `auth`
+  -- no esta expuesto a la API; solo leen/borran filas de auth.sessions de auth.uid() (sin IP) y solo `authenticated` las ejecuta.
   -- hours_entry_tagged responde solo si quien llama esta etiquetado en un registro (evita recursion de RLS).
   '', 'las unicas funciones publicas SECURITY DEFINER son los ayudantes de permisos y la verificacion de la cadena');
 select is(

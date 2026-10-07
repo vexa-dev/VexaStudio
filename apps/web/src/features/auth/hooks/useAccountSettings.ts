@@ -6,6 +6,7 @@ import { isSupabaseSource } from "@/services/supabase/data-source";
 
 const SESSION_KEY = ["auth", "session"];
 const MFA_FACTORS_KEY = ["auth", "mfa-factors"];
+const SESSIONS_KEY = ["auth", "sessions"];
 const PREFERENCES_KEY = ["notifications", "preferences"];
 
 const messageOf = (error: unknown, fallback: string) =>
@@ -87,10 +88,34 @@ export function useDisableMfa() {
   });
 }
 
+/** Active sessions of the signed-in person (current one first). */
+export function useSessions(enabled: boolean) {
+  return useQuery({
+    queryKey: SESSIONS_KEY,
+    queryFn: () => services.auth.listSessions(),
+    enabled,
+  });
+}
+
+export function useRevokeSession() {
+  const queryClient = useQueryClient();
+  return useMutation<void, Error, Id>({
+    mutationFn: (id) => services.auth.revokeSession(id),
+    onSuccess: () => toast.success("Cerraste esa sesión"),
+    onError: (error: unknown) => toast.error(messageOf(error, "No se pudo cerrar la sesión")),
+    // The list may have changed on the server either way (already closed elsewhere).
+    onSettled: () => void queryClient.invalidateQueries({ queryKey: SESSIONS_KEY }),
+  });
+}
+
 export function useSignOutOthers() {
+  const queryClient = useQueryClient();
   return useMutation({
     mutationFn: () => services.auth.signOutOthers(),
-    onSuccess: () => toast.success("Cerraste la sesión en tus otros dispositivos"),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: SESSIONS_KEY });
+      toast.success("Cerraste la sesión en tus otros dispositivos");
+    },
     onError: (error: unknown) =>
       toast.error(messageOf(error, "No se pudo cerrar la sesión en los otros dispositivos")),
   });

@@ -16,6 +16,7 @@ import { stagger } from '@/lib/utils'
 import { normalizeCodeInput, MFA_CODE_LENGTH } from '../schemas'
 import { useAuth } from '../hooks/useAuth'
 import { useLoginProfiles } from '../hooks/useLoginProfiles'
+import { useRequestPasswordReset } from '../hooks/usePasswordReset'
 import './login.css'
 
 const LAST_USER_KEY = 'vexa-studio.last-user'
@@ -31,6 +32,7 @@ function readLastUser(): string | null {
 export default function LoginPage() {
   const { user, signIn, supportsPassword, signInWithPassword, mfaPending, verifyMfa, cancelMfa } = useAuth()
   const { data, isLoading, isError, refetch } = useLoginProfiles()
+  const requestReset = useRequestPasswordReset()
   const navigate = useNavigate()
   const location = useLocation()
   const [pendingId, setPendingId] = useState<string | null>(null)
@@ -80,9 +82,13 @@ export default function LoginPage() {
     setError(null)
     setPendingId(userId)
     try {
-      await animate('.access-content',
-        { opacity: .15, ...(reduced ? {} : { y: -motionTokens.distance.sm, scale: motionTokens.scale.press }) },
-        { duration: reduced ? motionTokens.duration.fast : motionTokens.duration.normal, ease: motionTokens.easing.smooth })
+      // La animación nunca debe bloquear el acceso: en una pestaña en segundo plano el navegador la pausa.
+      await Promise.race([
+        animate('.access-content',
+          { opacity: .15, ...(reduced ? {} : { y: -motionTokens.distance.sm, scale: motionTokens.scale.press }) },
+          { duration: reduced ? motionTokens.duration.fast : motionTokens.duration.normal, ease: motionTokens.easing.smooth }),
+        new Promise((resolve) => setTimeout(resolve, 700)),
+      ])
       await signIn(userId)
       try {
         localStorage.setItem(LAST_USER_KEY, userId)
@@ -116,7 +122,7 @@ export default function LoginPage() {
           <div className="access-panel-heading">
             <h2 id="access-title">{mfaPending ? 'Verifica tu identidad' : recovering ? 'Recupera tu acceso' : 'Inicia sesión'}</h2>
             {mfaPending && <p>Escribe el código de 6 dígitos de tu aplicación de autenticación.</p>}
-            {recovering && !mfaPending && <p>Indica el correo de tu cuenta.</p>}
+            {recovering && !mfaPending && <p>Indica el correo de tu cuenta y te enviaremos un enlace.</p>}
           </div>
           {mfaPending ? (
             <form className="access-form" noValidate onSubmit={async event => {
@@ -165,17 +171,29 @@ export default function LoginPage() {
               }
               return
             }
-            setFormNotice(recovering
-              ? (supportsPassword
-                ? 'Para recuperar tu acceso, pide a un administrador de VEXA que te envíe una invitación nueva.'
-                : 'La recuperación estará disponible al conectar las cuentas. Por ahora puedes entrar a la demo de abajo.')
-              : 'El acceso con correo y contraseña estará disponible al conectar las cuentas. Por ahora puedes entrar a la demo de abajo.')
+            if (recovering) {
+              const email = String(new FormData(event.currentTarget).get('email') ?? '')
+              setCredentialsError(null)
+              setFormNotice(null)
+              setSubmitting(true)
+              try {
+                await requestReset.mutateAsync(email)
+                // Mismo aviso exista o no la cuenta: no se revela quién está registrado.
+                setFormNotice('Si el correo está registrado, te enviamos un enlace para crear una contraseña nueva. Revisa también el spam.')
+              } catch (reason) {
+                setCredentialsError(reason instanceof Error ? reason.message : 'No pudimos enviar el enlace. Inténtalo de nuevo.')
+              } finally {
+                setSubmitting(false)
+              }
+              return
+            }
+            setFormNotice('El acceso con correo y contraseña estará disponible al conectar las cuentas. Por ahora puedes entrar a la demo de abajo.')
           }}>
             <label htmlFor="login-email">Correo electrónico</label>
             <input id="login-email" name="email" type="email" autoComplete="email" placeholder="tu@vexa.space" required maxLength={254} />
             {!recovering && <>
               <div className="access-password-label"><label htmlFor="login-password">Contraseña</label>
-                <button type="button" className="access-text-button" onClick={() => { setRecovering(true); setFormNotice(null) }}>¿La olvidaste?</button>
+                <button type="button" className="access-text-button min-h-11" onClick={() => { setRecovering(true); setFormNotice(null); setCredentialsError(null) }}>¿La olvidaste?</button>
               </div>
               <div className="access-password">
                 <input id="login-password" name="password" type={showPassword ? 'text' : 'password'} autoComplete="current-password" placeholder="Tu contraseña" required />
@@ -188,9 +206,9 @@ export default function LoginPage() {
               whileHover={reduced ? undefined : { y: -motionTokens.login.hoverPx }}
               whileTap={reduced ? undefined : { scale: motionTokens.scale.press }}
               transition={{ duration: motionTokens.duration.fast }}>
-              {recovering ? (supportsPassword ? 'Ver cómo recuperarla' : 'Enviar enlace de recuperación') : submitting ? 'Entrando…' : 'Iniciar sesión'}<ArrowUpRight size={17} aria-hidden="true" />
+              {recovering ? (submitting ? 'Enviando…' : 'Enviar enlace de recuperación') : submitting ? 'Entrando…' : 'Iniciar sesión'}<ArrowUpRight size={17} aria-hidden="true" />
             </motion.button>
-            {recovering && <button type="button" className="access-text-button access-back" onClick={() => { setRecovering(false); setFormNotice(null) }}>Volver al inicio de sesión</button>}
+            {recovering && <button type="button" className="access-text-button access-back" onClick={() => { setRecovering(false); setFormNotice(null); setCredentialsError(null) }}>Volver al inicio de sesión</button>}
             {credentialsError && <p role="alert" className="access-error">{credentialsError}</p>}
             {formNotice && <motion.output className="access-form-notice" aria-live="polite" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: motionTokens.duration.fast }}>{formNotice}</motion.output>}
           </form>

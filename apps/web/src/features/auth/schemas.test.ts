@@ -5,6 +5,7 @@ import {
   passwordFormSchema,
   profileFormSchema,
   qrImageSrc,
+  resetPasswordSchema,
   toProfileInput,
 } from "./schemas";
 
@@ -119,5 +120,25 @@ describe("qrImageSrc", () => {
   });
   it("returns an empty string for anything else", () => {
     expect(qrImageSrc("javascript:alert(1)")).toBe("");
+  });
+});
+
+describe("resetPasswordSchema", () => {
+  const ok = { newPassword: "Nueva-clave-2026", confirmPassword: "Nueva-clave-2026" };
+
+  it("acepta una contraseña fuerte y confirmada", () => {
+    expect(resetPasswordSchema.safeParse(ok).success).toBe(true);
+  });
+
+  it.each(["Abc12345", "nueva-clave-2026", "NUEVA-CLAVE-2026", "Nueva-clave-segura"])(
+    "rechaza %s por no cumplir la política",
+    (newPassword) => {
+      expect(resetPasswordSchema.safeParse({ newPassword, confirmPassword: newPassword }).success).toBe(false);
+    },
+  );
+
+  it("exige que la confirmación coincida", () => {
+    const result = resetPasswordSchema.safeParse({ ...ok, confirmPassword: "otra" });
+    expect(result.success).toBe(false);
   });
 });

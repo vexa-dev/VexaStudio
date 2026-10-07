@@ -48,6 +48,31 @@ isOneToOne: false
       referencedColumns: ["id"]
     }
                   ]
+                },"announcements": {
+                  Row: {
+                    "author_id": string,"created_at": string,"id": string,"pinned": boolean,"text": string
+                  }
+                  Insert: {
+                    "author_id"?: string,"created_at"?: string,"id"?: string,"pinned"?: boolean,"text": string
+                  }
+                  Update: {
+                    "author_id"?: string,"created_at"?: string,"id"?: string,"pinned"?: boolean,"text"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "announcements_author_id_fkey"
+      columns: ["author_id"]
+isOneToOne: false
+      referencedRelation: "member_points"
+      referencedColumns: ["user_id"]
+    },{
+      foreignKeyName: "announcements_author_id_fkey"
+      columns: ["author_id"]
+isOneToOne: false
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    }
+                  ]
                 },"audit_chain_head": {
                   Row: {
                     "hash": string,"id": boolean,"seq": number
@@ -328,6 +353,56 @@ isOneToOne: false
       referencedColumns: ["id"]
     }
                   ]
+                },"comments": {
+                  Row: {
+                    "created_at": string,"entity": Database["public"]['Enums']["comment_entity"],"entity_id": string,"id": string,"mentions": (string)[],"text": string,"user_id": string
+                  }
+                  Insert: {
+                    "created_at"?: string,"entity": Database["public"]['Enums']["comment_entity"],"entity_id": string,"id"?: string,"mentions"?: (string)[],"text": string,"user_id"?: string
+                  }
+                  Update: {
+                    "created_at"?: string,"entity"?: Database["public"]['Enums']["comment_entity"],"entity_id"?: string,"id"?: string,"mentions"?: (string)[],"text"?: string,"user_id"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "comments_user_id_fkey"
+      columns: ["user_id"]
+isOneToOne: false
+      referencedRelation: "member_points"
+      referencedColumns: ["user_id"]
+    },{
+      foreignKeyName: "comments_user_id_fkey"
+      columns: ["user_id"]
+isOneToOne: false
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"daily_updates": {
+                  Row: {
+                    "blockers": string,"created_at": string,"date": string,"done": string,"id": string,"updated_at": string,"user_id": string,"will_do": string
+                  }
+                  Insert: {
+                    "blockers"?: string,"created_at"?: string,"date": string,"done"?: string,"id"?: string,"updated_at"?: string,"user_id"?: string,"will_do"?: string
+                  }
+                  Update: {
+                    "blockers"?: string,"created_at"?: string,"date"?: string,"done"?: string,"id"?: string,"updated_at"?: string,"user_id"?: string,"will_do"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "daily_updates_user_id_fkey"
+      columns: ["user_id"]
+isOneToOne: false
+      referencedRelation: "member_points"
+      referencedColumns: ["user_id"]
+    },{
+      foreignKeyName: "daily_updates_user_id_fkey"
+      columns: ["user_id"]
+isOneToOne: false
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    }
+                  ]
                 },"expense_votes": {
                   Row: {
                     "created_at": string,"expense_id": string,"in_favor": boolean,"user_id": string
@@ -416,6 +491,56 @@ isOneToOne: false
     },{
       foreignKeyName: "hours_drafts_user_id_fkey"
       columns: ["user_id"]
+isOneToOne: false
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"meeting_slots": {
+                  Row: {
+                    "id": string,"meeting_id": string,"starts_at": string
+                  }
+                  Insert: {
+                    "id"?: string,"meeting_id": string,"starts_at": string
+                  }
+                  Update: {
+                    "id"?: string,"meeting_id"?: string,"starts_at"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "meeting_slots_meeting_id_fkey"
+      columns: ["meeting_id"]
+isOneToOne: false
+      referencedRelation: "meetings"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"meetings": {
+                  Row: {
+                    "attendee_ids": (string)[],"confirmed_slot_id": string | null,"created_at": string,"created_by": string,"id": string,"meet_link": string | null,"status": Database["public"]['Enums']["meeting_status"],"week": string
+                  }
+                  Insert: {
+                    "attendee_ids"?: (string)[],"confirmed_slot_id"?: string | null,"created_at"?: string,"created_by": string,"id"?: string,"meet_link"?: string | null,"status"?: Database["public"]['Enums']["meeting_status"],"week": string
+                  }
+                  Update: {
+                    "attendee_ids"?: (string)[],"confirmed_slot_id"?: string | null,"created_at"?: string,"created_by"?: string,"id"?: string,"meet_link"?: string | null,"status"?: Database["public"]['Enums']["meeting_status"],"week"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "meetings_confirmed_slot_fkey"
+      columns: ["confirmed_slot_id"]
+isOneToOne: false
+      referencedRelation: "meeting_slots"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "meetings_created_by_fkey"
+      columns: ["created_by"]
+isOneToOne: false
+      referencedRelation: "member_points"
+      referencedColumns: ["user_id"]
+    },{
+      foreignKeyName: "meetings_created_by_fkey"
+      columns: ["created_by"]
 isOneToOne: false
       referencedRelation: "profiles"
       referencedColumns: ["id"]
@@ -585,18 +710,61 @@ isOneToOne: false
       referencedColumns: ["id"]
     }
                   ]
-                },"sprints": {
+                },"slot_votes": {
                   Row: {
-                    "created_at": string,"end_date": string,"goal": string,"id": string,"project_id": string,"start_date": string,"status": Database["public"]['Enums']["sprint_status"],"updated_at": string
+                    "available": boolean,"created_at": string,"slot_id": string,"user_id": string
                   }
                   Insert: {
-                    "created_at"?: string,"end_date": string,"goal": string,"id"?: string,"project_id": string,"start_date": string,"status"?: Database["public"]['Enums']["sprint_status"],"updated_at"?: string
+                    "available": boolean,"created_at"?: string,"slot_id": string,"user_id"?: string
                   }
                   Update: {
-                    "created_at"?: string,"end_date"?: string,"goal"?: string,"id"?: string,"project_id"?: string,"start_date"?: string,"status"?: Database["public"]['Enums']["sprint_status"],"updated_at"?: string
+                    "available"?: boolean,"created_at"?: string,"slot_id"?: string,"user_id"?: string
                   }
                   Relationships: [
                     {
+      foreignKeyName: "slot_votes_slot_id_fkey"
+      columns: ["slot_id"]
+isOneToOne: false
+      referencedRelation: "meeting_slots"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "slot_votes_user_id_fkey"
+      columns: ["user_id"]
+isOneToOne: false
+      referencedRelation: "member_points"
+      referencedColumns: ["user_id"]
+    },{
+      foreignKeyName: "slot_votes_user_id_fkey"
+      columns: ["user_id"]
+isOneToOne: false
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"sprints": {
+                  Row: {
+                    "close_report": Json | null,"closed_at": string | null,"closed_by": string | null,"created_at": string,"end_date": string,"goal": string,"id": string,"project_id": string,"start_date": string,"status": Database["public"]['Enums']["sprint_status"],"updated_at": string
+                  }
+                  Insert: {
+                    "close_report"?: Json | null,"closed_at"?: string | null,"closed_by"?: string | null,"created_at"?: string,"end_date": string,"goal": string,"id"?: string,"project_id": string,"start_date": string,"status"?: Database["public"]['Enums']["sprint_status"],"updated_at"?: string
+                  }
+                  Update: {
+                    "close_report"?: Json | null,"closed_at"?: string | null,"closed_by"?: string | null,"created_at"?: string,"end_date"?: string,"goal"?: string,"id"?: string,"project_id"?: string,"start_date"?: string,"status"?: Database["public"]['Enums']["sprint_status"],"updated_at"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "sprints_closed_by_fkey"
+      columns: ["closed_by"]
+isOneToOne: false
+      referencedRelation: "member_points"
+      referencedColumns: ["user_id"]
+    },{
+      foreignKeyName: "sprints_closed_by_fkey"
+      columns: ["closed_by"]
+isOneToOne: false
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    },{
       foreignKeyName: "sprints_project_id_fkey"
       columns: ["project_id"]
 isOneToOne: false
@@ -668,16 +836,22 @@ isOneToOne: false
                   ]
                 },"time_entries": {
                   Row: {
-                    "allocations": Json | null,"created_at": string,"description": string | null,"draft": boolean,"elapsed_ms": number,"ended_at": string | null,"evidence_url": string | null,"hours": number,"id": string,"paid": boolean,"project_id": string | null,"review_note": string | null,"reviewed_by": string | null,"segment_started_at": string | null,"segments": Json | null,"source": string | null,"started_at": string,"task_id": string | null,"timer_state": string | null,"user_id": string,"validated": boolean,"validated_at": string | null,"validated_by": string | null,"void_reason": string | null,"voided_at": string | null
+                    "allocations": Json | null,"created_at": string,"description": string | null,"draft": boolean,"elapsed_ms": number,"ended_at": string | null,"evidence_url": string | null,"hours": number,"id": string,"locked_by_sprint": string | null,"paid": boolean,"project_id": string | null,"review_note": string | null,"reviewed_by": string | null,"segment_started_at": string | null,"segments": Json | null,"source": string | null,"started_at": string,"task_id": string | null,"timer_state": string | null,"user_id": string,"validated": boolean,"validated_at": string | null,"validated_by": string | null,"void_reason": string | null,"voided_at": string | null
                   }
                   Insert: {
-                    "allocations"?: Json | null,"created_at"?: string,"description"?: string | null,"draft"?: boolean,"elapsed_ms"?: number,"ended_at"?: string | null,"evidence_url"?: string | null,"hours"?: number,"id"?: string,"paid"?: boolean,"project_id"?: string | null,"review_note"?: string | null,"reviewed_by"?: string | null,"segment_started_at"?: string | null,"segments"?: Json | null,"source"?: string | null,"started_at": string,"task_id"?: string | null,"timer_state"?: string | null,"user_id": string,"validated"?: boolean,"validated_at"?: string | null,"validated_by"?: string | null,"void_reason"?: string | null,"voided_at"?: string | null
+                    "allocations"?: Json | null,"created_at"?: string,"description"?: string | null,"draft"?: boolean,"elapsed_ms"?: number,"ended_at"?: string | null,"evidence_url"?: string | null,"hours"?: number,"id"?: string,"locked_by_sprint"?: string | null,"paid"?: boolean,"project_id"?: string | null,"review_note"?: string | null,"reviewed_by"?: string | null,"segment_started_at"?: string | null,"segments"?: Json | null,"source"?: string | null,"started_at": string,"task_id"?: string | null,"timer_state"?: string | null,"user_id": string,"validated"?: boolean,"validated_at"?: string | null,"validated_by"?: string | null,"void_reason"?: string | null,"voided_at"?: string | null
                   }
                   Update: {
-                    "allocations"?: Json | null,"created_at"?: string,"description"?: string | null,"draft"?: boolean,"elapsed_ms"?: number,"ended_at"?: string | null,"evidence_url"?: string | null,"hours"?: number,"id"?: string,"paid"?: boolean,"project_id"?: string | null,"review_note"?: string | null,"reviewed_by"?: string | null,"segment_started_at"?: string | null,"segments"?: Json | null,"source"?: string | null,"started_at"?: string,"task_id"?: string | null,"timer_state"?: string | null,"user_id"?: string,"validated"?: boolean,"validated_at"?: string | null,"validated_by"?: string | null,"void_reason"?: string | null,"voided_at"?: string | null
+                    "allocations"?: Json | null,"created_at"?: string,"description"?: string | null,"draft"?: boolean,"elapsed_ms"?: number,"ended_at"?: string | null,"evidence_url"?: string | null,"hours"?: number,"id"?: string,"locked_by_sprint"?: string | null,"paid"?: boolean,"project_id"?: string | null,"review_note"?: string | null,"reviewed_by"?: string | null,"segment_started_at"?: string | null,"segments"?: Json | null,"source"?: string | null,"started_at"?: string,"task_id"?: string | null,"timer_state"?: string | null,"user_id"?: string,"validated"?: boolean,"validated_at"?: string | null,"validated_by"?: string | null,"void_reason"?: string | null,"voided_at"?: string | null
                   }
                   Relationships: [
                     {
+      foreignKeyName: "time_entries_locked_by_sprint_fkey"
+      columns: ["locked_by_sprint"]
+isOneToOne: false
+      referencedRelation: "sprints"
+      referencedColumns: ["id"]
+    },{
       foreignKeyName: "time_entries_project_id_fkey"
       columns: ["project_id"]
 isOneToOne: false
@@ -820,6 +994,7 @@ isOneToOne: false
 "evidence_url": string | null,
 "hours": number,
 "id": string,
+"locked_by_sprint": string | null,
 "paid": boolean,
 "project_id": string | null,
 "review_note": string | null,
@@ -848,6 +1023,9 @@ isOneToOne: false
                            },
 "can_access_project":
 { Args: { "p_project": string }; Returns: boolean
+                           },
+"can_view_comment_entity":
+{ Args: { "p_entity": Database["public"]['Enums']["comment_entity"],"p_id": string }; Returns: boolean
                            },
 "can_view_task":
 { Args: { "p_task": string }; Returns: boolean
@@ -907,6 +1085,26 @@ isOneToOne: false
 "chat_save_group":
 { Args: { "p_description": string,"p_id": string,"p_members": (string)[],"p_name": string }; Returns: string
                            },
+"close_sprint":
+{ Args: { "p_entry_ids"?: (string)[],"p_sprint": string }; Returns: {
+              "close_report": Json | null,
+"closed_at": string | null,
+"closed_by": string | null,
+"created_at": string,
+"end_date": string,
+"goal": string,
+"id": string,
+"project_id": string,
+"start_date": string,
+"status": Database["public"]['Enums']["sprint_status"],
+"updated_at": string
+            }
+                          SetofOptions: {
+        from: "*"
+        to: "sprints"
+        isOneToOne: true
+        isSetofReturn: false
+      } },
 "create_expense":
 { Args: { "p_amount": number,"p_before_signing"?: boolean,"p_category": Database["public"]['Enums']["expense_category"],"p_concept": string,"p_currency": Database["public"]['Enums']["currency_code"],"p_receipt_url"?: string }; Returns: {
               "amount": number,
@@ -959,6 +1157,11 @@ isOneToOne: false
 "is_project_member":
 { Args: { "p_project": string }; Returns: boolean
                            },
+"list_my_sessions":
+{ Args: Record<PropertyKey, never>; Returns: {
+              "aal": string,"created_at": string,"id": string,"is_current": boolean,"updated_at": string,"user_agent": string
+            }[]
+                           },
 "mark_all_notifications_read":
 { Args: Record<PropertyKey, never>; Returns: number
                            },
@@ -1002,6 +1205,7 @@ isOneToOne: false
 "evidence_url": string | null,
 "hours": number,
 "id": string,
+"locked_by_sprint": string | null,
 "paid": boolean,
 "project_id": string | null,
 "review_note": string | null,
@@ -1025,6 +1229,9 @@ isOneToOne: false
         isOneToOne: true
         isSetofReturn: false
       } },
+"propose_meeting":
+{ Args: { "p_slots": (string)[] }; Returns: string
+                           },
 "request_hours_clarification":
 { Args: { "p_id": string,"p_note": string }; Returns: {
               "allocations": Json | null,
@@ -1036,6 +1243,7 @@ isOneToOne: false
 "evidence_url": string | null,
 "hours": number,
 "id": string,
+"locked_by_sprint": string | null,
 "paid": boolean,
 "project_id": string | null,
 "review_note": string | null,
@@ -1070,6 +1278,7 @@ isOneToOne: false
 "evidence_url": string | null,
 "hours": number,
 "id": string,
+"locked_by_sprint": string | null,
 "paid": boolean,
 "project_id": string | null,
 "review_note": string | null,
@@ -1093,6 +1302,9 @@ isOneToOne: false
         isOneToOne: true
         isSetofReturn: false
       } },
+"revoke_my_session":
+{ Args: { "p_id": string }; Returns: undefined
+                           },
 "set_hours_participants":
 { Args: { "p_entry": string,"p_participants": Json }; Returns: {
               "allocations": Json | null,
@@ -1104,6 +1316,7 @@ isOneToOne: false
 "evidence_url": string | null,
 "hours": number,
 "id": string,
+"locked_by_sprint": string | null,
 "paid": boolean,
 "project_id": string | null,
 "review_note": string | null,
@@ -1124,6 +1337,48 @@ isOneToOne: false
                           SetofOptions: {
         from: "*"
         to: "time_entries"
+        isOneToOne: true
+        isSetofReturn: false
+      } },
+"set_member_active":
+{ Args: { "p_active": boolean,"p_member": string,"p_reason"?: string }; Returns: {
+              "active": boolean,
+"area": Database["public"]['Enums']["user_area"],
+"avatar_path": string | null,
+"banner_path": string | null,
+"bio": string | null,
+"created_at": string,
+"id": string,
+"name": string,
+"role": Database["public"]['Enums']["user_role"],
+"updated_at": string,
+"username": string | null,
+"weekly_hours": number
+            }
+                          SetofOptions: {
+        from: "*"
+        to: "profiles"
+        isOneToOne: true
+        isSetofReturn: false
+      } },
+"set_member_role":
+{ Args: { "p_member": string,"p_note"?: string,"p_role": Database["public"]['Enums']["user_role"] }; Returns: {
+              "active": boolean,
+"area": Database["public"]['Enums']["user_area"],
+"avatar_path": string | null,
+"banner_path": string | null,
+"bio": string | null,
+"created_at": string,
+"id": string,
+"name": string,
+"role": Database["public"]['Enums']["user_role"],
+"updated_at": string,
+"username": string | null,
+"weekly_hours": number
+            }
+                          SetofOptions: {
+        from: "*"
+        to: "profiles"
         isOneToOne: true
         isSetofReturn: false
       } },
@@ -1179,6 +1434,7 @@ isOneToOne: false
 "evidence_url": string | null,
 "hours": number,
 "id": string,
+"locked_by_sprint": string | null,
 "paid": boolean,
 "project_id": string | null,
 "review_note": string | null,
@@ -1213,6 +1469,7 @@ isOneToOne: false
 "evidence_url": string | null,
 "hours": number,
 "id": string,
+"locked_by_sprint": string | null,
 "paid": boolean,
 "project_id": string | null,
 "review_note": string | null,
@@ -1247,6 +1504,7 @@ isOneToOne: false
 "evidence_url": string | null,
 "hours": number,
 "id": string,
+"locked_by_sprint": string | null,
 "paid": boolean,
 "project_id": string | null,
 "review_note": string | null,
@@ -1281,6 +1539,7 @@ isOneToOne: false
 "evidence_url": string | null,
 "hours": number,
 "id": string,
+"locked_by_sprint": string | null,
 "paid": boolean,
 "project_id": string | null,
 "review_note": string | null,
@@ -1336,6 +1595,7 @@ isOneToOne: false
 "evidence_url": string | null,
 "hours": number,
 "id": string,
+"locked_by_sprint": string | null,
 "paid": boolean,
 "project_id": string | null,
 "review_note": string | null,
@@ -1395,6 +1655,7 @@ isOneToOne: false
 "evidence_url": string | null,
 "hours": number,
 "id": string,
+"locked_by_sprint": string | null,
 "paid": boolean,
 "project_id": string | null,
 "review_note": string | null,
@@ -1442,7 +1703,7 @@ isOneToOne: false
       } }
           }
           Enums: {
-            "audit_event_type": "task.created"|"task.edited"|"task.moved"|"task.assigned"|"project.created"|"project.updated"|"project.members_changed"|"project_label.created"|"project_label.updated"|"sprint.created"|"hours.created"|"hours.confirmed"|"hours.edited"|"hours.approved"|"hours.clarification_requested"|"hours.voided"|"timer.started"|"timer.stopped"|"timer.paused"|"timer.resumed"|"timer.recovered"|"member.created"|"member.updated"|"member.role_changed"|"member.deactivated"|"settings.changed","chat_sound": "soft"|"bell"|"none","chat_thread_kind": "direct"|"group","currency_code": "PEN"|"USD","expense_category": "infrastructure"|"software"|"marketing"|"legal"|"other","expense_status": "pending"|"approved"|"rejected"|"voided","notification_type": "project_added"|"task_assigned"|"daily_pending"|"hours_missing"|"expense_vote"|"expense_result"|"mention"|"renewal"|"meeting","periodicity": "monthly"|"yearly","project_status": "active"|"paused"|"archived","project_type": "internal"|"product"|"client","sprint_status": "planned"|"active"|"closed","task_status": "todo"|"in_progress"|"review"|"done","user_area": "technical"|"management_finance"|"commercial"|"design_marketing","user_role": "admin"|"partner"|"collaborator"
+            "audit_event_type": "task.created"|"task.edited"|"task.moved"|"task.assigned"|"project.created"|"project.updated"|"project.members_changed"|"project_label.created"|"project_label.updated"|"sprint.created"|"hours.created"|"hours.confirmed"|"hours.edited"|"hours.approved"|"hours.clarification_requested"|"hours.voided"|"timer.started"|"timer.stopped"|"timer.paused"|"timer.resumed"|"timer.recovered"|"member.created"|"member.updated"|"member.role_changed"|"member.deactivated"|"settings.changed","chat_sound": "soft"|"bell"|"none","chat_thread_kind": "direct"|"group","comment_entity": "task"|"expense"|"time_entry","currency_code": "PEN"|"USD","expense_category": "infrastructure"|"software"|"marketing"|"legal"|"other","expense_status": "pending"|"approved"|"rejected"|"voided","meeting_status": "polling"|"confirmed"|"held"|"cancelled","notification_type": "project_added"|"task_assigned"|"daily_pending"|"hours_missing"|"expense_vote"|"expense_result"|"mention"|"renewal"|"meeting","periodicity": "monthly"|"yearly","project_status": "active"|"paused"|"archived","project_type": "internal"|"product"|"client","sprint_status": "planned"|"active"|"closed","task_status": "todo"|"in_progress"|"review"|"done","user_area": "technical"|"management_finance"|"commercial"|"design_marketing","user_role": "admin"|"partner"|"collaborator"
           }
           CompositeTypes: {
             [_ in never]: never
@@ -1562,7 +1823,7 @@ export const Constants = {
           }
         },"public": {
           Enums: {
-            "audit_event_type": ["task.created", "task.edited", "task.moved", "task.assigned", "project.created", "project.updated", "project.members_changed", "project_label.created", "project_label.updated", "sprint.created", "hours.created", "hours.confirmed", "hours.edited", "hours.approved", "hours.clarification_requested", "hours.voided", "timer.started", "timer.stopped", "timer.paused", "timer.resumed", "timer.recovered", "member.created", "member.updated", "member.role_changed", "member.deactivated", "settings.changed"],"chat_sound": ["soft", "bell", "none"],"chat_thread_kind": ["direct", "group"],"currency_code": ["PEN", "USD"],"expense_category": ["infrastructure", "software", "marketing", "legal", "other"],"expense_status": ["pending", "approved", "rejected", "voided"],"notification_type": ["project_added", "task_assigned", "daily_pending", "hours_missing", "expense_vote", "expense_result", "mention", "renewal", "meeting"],"periodicity": ["monthly", "yearly"],"project_status": ["active", "paused", "archived"],"project_type": ["internal", "product", "client"],"sprint_status": ["planned", "active", "closed"],"task_status": ["todo", "in_progress", "review", "done"],"user_area": ["technical", "management_finance", "commercial", "design_marketing"],"user_role": ["admin", "partner", "collaborator"]
+            "audit_event_type": ["task.created", "task.edited", "task.moved", "task.assigned", "project.created", "project.updated", "project.members_changed", "project_label.created", "project_label.updated", "sprint.created", "hours.created", "hours.confirmed", "hours.edited", "hours.approved", "hours.clarification_requested", "hours.voided", "timer.started", "timer.stopped", "timer.paused", "timer.resumed", "timer.recovered", "member.created", "member.updated", "member.role_changed", "member.deactivated", "settings.changed"],"chat_sound": ["soft", "bell", "none"],"chat_thread_kind": ["direct", "group"],"comment_entity": ["task", "expense", "time_entry"],"currency_code": ["PEN", "USD"],"expense_category": ["infrastructure", "software", "marketing", "legal", "other"],"expense_status": ["pending", "approved", "rejected", "voided"],"meeting_status": ["polling", "confirmed", "held", "cancelled"],"notification_type": ["project_added", "task_assigned", "daily_pending", "hours_missing", "expense_vote", "expense_result", "mention", "renewal", "meeting"],"periodicity": ["monthly", "yearly"],"project_status": ["active", "paused", "archived"],"project_type": ["internal", "product", "client"],"sprint_status": ["planned", "active", "closed"],"task_status": ["todo", "in_progress", "review", "done"],"user_area": ["technical", "management_finance", "commercial", "design_marketing"],"user_role": ["admin", "partner", "collaborator"]
           }
         }
 } as const

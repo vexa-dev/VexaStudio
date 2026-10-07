@@ -16,6 +16,11 @@ describe("contacts-only minimization", () => {
     },
   );
 
+  it("keeps contacts visible when the whole chat goes to the bubble", () => {
+    // Bubble mode is not "minimized": the panel hides as a whole, not just contacts.
+    expect(chatPanelVisibility(false, true)).toEqual({ contactsHidden: false });
+  });
+
   it("never produces a floating widget or hides the whole panel", () => {
     for (const minimized of [false, true])
       for (const hasConversation of [false, true])

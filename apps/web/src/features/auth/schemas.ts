@@ -26,15 +26,26 @@ export function toProfileInput(values: ProfileFormValues): ProfileDetailsInput {
   return { name: values.name.trim(), username: username || null, bio: bio || null };
 }
 
+/** Misma política que `passwordProblem` (dominio) y que la base: 12+ con minúscula, mayúscula y número. */
+const newPasswordField = z
+  .string()
+  .min(12, "Usa al menos 12 caracteres")
+  .regex(/[a-z]/, "Incluye al menos una minúscula")
+  .regex(/[A-Z]/, "Incluye al menos una mayúscula")
+  .regex(/\d/, "Incluye al menos un número");
+
+export const resetPasswordSchema = z
+  .object({ newPassword: newPasswordField, confirmPassword: z.string() })
+  .refine((v) => v.confirmPassword === v.newPassword, {
+    path: ["confirmPassword"],
+    message: "Las contraseñas no coinciden",
+  });
+export type ResetPasswordValues = z.infer<typeof resetPasswordSchema>;
+
 export const passwordFormSchema = z
   .object({
     currentPassword: z.string().min(1, "Escribe tu contraseña actual"),
-    newPassword: z
-      .string()
-      .min(12, "Usa al menos 12 caracteres")
-      .regex(/[a-z]/, "Incluye al menos una minúscula")
-      .regex(/[A-Z]/, "Incluye al menos una mayúscula")
-      .regex(/\d/, "Incluye al menos un número"),
+    newPassword: newPasswordField,
     confirmPassword: z.string(),
   })
   .refine((v) => v.confirmPassword === v.newPassword, {

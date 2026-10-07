@@ -1,5 +1,6 @@
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { todayLima } from "@vexa/domain/dates";
+import { limaWeekMonday } from "@vexa/domain/meetings";
 import type { Services } from "@vexa/services";
 import { createSupabaseClient, type VexaSupabase } from "@/lib/supabase";
 import type { CredentialsAuthService } from "./auth";
@@ -357,5 +358,199 @@ describe.skipIf(!url || !key)("Supabase local (integración)", () => {
     expect((await rober.services.time.listEntries({ userId: ROBER })).find((e) => e.id === created.id)?.evidence)
       .toEqual([]);
     await rober.services.time.void(created.id, "Prueba de integración");
+  });
+  it("cierra un sprint: valida y bloquea horas elegidas, guarda el reporte y manda lo pendiente al backlog", async () => {
+    const project = await admin.services.projects.create({
+      name: `Cierre ${Date.now()}`,
+      type: "internal",
+      status: "active",
+      memberIds: [ROBER],
+    });
+    const sprint = await admin.services.sprints.create({
+      projectId: project.id,
+      startDate: todayLima(),
+      endDate: todayLima(new Date(Date.now() + 13 * 86_400_000)),
+      goal: "Sprint de integración",
+    });
+    expect(sprint.status).toBe("active");
+    const base = {
+      sprintId: sprint.id,
+      projectId: project.id,
+      assigneeId: ROBER,
+      estimateHours: 2,
+      link: null,
+    };
+    const done = await admin.services.tasks.create({ ...base, title: "Hecha" });
+    const open = await admin.services.tasks.create({ ...base, title: "Pendiente" });
+    await admin.services.tasks.move(done.id, "done");
+    const yesterday = todayLima(new Date(Date.now() - 86_400_000));
+    const hours = await rober.services.time.addManual({
+      taskId: done.id,
+      date: yesterday,
+      hours: 1.5,
+      description: "Horas del sprint de integración",
+    });
+
+    const before = await admin.services.sprints.getCloseReport!(sprint.id);
+    expect(before.partners.find((p) => p.userId === ROBER)).toMatchObject({
+      committed: 2,
+      delivered: 1,
+      loggedHours: 1.5,
+    });
+    expect(before.pendingEntries.map((e) => e.id)).toContain(hours.id);
+
+    // Un socio no cierra.
+    await expect(rober.services.sprints.close(sprint.id, [hours.id])).rejects.toThrow();
+    const closed = await admin.services.sprints.close(sprint.id, [hours.id]);
+    expect(closed.status).toBe("closed");
+    expect(closed.deliveryReport?.find((p) => p.userId === ROBER)).toMatchObject({
+      committed: 2,
+      delivered: 1,
+    });
+
+    const [entry] = (await rober.services.time.listEntries({ userId: ROBER })).filter(
+      (e) => e.id === hours.id,
+    );
+    expect(entry).toMatchObject({ validated: true, lockedBySprintId: sprint.id });
+    // Bloqueada: el dueño ya no la edita.
+    await expect(rober.services.time.update(hours.id, { hours: 3 })).rejects.toThrow();
+    const tasks = await admin.services.tasks.list({ projectId: project.id });
+    expect(tasks.find((t) => t.id === open.id)?.sprintId).toBeNull();
+    expect(tasks.find((t) => t.id === done.id)?.sprintId).toBe(sprint.id);
+    // Un sprint cerrado no se cierra otra vez y su reporte es el guardado.
+    await expect(admin.services.sprints.close(sprint.id, [])).rejects.toThrow();
+    const after = await admin.services.sprints.getCloseReport!(sprint.id);
+    expect(after.sprint.status).toBe("closed");
+    expect(after.pendingEntries).toEqual([]);
+  });
+  it("comparte el daily: un envío por día, visible para socios y solo propio para el colaborador", async () => {
+    const today = todayLima();
+    const first = await rober.services.daily.submit({ done: "  Avance de integración ", willDo: "Seguir", blockers: "" });
+    expect(first).toMatchObject({ userId: ROBER, date: today, done: "Avance de integración" });
+    // Reenviar el mismo día corrige la misma fila.
+    const second = await rober.services.daily.submit({ done: "Avance corregido", willDo: "Seguir", blockers: "Nada" });
+    expect(second.id).toBe(first.id);
+    expect(await rober.services.daily.list({ userId: ROBER, date: today })).toHaveLength(1);
+
+    // El admin lo ve; el colaborador no ve el de otra persona, pero sí el suyo.
+    const seenByAdmin = await admin.services.daily.list({ userId: ROBER, date: today });
+    expect(seenByAdmin.map((d) => d.done)).toEqual(["Avance corregido"]);
+    expect(await alex.services.daily.list({ userId: ROBER })).toEqual([]);
+    await alex.services.daily.submit({ done: "Lo mío", willDo: "", blockers: "" });
+    const mine = await alex.services.daily.list();
+    expect(mine.every((d) => d.userId === ALEX)).toBe(true);
+    expect(mine.length).toBeGreaterThan(0);
+
+    // La base rechaza otra fecha aunque el cliente la mande, y nadie borra.
+    const denied = await rober.client
+      .from("daily_updates")
+      .insert({ date: "2020-01-01", done: "viejo" });
+    expect(denied.error).not.toBeNull();
+    const removed = await rober.client.from("daily_updates").delete().eq("id", first.id);
+    expect(removed.error).not.toBeNull();
+    expect(typeof (await rober.services.daily.suggestDone())).toBe("string");
+  });
+  it("comenta con @mención: avisa una vez, respeta la visibilidad y el anuncio es solo de admin", async () => {
+    const DIEGO = "00000000-0000-4000-8000-000000000004";
+    const diego = await login("diego@vexa.test");
+    const before = (await diego.services.notifications.list()).filter((n) => n.type === "mention").length;
+
+    const comment = await rober.services.comments.add({
+      entity: "task",
+      entityId: TASK_ROBER,
+      text: "  Integración @diego y @alex  ",
+      mentions: [DIEGO, DIEGO, ALEX, ROBER],
+    });
+    expect(comment).toMatchObject({ userId: ROBER, text: "Integración @diego y @alex" });
+    expect(comment.mentions.sort()).toEqual([ALEX, DIEGO].sort());
+
+    // Diego recibe un solo aviso `mention` que apunta a la tarea; Rober (autor) no recibe ninguno.
+    const mentions = (await diego.services.notifications.list()).filter((n) => n.type === "mention");
+    expect(mentions).toHaveLength(before + 1);
+    expect(mentions[0].payload.taskId).toBe(TASK_ROBER);
+
+    // Alex es miembro del proyecto y lee el hilo; nadie edita ni borra.
+    expect((await alex.services.comments.list("task", TASK_ROBER)).map((c) => c.id)).toContain(comment.id);
+    expect((await rober.client.from("comments").delete().eq("id", comment.id)).error).not.toBeNull();
+    expect((await rober.client.from("comments").update({ text: "x" }).eq("id", comment.id)).error).not.toBeNull();
+    await expect(
+      rober.services.comments.add({ entity: "task", entityId: "99999999-0000-4000-8000-000000000000", text: "x" }),
+    ).rejects.toThrow();
+
+    // Anuncios: solo admin publica; socios leen; el colaborador no ve ninguno.
+    const note = await admin.services.announcements.create("  Anuncio de integración ", { pinned: true });
+    expect(note).toMatchObject({ text: "Anuncio de integración", pinned: true });
+    await expect(rober.services.announcements.create("no")).rejects.toThrow();
+    expect((await rober.services.announcements.list())[0].id).toBe(note.id);
+    expect(await alex.services.announcements.list()).toEqual([]);
+    expect((await admin.services.announcements.setPinned(note.id, false)).pinned).toBe(false);
+  });
+  it("convoca la reunión: solo admin propone, socios votan, el enlace es https y la asistencia espera al inicio", async () => {
+    const JHONY = "00000000-0000-4000-8000-000000000001";
+    // Solo cabe una convocatoria por semana: si una corrida anterior ya dejó la suya, `npm run db:reset` la limpia.
+    if (await admin.services.meetings.getCurrent()) return;
+    const diego = await login("diego@vexa.test");
+    const noticesBefore = (await diego.services.notifications.list()).filter((n) => n.type === "meeting").length;
+    // Martes y miércoles de la semana siguiente (3:00 p. m. de Lima): válidos en cualquier día de hoy.
+    const monday = Date.parse(`${limaWeekMonday(new Date())}T20:00:00Z`);
+    const day = 24 * 3_600_000;
+    const slots = [new Date(monday + 8 * day).toISOString(), new Date(monday + 9 * day).toISOString()];
+
+    await expect(rober.services.meetings.propose(slots)).rejects.toThrow();
+    const proposed = await admin.services.meetings.propose(slots);
+    expect(proposed.meeting).toMatchObject({ status: "polling", attendeeIds: [] });
+    expect(proposed.slots).toHaveLength(2);
+    await expect(admin.services.meetings.propose(slots)).rejects.toThrow("Ya hay una convocatoria");
+
+    // Cada socio recibe un solo aviso; el colaborador no ve la convocatoria.
+    expect((await diego.services.notifications.list()).filter((n) => n.type === "meeting")).toHaveLength(noticesBefore + 1);
+    expect(await alex.services.meetings.getCurrent()).toBeNull();
+
+    const [first, second] = proposed.slots;
+    await rober.services.meetings.vote(first.id, true);
+    const changed = await rober.services.meetings.vote(first.id, false);
+    expect(changed.votes.filter((v) => v.userId === ROBER && v.slotId === first.id)).toEqual([
+      { slotId: first.id, userId: ROBER, available: false },
+    ]);
+    await expect(alex.services.meetings.vote(first.id, true)).rejects.toThrow();
+    await admin.services.meetings.vote(second.id, true);
+
+    await expect(rober.services.meetings.confirm(proposed.meeting.id, second.id, "https://meet.google.com/abc-defg-hij")).rejects.toThrow();
+    await expect(admin.services.meetings.confirm(proposed.meeting.id, second.id, "http://meet.google.com/abc")).rejects.toThrow("https");
+    const confirmed = await admin.services.meetings.confirm(proposed.meeting.id, second.id, "https://meet.google.com/abc-defg-hij");
+    expect(confirmed.meeting).toMatchObject({ status: "confirmed", confirmedSlotId: second.id });
+    expect((await diego.services.notifications.list()).filter((n) => n.type === "meeting")).toHaveLength(noticesBefore + 2);
+    await expect(rober.services.meetings.vote(second.id, true)).rejects.toThrow("votación ya terminó");
+    await expect(admin.services.meetings.markAttendance(proposed.meeting.id, [JHONY, ROBER])).rejects.toThrow("ya empezó");
+    expect((await rober.services.meetings.getCurrent())?.meeting.id).toBe(proposed.meeting.id);
+  });
+
+  it("gestiona miembros: solo admin cambia roles y (des)activa, no a sí mismo, y la persona inactiva pierde el acceso", async () => {
+    // Se usan los RPC directo: el cierre de sesiones es de la Edge Function (no corre en este stack local).
+    const JHONY_ID = "00000000-0000-4000-8000-000000000001";
+    const promoted = await admin.client.rpc("set_member_role", { p_member: ALEX, p_role: "partner", p_note: "Prueba" });
+    expect(promoted.error).toBeNull();
+    expect(promoted.data).toMatchObject({ id: ALEX, role: "partner" });
+    expect((await admin.services.members.get(ALEX))?.role).toBe("partner");
+    expect((await rober.client.rpc("set_member_role", { p_member: ALEX, p_role: "admin" })).error?.message).toMatch(
+      /administrador/i,
+    );
+    expect((await admin.client.rpc("set_member_role", { p_member: JHONY_ID, p_role: "partner" })).error?.message).toMatch(
+      /propio rol/i,
+    );
+    expect((await admin.client.rpc("set_member_active", { p_member: ALEX, p_active: false })).error?.message).toMatch(
+      /motivo/i,
+    );
+
+    const off = await admin.client.rpc("set_member_active", { p_member: ALEX, p_active: false, p_reason: "Prueba" });
+    expect(off.error).toBeNull();
+    expect(off.data).toMatchObject({ id: ALEX, active: false });
+    expect(await alex.services.members.list()).toEqual([]);
+    expect((await alex.client.rpc("set_member_active", { p_member: ALEX, p_active: true })).error).not.toBeNull();
+
+    // Se deja el estado como estaba.
+    expect((await admin.client.rpc("set_member_active", { p_member: ALEX, p_active: true })).error).toBeNull();
+    expect((await admin.client.rpc("set_member_role", { p_member: ALEX, p_role: "collaborator" })).error).toBeNull();
+    expect(await admin.services.members.get(ALEX)).toMatchObject({ role: "collaborator", active: true });
   });
 });

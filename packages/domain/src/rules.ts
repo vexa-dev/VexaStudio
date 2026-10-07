@@ -109,6 +109,42 @@ export function resolveExpenseStatus(
   return 'pending'
 }
 
+/** Votos a favor y en contra de un gasto y cuántos faltan para aprobarlo. */
+export function expenseVoteTally(votes: Pick<ExpenseVote, 'inFavor'>[]): {
+  inFavor: number
+  against: number
+  required: number
+  missing: number
+} {
+  const inFavor = votes.filter((v) => v.inFavor).length
+  return {
+    inFavor,
+    against: votes.length - inFavor,
+    required: EXPENSE_VOTES_REQUIRED,
+    missing: Math.max(0, EXPENSE_VOTES_REQUIRED - inFavor),
+  }
+}
+
+/** Tipos permitidos para el comprobante de un gasto (mismos que el bucket privado `receipts`). */
+export const RECEIPT_MIME_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'application/pdf'] as const
+/** Tope del bucket `receipts` (5 MiB). */
+export const RECEIPT_MAX_BYTES = 5 * 1024 * 1024
+
+const RECEIPT_DATA_URL = /^data:([a-z]+\/[a-z]+);base64,([A-Za-z0-9+/]+={0,2})$/
+
+/** Tipo y tamaño real de un comprobante en data URL; `null` si no es válido o su tipo no se permite. */
+export function parseReceiptDataUrl(dataUrl: string): { mime: string; bytes: number } | null {
+  const match = RECEIPT_DATA_URL.exec(dataUrl)
+  if (!match) return null
+  const mime = match[1] ?? ''
+  const payload = match[2] ?? ''
+  if (!(RECEIPT_MIME_TYPES as readonly string[]).includes(mime)) return null
+  if (payload.length % 4 !== 0) return null
+  const padding = payload.endsWith('==') ? 2 : payload.endsWith('=') ? 1 : 0
+  const bytes = (payload.length / 4) * 3 - padding
+  return bytes > 0 ? { mime, bytes } : null
+}
+
 /** Un registro propio se edita hasta `entryEditDays` días o y reabre la revisión al editar; nunca si está anulado o pagado. */
 export function canEditEntry(
   entry: Pick<TimeEntry, 'createdAt' | 'validated' | 'voidedAt'> & Partial<Pick<TimeEntry, 'paid' | 'reviewNote'>>,

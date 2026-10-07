@@ -1,21 +1,21 @@
 import type {
-  AnnouncementService,
   AuthService,
-  CommentService,
   DailyService,
-  ExpenseService,
-  MeetingService,
-  MemberService,
   Services,
   SettingsService,
 } from "@vexa/services";
+import { announcementService } from "./announcements";
 import { auditService } from "./audit";
+import { commentService } from "./comments";
 import { chatService } from "./chat";
 import { getDb, getSessionUserId, setSessionUserId } from "./db";
-import { requireStudioAccess } from "./studio-access";
+import { createMockDailyService } from "./daily";
 import { dashboard } from "./dashboard";
+import { expenseService } from "./expenses";
 import { projects, sprints, tasks, time } from "./work";
-import { delay, notImplemented } from "./utils";
+import { meetingService } from "./meetings";
+import { memberService as members } from "./members";
+import { delay } from "./utils";
 import { profileAuth } from "./auth";
 import { notificationService, resetNotificationPreferences } from "./notifications";
 import {
@@ -56,50 +56,8 @@ const settings: SettingsService = {
   },
 };
 
-const members: MemberService = {
-  async list() {
-    return delay(withMediaAll(getDb().profiles));
-  },
-  async get(id) {
-    const profile = getDb().profiles.find((p) => p.id === id);
-    return delay(profile ? withMedia(profile) : null);
-  },
-};
+const daily: DailyService = createMockDailyService(time, tasks);
 
-const daily: DailyService = {
-  async list(filter) {
-    requireStudioAccess();
-    return delay(getDb().dailyUpdates.filter((update) =>
-      (!filter?.userId || update.userId === filter.userId) &&
-      (!filter?.date || update.date === filter.date),
-    ));
-  },
-  submit: (...args) => notImplemented<DailyService>("DailyService").submit(...args),
-  suggestDone: (...args) => notImplemented<DailyService>("DailyService").suggestDone(...args),
-};
-
-const expenses: ExpenseService = {
-  async list() {
-    requireStudioAccess();
-    return delay(getDb().expenses);
-  },
-  async listVotes(expenseId) {
-    requireStudioAccess();
-    return delay(
-      getDb().expenseVotes.filter((vote) => vote.expenseId === expenseId),
-    );
-  },
-  async listRecurring() {
-    requireStudioAccess();
-    return delay(getDb().recurringExpenses);
-  },
-  create: (...args) =>
-    notImplemented<ExpenseService>("ExpenseService").create(...args),
-  vote: (...args) =>
-    notImplemented<ExpenseService>("ExpenseService").vote(...args),
-  void: (...args) =>
-    notImplemented<ExpenseService>("ExpenseService").void(...args),
-};
 /** Servicios del mock. Los de F2–F4 se van implementando bloque a bloque. */
 export function createMockServices(): Services {
   return {
@@ -110,12 +68,12 @@ export function createMockServices(): Services {
     sprints,
     tasks,
     time,
-    expenses,
+    expenses: expenseService,
     dashboard,
     daily,
-    comments: notImplemented<CommentService>("CommentService"),
-    announcements: notImplemented<AnnouncementService>("AnnouncementService"),
-    meetings: notImplemented<MeetingService>("MeetingService"),
+    comments: commentService,
+    announcements: announcementService,
+    meetings: meetingService,
     notifications: notificationService,
     audit: auditService,
     chat: chatService,

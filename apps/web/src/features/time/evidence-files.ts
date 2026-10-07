@@ -11,7 +11,7 @@ export const MOCK_EVIDENCE_MAX_BYTES = 3 * 1024 * 1024;
 type FileLike = { name: string; type: string; size: number };
 
 export const EVIDENCE_RETENTION_TEXT =
-  "Los archivos se conservan 7 días después de aprobar las horas y luego se eliminan.";
+  "Se eliminan 7 días después de aprobar las horas.";
 
 /** `850 KB`, `2.4 MB`: sizes the way people read them. */
 export function formatBytes(bytes: number): string {

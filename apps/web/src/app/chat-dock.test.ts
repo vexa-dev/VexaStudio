@@ -7,6 +7,22 @@ describe("nextChatMode", () => {
     expect(nextChatMode("open", "toggle")).toBe("closed");
     expect(nextChatMode("minimized", "toggle")).toBe("closed");
   });
+  it("toggle from the bubble brings the chat back instead of closing it", () => {
+    expect(nextChatMode("bubble", "toggle")).toBe("open");
+  });
+  it("bubble hides the whole chat and only applies from open or minimized", () => {
+    expect(nextChatMode("open", "bubble")).toBe("bubble");
+    expect(nextChatMode("minimized", "bubble")).toBe("bubble");
+    expect(nextChatMode("closed", "bubble")).toBe("closed");
+    expect(nextChatMode("bubble", "bubble")).toBe("bubble");
+  });
+  it("restore and open bring the chat back from the bubble", () => {
+    expect(nextChatMode("bubble", "restore")).toBe("open");
+    expect(nextChatMode("bubble", "open")).toBe("open");
+  });
+  it("minimize does not leave the bubble", () => {
+    expect(nextChatMode("bubble", "minimize")).toBe("bubble");
+  });
   it("minimize only applies from open", () => {
     expect(nextChatMode("open", "minimize")).toBe("minimized");
     expect(nextChatMode("closed", "minimize")).toBe("closed");
@@ -18,11 +34,11 @@ describe("nextChatMode", () => {
     expect(nextChatMode("open", "restore")).toBe("open");
   });
   it("open shows the panel from closed or minimized and keeps it open", () => {
-    const modes: ChatMode[] = ["closed", "open", "minimized"];
+    const modes: ChatMode[] = ["closed", "open", "minimized", "bubble"];
     for (const mode of modes) expect(nextChatMode(mode, "open")).toBe("open");
   });
   it("close goes to closed from anywhere", () => {
-    const modes: ChatMode[] = ["closed", "open", "minimized"];
+    const modes: ChatMode[] = ["closed", "open", "minimized", "bubble"];
     for (const mode of modes)
       expect(nextChatMode(mode, "close")).toBe("closed");
   });

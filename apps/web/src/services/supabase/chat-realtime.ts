@@ -53,19 +53,12 @@ export function createChatRealtime(client: VexaSupabase) {
     }
     actor = user;
     try {
-      const [profilesResult, statusesResult] = await Promise.all([
-        client.from("profiles").select("id").eq("active", true),
-        client.from("chat_status").select("user_id,presence"),
-      ]);
-      const profiles = unwrap(profilesResult),
-        statuses = unwrap(statusesResult);
+      const profiles = unwrap(
+        await client.from("profiles").select("id").eq("active", true),
+      );
       if (current !== generation) return;
-      const hidden = new Set(
-        statuses.filter((row) => !row.presence).map((row) => row.user_id),
-      );
-      allowed = new Set(
-        profiles.filter((row) => !hidden.has(row.id)).map((row) => row.id),
-      );
+      // Everyone active is visible: presence cannot be switched off.
+      allowed = new Set(profiles.map((row) => row.id));
       for (const [id, channel] of presenceChannels)
         if (!allowed.has(id) || (!presenceListeners.size && id !== user)) {
           presenceChannels.delete(id);

@@ -3,6 +3,8 @@
  * Las funciones SQL escriben sus mensajes en español sin acentos; aquí se restituyen comparando
  * con la lista de mensajes canónicos (los del mock y de las guardas de la base).
  */
+import { MEMBER_ADMIN_MESSAGES } from "@vexa/domain/member-admin";
+
 export interface ErrorLike {
   message?: string;
   code?: string;
@@ -128,6 +130,30 @@ const CANONICAL_MESSAGES = [
   "El nombre debe tener de 1 a 80 caracteres",
   "El usuario debe tener de 3 a 30 caracteres: letras, números, punto o guion bajo",
   "La biografía puede tener hasta 280 caracteres",
+  "Debes iniciar sesión.",
+  "No puedes cerrar la sesión de este dispositivo desde aquí.",
+  "No se encontró esa sesión.",
+  "El anuncio no puede estar vacío",
+  "Solo un administrador publica anuncios",
+  "Solo el product owner convoca la reunión",
+  "Propón 2 o 3 horarios",
+  "Los horarios deben ser distintos",
+  "Los horarios deben estar en el futuro",
+  "Los horarios deben ser de la misma semana",
+  "Los horarios deben ser de esta semana o la siguiente",
+  "Ya hay una convocatoria para esa semana",
+  "La votación ya terminó",
+  "El horario no existe o no tienes permiso",
+  "El horario no pertenece a esta convocatoria",
+  "El enlace debe ser una URL https",
+  "La asistencia se marca después de la reunión",
+  "La asistencia se marca cuando la reunión ya empezó",
+  "Solo admin y socios activos pueden asistir",
+  "Esa transición de la convocatoria no está permitida",
+  "La reunión confirmada no cambia",
+  "La convocatoria no cambia de semana ni de autor",
+  // Gestión de miembros (RPC set_member_role / set_member_active y guarda de profiles).
+  ...Object.values(MEMBER_ADMIN_MESSAGES),
 ];
 
 const fold = (text: string) =>
@@ -137,6 +163,9 @@ const CANONICAL = new Map(CANONICAL_MESSAGES.map((m) => [fold(m), m]));
 
 /** Restricciones de la base con su mensaje para la persona usuaria. */
 const CONSTRAINT_MESSAGES: Record<string, string> = {
+  expense_votes_pkey: "Ya votaste en este gasto",
+  expenses_amount_check: "El monto debe ser mayor a cero",
+  expenses_concept_check: "Escribe el concepto del gasto",
   chat_preferences_wallpaper_path_owner_check:
     "La imagen debe estar en tu carpeta",
   chat_messages_body_len_check: "El mensaje puede tener hasta 4000 caracteres.",
@@ -166,6 +195,9 @@ const CONSTRAINT_MESSAGES: Record<string, string> = {
   profiles_username_uidx: "Ese usuario ya está en uso",
   profiles_username_format_check:
     "El usuario debe tener de 3 a 30 caracteres: letras, números, punto o guion bajo",
+  comments_text_len_check: "El comentario debe tener de 1 a 2000 caracteres",
+  comments_mentions_len_check: "Puedes mencionar hasta 10 personas",
+  announcements_text_len_check: "El anuncio debe tener de 1 a 1000 caracteres",
   profiles_bio_len_check: "La biografía puede tener hasta 280 caracteres",
 };
 

@@ -2,7 +2,8 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { LogOut, ShieldCheck } from "lucide-react";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
-import type { MfaEnrollment } from "@vexa/domain/types";
+import { formatDateTime } from "@vexa/domain/dates";
+import type { AuthSession, MfaEnrollment } from "@vexa/domain/types";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
@@ -16,8 +17,11 @@ import {
   useDisableMfa,
   useEnrollMfa,
   useMfaFactors,
+  useRevokeSession,
+  useSessions,
   useSignOutOthers,
 } from "../hooks/useAccountSettings";
+import { describeDevice } from "../device";
 import { passwordFormSchema, type PasswordFormValues } from "../schemas";
 import { MfaSetupSheet } from "./MfaSetupSheet";
 
@@ -217,41 +221,101 @@ function MfaCard({ enabled }: { enabled: boolean }) {
 }
 
 function SessionsCard({ enabled }: { enabled: boolean }) {
+  const sessions = useSessions(enabled);
+  const revoke = useRevokeSession();
   const signOutOthers = useSignOutOthers();
-  const [confirming, setConfirming] = useState(false);
+  const [confirmingAll, setConfirmingAll] = useState(false);
+  const [target, setTarget] = useState<AuthSession | null>(null);
+  const others = (sessions.data ?? []).filter((session) => !session.isCurrent);
   return (
     <Card className="profile-panel profile-security-card">
       <div className="profile-section-heading">
         <h2>Dispositivos y sesiones</h2>
         <p>Controla dónde tienes abierta tu cuenta.</p>
       </div>
-      {enabled ? null : <SupabaseOnlyNotice />}
-      <div className="profile-security-action">
-        <div>
-          <strong>Lista de dispositivos no disponible</strong>
-          <p>
-            Por ahora no podemos mostrar tus dispositivos. Si dudas de algún acceso, cierra la
-            sesión en los demás: esta sesión se conserva.
-          </p>
-        </div>
-        <Button variant="secondary" disabled={!enabled} onClick={() => setConfirming(true)}>
-          <LogOut size={16} aria-hidden="true" />
-          Cerrar sesión en los demás dispositivos
-        </Button>
-      </div>
+      {!enabled ? (
+        <SupabaseOnlyNotice />
+      ) : sessions.isError ? (
+        <ErrorState
+          title="No se pudieron cargar las sesiones"
+          message={sessions.error.message}
+          onRetry={() => void sessions.refetch()}
+        />
+      ) : !sessions.data ? (
+        <output className="flex flex-col gap-3" aria-label="Cargando sesiones">
+          <Skeleton className="h-12" />
+          <Skeleton className="h-12" />
+        </output>
+      ) : (
+        <>
+          {sessions.data.map((session) => (
+            <div key={session.id} className="profile-security-action">
+              <div>
+                <strong>
+                  {describeDevice(session.userAgent)}{" "}
+                  {session.isCurrent ? <Badge tone="success">Este dispositivo</Badge> : null}
+                </strong>
+                <p>
+                  Última actividad: <span className="num">{formatDateTime(session.lastActiveAt)}</span>
+                </p>
+              </div>
+              {session.isCurrent ? null : (
+                <Button
+                  variant="secondary"
+                  aria-label={`Cerrar la sesión de ${describeDevice(session.userAgent)}`}
+                  onClick={() => setTarget(session)}
+                >
+                  Cerrar
+                </Button>
+              )}
+            </div>
+          ))}
+          {others.length ? (
+            <div className="profile-security-action">
+              <p>Si dudas de algún acceso, cierra todas las demás sesiones.</p>
+              <Button variant="secondary" onClick={() => setConfirmingAll(true)}>
+                <LogOut size={16} aria-hidden="true" />
+                Cerrar todas las demás
+              </Button>
+            </div>
+          ) : null}
+        </>
+      )}
       <Sheet
-        open={confirming}
-        onClose={() => setConfirming(false)}
-        title="Cerrar sesión en los demás dispositivos"
-        description="Tendrás que volver a iniciar sesión en cada uno de ellos."
+        open={target !== null}
+        onClose={() => setTarget(null)}
+        title="Cerrar esta sesión"
+        description={
+          target
+            ? `${describeDevice(target.userAgent)}. Tendrás que volver a iniciar sesión allí.`
+            : undefined
+        }
       >
         <div className="flex flex-wrap justify-end gap-2">
-          <Button variant="ghost" onClick={() => setConfirming(false)}>
+          <Button variant="ghost" onClick={() => setTarget(null)}>
+            Cancelar
+          </Button>
+          <Button
+            disabled={revoke.isPending}
+            onClick={() => target && revoke.mutate(target.id, { onSettled: () => setTarget(null) })}
+          >
+            {revoke.isPending ? "Cerrando…" : "Cerrar sesión"}
+          </Button>
+        </div>
+      </Sheet>
+      <Sheet
+        open={confirmingAll}
+        onClose={() => setConfirmingAll(false)}
+        title="Cerrar todas las demás sesiones"
+        description="Tendrás que volver a iniciar sesión en cada uno de esos dispositivos."
+      >
+        <div className="flex flex-wrap justify-end gap-2">
+          <Button variant="ghost" onClick={() => setConfirmingAll(false)}>
             Cancelar
           </Button>
           <Button
             disabled={signOutOthers.isPending}
-            onClick={() => signOutOthers.mutate(undefined, { onSuccess: () => setConfirming(false) })}
+            onClick={() => signOutOthers.mutate(undefined, { onSuccess: () => setConfirmingAll(false) })}
           >
             {signOutOthers.isPending ? "Cerrando…" : "Cerrar sesiones"}
           </Button>

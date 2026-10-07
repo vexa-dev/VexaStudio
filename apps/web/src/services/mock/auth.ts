@@ -8,6 +8,9 @@ const USERNAME_PATTERN = /^[a-z0-9_.]{3,30}$/;
 const NAME_MAX = 80;
 const BIO_MAX = 280;
 
+/** El mock no envía correos: no se simula el enlace de recuperación. */
+const RESET_UNAVAILABLE = "El restablecimiento de contraseña solo funciona con Supabase.";
+
 type ProfileDetails = Parameters<AuthService["updateProfile"]>[0];
 
 /** Guarda nombre, usuario y bio de la persona con sesión; el usuario es único sin importar mayúsculas. */
@@ -44,7 +47,11 @@ export const profileAuth: Pick<
   AuthService,
   | "updateProfile"
   | "updatePassword"
+  | "requestPasswordReset"
+  | "completePasswordReset"
   | "signOutOthers"
+  | "listSessions"
+  | "revokeSession"
   | "listMfaFactors"
   | "enrollMfa"
   | "verifyMfaEnrollment"
@@ -56,7 +63,11 @@ export const profileAuth: Pick<
     return delay(updateProfile(input));
   },
   updatePassword: supabaseOnly,
+  requestPasswordReset: () => Promise.reject(new Error(RESET_UNAVAILABLE)),
+  completePasswordReset: () => Promise.reject(new Error(RESET_UNAVAILABLE)),
   signOutOthers: supabaseOnly,
+  listSessions: supabaseOnly,
+  revokeSession: supabaseOnly,
   listMfaFactors: supabaseOnly,
   enrollMfa: supabaseOnly,
   verifyMfaEnrollment: supabaseOnly,

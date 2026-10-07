@@ -22,6 +22,8 @@ import { ChoicePicker } from "@/features/time/components/TimePickers";
 import { todayLima } from "@vexa/domain/dates";
 import { formatHours } from "@vexa/domain/format";
 import { taskStatusLabel } from "@/lib/labels";
+import { AnnouncementsCard } from "@/features/announcements/components/AnnouncementsCard";
+import { WeeklyMeetingCard } from "./WeeklyMeetingCard";
 import { DayDaily } from "./DayDaily";
 import { DayFocus } from "./DayFocus";
 import { readLocal, writeLocal, type DayPriority } from "./day-storage";
@@ -55,23 +57,8 @@ function DayWorkspace({ userId, day }: { userId: string; day: string }) {
       tasks.data?.some((t) => t.id === p.taskId && t.status === "done"),
   );
   const pending = plan.filter((p) => !completed.includes(p));
-  const own = (history.data ?? []).filter((e) => e.userId === userId);
   const stats = creditedActivity(history.data ?? [], userId, day.slice(0, 7));
   const todayHours = stats.daily[Number(day.slice(8)) - 1] ?? 0;
-  const todayEntries = own.filter(
-    (e) => !e.voidedAt && e.endedAt && todayLima(new Date(e.startedAt)) === day,
-  );
-  const suggestions = [
-    ...new Set([
-      ...completed.map((p) => p.title),
-      ...todayEntries.map(
-        (e) =>
-          e.description ??
-          tasks.data?.find((t) => t.id === e.taskId)?.title ??
-          "Trabajo del estudio",
-      ),
-    ]),
-  ];
   const suggested = active.filter((t) => !plan.some((p) => p.taskId === t.id));
   function save(next: DayPriority[]) {
     setPlan(next);
@@ -269,9 +256,11 @@ function DayWorkspace({ userId, day }: { userId: string; day: string }) {
               Ver mis tareas <ArrowUpRight size={14} />
             </Link>
           </Card>
-          <DayDaily userId={userId} today={day} suggestions={suggestions} />
+          <DayDaily userId={userId} today={day} />
         </div>
         <div className="day-work-column">
+          <WeeklyMeetingCard />
+          <AnnouncementsCard />
           <Card className="day-summary-card">
             <div className="day-card-title">
               <h2>Hoy, en un vistazo</h2>

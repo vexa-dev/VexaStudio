@@ -1,7 +1,7 @@
 import type { Id, NotificationPreferences } from "@vexa/domain/types";
 import type { NotificationService } from "@vexa/services";
-import { getSessionUserId } from "./db";
-import { delay, notImplemented } from "./utils";
+import { getDb, getSessionUserId, save as saveDb } from "./db";
+import { delay } from "./utils";
 
 const PREFERENCES_KEY = "vexa-studio.mock.notification-preferences";
 
@@ -59,16 +59,43 @@ function read(userId: Id): NotificationPreferences {
   return { ...DEFAULTS, ...load()[userId] };
 }
 
-const pending = notImplemented<NotificationService>("NotificationService");
+/** Mismo tope que el adaptador de Supabase. */
+const LIST_LIMIT = 50;
 
 /**
- * Avisos y preferencias. Las preferencias funcionan y persisten; la lista de avisos sigue
- * pendiente en el mock (los avisos reales los crean triggers de Supabase).
+ * Avisos y preferencias. Los avisos los escriben comentarios y reuniones en `db.notifications` (lo
+ * que en Supabase hacen triggers); aquí solo se leen y se marcan, siempre solo los de la persona.
  */
 export const notificationService: NotificationService = {
-  list: () => pending.list(),
-  markRead: (id) => pending.markRead(id),
-  markAllRead: () => pending.markAllRead(),
+  async list() {
+    const userId = requireUser();
+    const own = getDb()
+      .notifications.filter((n) => n.userId === userId)
+      .sort((a, b) => b.createdAt.localeCompare(a.createdAt))
+      .slice(0, LIST_LIMIT);
+    return delay(own);
+  },
+  async markRead(id) {
+    const userId = requireUser();
+    const found = getDb().notifications.find((n) => n.id === id && n.userId === userId);
+    if (!found) throw new Error("El aviso no existe o no es tuyo");
+    if (!found.read) {
+      found.read = true;
+      saveDb();
+    }
+    return delay(undefined);
+  },
+  async markAllRead() {
+    const userId = requireUser();
+    let changed = false;
+    for (const n of getDb().notifications)
+      if (n.userId === userId && !n.read) {
+        n.read = true;
+        changed = true;
+      }
+    if (changed) saveDb();
+    return delay(undefined);
+  },
   async getPreferences() {
     return delay(read(requireUser()));
   },

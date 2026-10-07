@@ -273,14 +273,6 @@ export function ChatSettings({
         wallpaper={settings.wallpaper}
         onChange={(wallpaper) => onChange({ wallpaper })}
       />
-      <div className="profile-divider" />
-      <h3>Privacidad y conexión</h3>
-      <SettingSwitch
-        title="Mostrar cuando estoy conectado"
-        description="Tu equipo verá que estás en línea mientras la aplicación está abierta."
-        checked={settings.presence}
-        onChange={(presence) => onChange({ presence })}
-      />
       {!isSupabaseSource() && (
         <p className="profile-help">
           Por ahora la mensajería se sincroniza solo entre pestañas del mismo

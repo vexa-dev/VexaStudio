@@ -13,6 +13,7 @@ import {
   FlaskConical,
   FolderOpen,
   MessageCircle,
+  Minimize2,
   Minus,
   Plus,
   Search,
@@ -84,6 +85,8 @@ export default function ChatPanel({
   minimized,
   onMinimize,
   onRestore,
+  bubble,
+  onBubble,
   onConversationChange,
   openRequest,
 }: {
@@ -94,6 +97,9 @@ export default function ChatPanel({
   minimized?: boolean;
   onMinimize?: () => void;
   onRestore?: () => void;
+  /** True while the whole chat is hidden behind the floating bubble. */
+  bubble?: boolean;
+  onBubble?: () => void;
   onConversationChange?: (hasConversation: boolean) => void;
   /** Selects a conversation from outside (e.g. a toast); a new `nonce` re-triggers it. */
   openRequest?: { threadId: string; nonce: number } | null;
@@ -324,6 +330,7 @@ export default function ChatPanel({
     <SidePanel
       title="Chat VEXA"
       onClose={onClose}
+      minimized={bubble}
       className={`chat-drawer${minimized && active ? " chat-contacts-minimized" : ""}`}
       header={
         <>
@@ -342,6 +349,17 @@ export default function ChatPanel({
           >
             <SquarePen size={20} aria-hidden="true" />
           </Button>
+          {onBubble && (
+            <Button
+              variant="ghost"
+              className="w-11 px-0"
+              aria-label="Minimizar chat"
+              title="Minimizar chat"
+              onClick={onBubble}
+            >
+              <Minimize2 size={20} aria-hidden="true" />
+            </Button>
+          )}
           {active && (minimized ? onRestore : onMinimize) && (
             <Button
               variant="ghost"

@@ -4,9 +4,25 @@
   min-height: 72px;
 }
 .chat-person-row.has-note {
-  align-items: flex-start;
-  padding-top: 28px;
+  /* The note takes its own row above avatar and body, so the row grows with the text. */
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  column-gap: 12px;
+  row-gap: 14px;
   min-height: 84px;
+}
+.chat-person-row.has-note > .chat-status-note {
+  grid-column: 1 / -1;
+  grid-row: 1;
+}
+.chat-person-row.has-note > .chat-avatar-wrap {
+  grid-column: 1;
+  grid-row: 2;
+}
+.chat-person-row.has-note > .chat-thread-body {
+  grid-column: 2;
+  grid-row: 2;
 }
 .chat-project-line {
   display: flex;
@@ -29,13 +45,12 @@
 
 /* Mini thought cloud above the avatar's upper right; tails point at it. */
 .chat-status-note {
-  position: absolute;
+  position: relative;
   z-index: 1;
-  top: 5px;
-  left: 36px;
+  justify-self: start;
   width: max-content;
-  max-width: min(110px, calc(100% - 52px));
-  margin: 0;
+  max-width: min(220px, calc(100% - 28px));
+  margin: 0 0 0 26px;
   padding: 2px 8px;
   border: 1px solid var(--border);
   border-radius: 10px;
@@ -47,13 +62,11 @@
 }
 .chat-status-note.is-md {
   font-size: 12px;
-  max-width: 140px;
 }
 .chat-status-note-text {
   display: block;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  white-space: normal;
+  overflow-wrap: anywhere;
 }
 .chat-status-tail-a,
 .chat-status-tail-b {

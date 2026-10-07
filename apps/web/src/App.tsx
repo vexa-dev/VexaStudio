@@ -1,31 +1,27 @@
 import { lazy, Suspense, useEffect } from "react";
 import { Link, Route, Routes, useLocation } from "react-router-dom";
-import { AppLayout } from "@/app/AppLayout";
+import { routeLoaders } from "@/app/route-loaders";
+import { AppShellSkeleton, CenteredSkeleton } from "@/app/RouteSkeleton";
 import { StudioGuard } from "@/features/auth/components/StudioGuard";
 import { AuthGuard } from "@/features/auth/components/AuthGuard";
 import { navItems } from "@/app/nav";
 
 // Cada pantalla se carga al entrar en ella: el arranque no descarga el tablero ni el arrastre.
-const LoginPage = lazy(() => import("@/features/auth/pages/LoginPage"));
-const ProfilePage = lazy(() => import("@/features/auth/pages/ProfilePage"));
-const DashboardPage = lazy(
-  () => import("@/features/dashboard/pages/DashboardPage"),
+const AppLayout = lazy(() =>
+  routeLoaders.layout().then((m) => ({ default: m.AppLayout })),
 );
-const ExpensesPage = lazy(
-  () => import("@/features/expenses/pages/ExpensesPage"),
-);
-const ProjectsPage = lazy(
-  () => import("@/features/projects/pages/ProjectsPage"),
-);
-const ActivityPage = lazy(
-  () => import("@/features/activity/pages/ActivityPage"),
-);
-const BoardPage = lazy(() => import("@/features/tasks/pages/BoardPage"));
-const TasksPage = lazy(() => import("@/features/tasks/pages/TasksPage"));
-const TeamPage = lazy(() => import("@/features/team/pages/TeamPage"));
-const TimePage = lazy(() => import("@/features/time/pages/TimePage"));
-
-const MyDayPage = lazy(() => import("@/features/day/MyDayPage"));
+const LoginPage = lazy(routeLoaders.login);
+const ResetPasswordPage = lazy(routeLoaders.reset);
+const ProfilePage = lazy(routeLoaders.profile);
+const DashboardPage = lazy(routeLoaders.dashboard);
+const ExpensesPage = lazy(routeLoaders.expenses);
+const ProjectsPage = lazy(routeLoaders.projects);
+const ActivityPage = lazy(routeLoaders.activity);
+const BoardPage = lazy(routeLoaders.board);
+const TasksPage = lazy(routeLoaders.tasks);
+const TeamPage = lazy(routeLoaders.team);
+const TimePage = lazy(routeLoaders.time);
+const MyDayPage = lazy(routeLoaders.day);
 
 export default function App() {
   const { pathname } = useLocation();
@@ -36,6 +32,8 @@ export default function App() {
         ? "Tablero"
         : pathname === "/login"
           ? "Acceso"
+          : pathname === "/restablecer"
+            ? "Restablecer contraseña"
           : pathname === "/perfil"
             ? "Perfil"
             : "Página no encontrada");
@@ -47,13 +45,27 @@ export default function App() {
       <Route
         path="/login"
         element={
-          <Suspense fallback={null}>
+          <Suspense fallback={<CenteredSkeleton />}>
             <LoginPage />
           </Suspense>
         }
       />
+      <Route
+        path="/restablecer"
+        element={
+          <Suspense fallback={<CenteredSkeleton />}>
+            <ResetPasswordPage />
+          </Suspense>
+        }
+      />
       <Route element={<AuthGuard />}>
-        <Route element={<AppLayout />}>
+        <Route
+          element={
+            <Suspense fallback={<AppShellSkeleton />}>
+              <AppLayout />
+            </Suspense>
+          }
+        >
           <Route index element={<DashboardPage />} />
           <Route path="mi-dia" element={<MyDayPage />} />
           <Route path="proyectos" element={<ProjectsPage />} />
