@@ -41,6 +41,7 @@ const timeRow: Tables<"time_entries"> = {
   validated: false,
   validated_at: null,
   validated_by: null,
+  locked_by_sprint: null,
   review_note: null,
   reviewed_by: null,
   draft: false,

@@ -1,4 +1,6 @@
-import { ArrowLeft, Plus, Tags, Pencil } from "lucide-react";
+import { ArrowLeft, Lock, Plus, Tags, Pencil } from "lucide-react";
+import { CloseSprintSheet } from "../components/CloseSprintSheet";
+import { useProjectSprints } from "../hooks/useSprintClose";
 import { SprintFormSheet } from "../components/SprintFormSheet";
 import { useState } from "react";
 import { Link, useParams } from "react-router-dom";
@@ -17,7 +19,7 @@ import {
   useStartTimer,
   useStopTimer,
 } from "@/features/time/hooks/useTime";
-import { formatIsoDate } from "@vexa/domain/dates";
+import { formatDate, formatIsoDate } from "@vexa/domain/dates";
 import { useFirstPlay } from "@/lib/useFirstPlay";
 import { cn } from "@/lib/utils";
 import { KanbanBoard } from "../components/KanbanBoard";
@@ -35,6 +37,7 @@ export default function BoardPage() {
   const project = useProject(projectId);
   const sprint = useActiveSprint(projectId);
   const tasks = useTasks({ projectId }, { enabled: Boolean(project.data) });
+  const projectSprints = useProjectSprints(projectId);
   const members = useMembers();
   const running = useRunningEntry();
   const start = useStartTimer();
@@ -44,6 +47,8 @@ export default function BoardPage() {
   const [projectOpen, setProjectOpen] = useState(false);
   const [labelsOpen, setLabelsOpen] = useState(false);
   const [sprintOpen, setSprintOpen] = useState(false);
+  const [closeOpen, setCloseOpen] = useState(false);
+  const [reportOpen, setReportOpen] = useState(false);
   const [detail, setDetail] = useState<Task>();
   const [onlyMine, setOnlyMine] = useState(false);
   const [taskOpen, setTaskOpen] = useState(false);
@@ -107,6 +112,16 @@ export default function BoardPage() {
   }
 
   const activeSprint = sprint.data;
+  // Sin sprint activo, el último cerrado se muestra de solo lectura (reporte guardado al cerrar).
+  const lastClosed = activeSprint
+    ? undefined
+    : [...(projectSprints.data ?? [])]
+        .filter((s) => s.status === "closed")
+        .sort(
+          (a, b) =>
+            (b.closedAt ?? "").localeCompare(a.closedAt ?? "") ||
+            b.endDate.localeCompare(a.endDate),
+        )[0];
   const allTasks = tasks.data ?? [];
   const shown = onlyMine
     ? allTasks.filter((t) => t.assigneeId === user.id)
@@ -134,6 +149,12 @@ export default function BoardPage() {
                 <Tags size={16} />
                 Etiquetas
               </Button>
+              {activeSprint && (
+                <Button variant="secondary" onClick={() => setCloseOpen(true)}>
+                  <Lock className="size-4" aria-hidden="true" />
+                  Cerrar sprint
+                </Button>
+              )}
               <Button onClick={() => openTask()}>
                 <Plus className="size-4" aria-hidden="true" />
                 Nueva tarea
@@ -156,6 +177,50 @@ export default function BoardPage() {
           onClose={() => setLabelsOpen(false)}
           projectId={projectId}
         />
+      )}
+      {user.role === "admin" && activeSprint && (
+        <CloseSprintSheet
+          open={closeOpen}
+          onClose={() => setCloseOpen(false)}
+          sprint={activeSprint}
+          viewerId={user.id}
+          canClose
+        />
+      )}
+      {lastClosed && (
+        <>
+          <div className="mb-4 flex flex-col gap-2 rounded-xl border border-border bg-surface-2 p-3 sm:flex-row sm:items-center sm:justify-between">
+            <p className="flex items-center gap-2 text-sm">
+              <Lock className="size-4 shrink-0 text-muted" aria-hidden="true" />
+              <span>
+                <span className="font-medium">Sprint cerrado:</span>{" "}
+                {lastClosed.goal}
+                {lastClosed.closedAt
+                  ? ` · ${formatDate(lastClosed.closedAt)}`
+                  : ""}
+                . Sus horas validadas están bloqueadas.
+              </span>
+            </p>
+            {user.role !== "collaborator" && (
+              <Button
+                variant="secondary"
+                size="sm"
+                onClick={() => setReportOpen(true)}
+              >
+                Ver reporte
+              </Button>
+            )}
+          </div>
+          {user.role !== "collaborator" && (
+            <CloseSprintSheet
+              open={reportOpen}
+              onClose={() => setReportOpen(false)}
+              sprint={lastClosed}
+              viewerId={user.id}
+              canClose={false}
+            />
+          )}
+        </>
       )}
       {user.role === "admin" && !activeSprint && (
         <Button

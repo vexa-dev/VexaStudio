@@ -41,6 +41,7 @@ import type {
   Settings,
   SlotVote,
   Sprint,
+  SprintCloseReport,
   Task,
   TaskStatus,
   TimeEntry,
@@ -122,8 +123,17 @@ export interface SprintService {
   listByProject(projectId: Id): Promise<Sprint[]>;
   getActive(projectId: Id): Promise<Sprint | null>;
   create(input: Omit<Sprint, "id" | "status">): Promise<Sprint>;
-  /** Cierra el sprint: valida en bloque las horas y las bloquea. */
+  /**
+   * Cierra el sprint (solo admin, sprint activo) en una sola operación: valida en bloque las horas
+   * elegidas y las bloquea, guarda el reporte de entrega y manda al backlog lo que no se terminó.
+   * Todo o nada: si una hora no es elegible no se cambia nada.
+   */
   close(sprintId: Id, validatedEntryIds: Id[]): Promise<Sprint>;
+  /**
+   * Entregado vs comprometido por persona y horas pendientes de validar. En un sprint cerrado
+   * devuelve el reporte guardado al cerrar.
+   */
+  getCloseReport?(sprintId: Id): Promise<SprintCloseReport>;
 }
 
 export interface TaskFilter {

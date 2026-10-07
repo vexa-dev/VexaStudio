@@ -612,16 +612,28 @@ isOneToOne: false
                   ]
                 },"sprints": {
                   Row: {
-                    "created_at": string,"end_date": string,"goal": string,"id": string,"project_id": string,"start_date": string,"status": Database["public"]['Enums']["sprint_status"],"updated_at": string
+                    "close_report": Json | null,"closed_at": string | null,"closed_by": string | null,"created_at": string,"end_date": string,"goal": string,"id": string,"project_id": string,"start_date": string,"status": Database["public"]['Enums']["sprint_status"],"updated_at": string
                   }
                   Insert: {
-                    "created_at"?: string,"end_date": string,"goal": string,"id"?: string,"project_id": string,"start_date": string,"status"?: Database["public"]['Enums']["sprint_status"],"updated_at"?: string
+                    "close_report"?: Json | null,"closed_at"?: string | null,"closed_by"?: string | null,"created_at"?: string,"end_date": string,"goal": string,"id"?: string,"project_id": string,"start_date": string,"status"?: Database["public"]['Enums']["sprint_status"],"updated_at"?: string
                   }
                   Update: {
-                    "created_at"?: string,"end_date"?: string,"goal"?: string,"id"?: string,"project_id"?: string,"start_date"?: string,"status"?: Database["public"]['Enums']["sprint_status"],"updated_at"?: string
+                    "close_report"?: Json | null,"closed_at"?: string | null,"closed_by"?: string | null,"created_at"?: string,"end_date"?: string,"goal"?: string,"id"?: string,"project_id"?: string,"start_date"?: string,"status"?: Database["public"]['Enums']["sprint_status"],"updated_at"?: string
                   }
                   Relationships: [
                     {
+      foreignKeyName: "sprints_closed_by_fkey"
+      columns: ["closed_by"]
+isOneToOne: false
+      referencedRelation: "member_points"
+      referencedColumns: ["user_id"]
+    },{
+      foreignKeyName: "sprints_closed_by_fkey"
+      columns: ["closed_by"]
+isOneToOne: false
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    },{
       foreignKeyName: "sprints_project_id_fkey"
       columns: ["project_id"]
 isOneToOne: false
@@ -693,16 +705,22 @@ isOneToOne: false
                   ]
                 },"time_entries": {
                   Row: {
-                    "allocations": Json | null,"created_at": string,"description": string | null,"draft": boolean,"elapsed_ms": number,"ended_at": string | null,"evidence_url": string | null,"hours": number,"id": string,"paid": boolean,"project_id": string | null,"review_note": string | null,"reviewed_by": string | null,"segment_started_at": string | null,"segments": Json | null,"source": string | null,"started_at": string,"task_id": string | null,"timer_state": string | null,"user_id": string,"validated": boolean,"validated_at": string | null,"validated_by": string | null,"void_reason": string | null,"voided_at": string | null
+                    "allocations": Json | null,"created_at": string,"description": string | null,"draft": boolean,"elapsed_ms": number,"ended_at": string | null,"evidence_url": string | null,"hours": number,"id": string,"locked_by_sprint": string | null,"paid": boolean,"project_id": string | null,"review_note": string | null,"reviewed_by": string | null,"segment_started_at": string | null,"segments": Json | null,"source": string | null,"started_at": string,"task_id": string | null,"timer_state": string | null,"user_id": string,"validated": boolean,"validated_at": string | null,"validated_by": string | null,"void_reason": string | null,"voided_at": string | null
                   }
                   Insert: {
-                    "allocations"?: Json | null,"created_at"?: string,"description"?: string | null,"draft"?: boolean,"elapsed_ms"?: number,"ended_at"?: string | null,"evidence_url"?: string | null,"hours"?: number,"id"?: string,"paid"?: boolean,"project_id"?: string | null,"review_note"?: string | null,"reviewed_by"?: string | null,"segment_started_at"?: string | null,"segments"?: Json | null,"source"?: string | null,"started_at": string,"task_id"?: string | null,"timer_state"?: string | null,"user_id": string,"validated"?: boolean,"validated_at"?: string | null,"validated_by"?: string | null,"void_reason"?: string | null,"voided_at"?: string | null
+                    "allocations"?: Json | null,"created_at"?: string,"description"?: string | null,"draft"?: boolean,"elapsed_ms"?: number,"ended_at"?: string | null,"evidence_url"?: string | null,"hours"?: number,"id"?: string,"locked_by_sprint"?: string | null,"paid"?: boolean,"project_id"?: string | null,"review_note"?: string | null,"reviewed_by"?: string | null,"segment_started_at"?: string | null,"segments"?: Json | null,"source"?: string | null,"started_at": string,"task_id"?: string | null,"timer_state"?: string | null,"user_id": string,"validated"?: boolean,"validated_at"?: string | null,"validated_by"?: string | null,"void_reason"?: string | null,"voided_at"?: string | null
                   }
                   Update: {
-                    "allocations"?: Json | null,"created_at"?: string,"description"?: string | null,"draft"?: boolean,"elapsed_ms"?: number,"ended_at"?: string | null,"evidence_url"?: string | null,"hours"?: number,"id"?: string,"paid"?: boolean,"project_id"?: string | null,"review_note"?: string | null,"reviewed_by"?: string | null,"segment_started_at"?: string | null,"segments"?: Json | null,"source"?: string | null,"started_at"?: string,"task_id"?: string | null,"timer_state"?: string | null,"user_id"?: string,"validated"?: boolean,"validated_at"?: string | null,"validated_by"?: string | null,"void_reason"?: string | null,"voided_at"?: string | null
+                    "allocations"?: Json | null,"created_at"?: string,"description"?: string | null,"draft"?: boolean,"elapsed_ms"?: number,"ended_at"?: string | null,"evidence_url"?: string | null,"hours"?: number,"id"?: string,"locked_by_sprint"?: string | null,"paid"?: boolean,"project_id"?: string | null,"review_note"?: string | null,"reviewed_by"?: string | null,"segment_started_at"?: string | null,"segments"?: Json | null,"source"?: string | null,"started_at"?: string,"task_id"?: string | null,"timer_state"?: string | null,"user_id"?: string,"validated"?: boolean,"validated_at"?: string | null,"validated_by"?: string | null,"void_reason"?: string | null,"voided_at"?: string | null
                   }
                   Relationships: [
                     {
+      foreignKeyName: "time_entries_locked_by_sprint_fkey"
+      columns: ["locked_by_sprint"]
+isOneToOne: false
+      referencedRelation: "sprints"
+      referencedColumns: ["id"]
+    },{
       foreignKeyName: "time_entries_project_id_fkey"
       columns: ["project_id"]
 isOneToOne: false
@@ -845,6 +863,7 @@ isOneToOne: false
 "evidence_url": string | null,
 "hours": number,
 "id": string,
+"locked_by_sprint": string | null,
 "paid": boolean,
 "project_id": string | null,
 "review_note": string | null,
@@ -932,6 +951,26 @@ isOneToOne: false
 "chat_save_group":
 { Args: { "p_description": string,"p_id": string,"p_members": (string)[],"p_name": string }; Returns: string
                            },
+"close_sprint":
+{ Args: { "p_entry_ids"?: (string)[],"p_sprint": string }; Returns: {
+              "close_report": Json | null,
+"closed_at": string | null,
+"closed_by": string | null,
+"created_at": string,
+"end_date": string,
+"goal": string,
+"id": string,
+"project_id": string,
+"start_date": string,
+"status": Database["public"]['Enums']["sprint_status"],
+"updated_at": string
+            }
+                          SetofOptions: {
+        from: "*"
+        to: "sprints"
+        isOneToOne: true
+        isSetofReturn: false
+      } },
 "create_expense":
 { Args: { "p_amount": number,"p_before_signing"?: boolean,"p_category": Database["public"]['Enums']["expense_category"],"p_concept": string,"p_currency": Database["public"]['Enums']["currency_code"],"p_receipt_url"?: string }; Returns: {
               "amount": number,
@@ -1032,6 +1071,7 @@ isOneToOne: false
 "evidence_url": string | null,
 "hours": number,
 "id": string,
+"locked_by_sprint": string | null,
 "paid": boolean,
 "project_id": string | null,
 "review_note": string | null,
@@ -1066,6 +1106,7 @@ isOneToOne: false
 "evidence_url": string | null,
 "hours": number,
 "id": string,
+"locked_by_sprint": string | null,
 "paid": boolean,
 "project_id": string | null,
 "review_note": string | null,
@@ -1100,6 +1141,7 @@ isOneToOne: false
 "evidence_url": string | null,
 "hours": number,
 "id": string,
+"locked_by_sprint": string | null,
 "paid": boolean,
 "project_id": string | null,
 "review_note": string | null,
@@ -1137,6 +1179,7 @@ isOneToOne: false
 "evidence_url": string | null,
 "hours": number,
 "id": string,
+"locked_by_sprint": string | null,
 "paid": boolean,
 "project_id": string | null,
 "review_note": string | null,
@@ -1212,6 +1255,7 @@ isOneToOne: false
 "evidence_url": string | null,
 "hours": number,
 "id": string,
+"locked_by_sprint": string | null,
 "paid": boolean,
 "project_id": string | null,
 "review_note": string | null,
@@ -1246,6 +1290,7 @@ isOneToOne: false
 "evidence_url": string | null,
 "hours": number,
 "id": string,
+"locked_by_sprint": string | null,
 "paid": boolean,
 "project_id": string | null,
 "review_note": string | null,
@@ -1280,6 +1325,7 @@ isOneToOne: false
 "evidence_url": string | null,
 "hours": number,
 "id": string,
+"locked_by_sprint": string | null,
 "paid": boolean,
 "project_id": string | null,
 "review_note": string | null,
@@ -1314,6 +1360,7 @@ isOneToOne: false
 "evidence_url": string | null,
 "hours": number,
 "id": string,
+"locked_by_sprint": string | null,
 "paid": boolean,
 "project_id": string | null,
 "review_note": string | null,
@@ -1369,6 +1416,7 @@ isOneToOne: false
 "evidence_url": string | null,
 "hours": number,
 "id": string,
+"locked_by_sprint": string | null,
 "paid": boolean,
 "project_id": string | null,
 "review_note": string | null,
@@ -1428,6 +1476,7 @@ isOneToOne: false
 "evidence_url": string | null,
 "hours": number,
 "id": string,
+"locked_by_sprint": string | null,
 "paid": boolean,
 "project_id": string | null,
 "review_note": string | null,

@@ -106,6 +106,16 @@ export interface Project {
 }
 
 export type SprintStatus = "planned" | "active" | "closed";
+/** Entrega de una persona en un sprint: comprometido vs entregado y horas estimadas vs registradas. */
+export interface SprintPartnerReport {
+  /** `null` agrupa las tareas sin responsable. */
+  userId: Id | null;
+  committed: number;
+  delivered: number;
+  estimatedHours: number;
+  loggedHours: number;
+}
+
 export interface Sprint {
   id: Id;
   projectId: Id;
@@ -113,6 +123,31 @@ export interface Sprint {
   endDate: IsoDate;
   goal: string;
   status: SprintStatus;
+  closedAt?: IsoDateTime | null;
+  closedById?: Id | null;
+  /** Reporte de entrega guardado al cerrar (lo leerá la regla de "2 sprints sin entregar"). */
+  deliveryReport?: SprintPartnerReport[] | null;
+  /** Horas que quedaron sin validar al cerrar (siguen pendientes por la vía de aclaración). */
+  closePendingEntryIds?: Id[] | null;
+}
+
+/** Horas pendientes de un sprint que quien cierra puede validar en bloque. */
+export interface SprintCloseEntry {
+  id: Id;
+  userId: Id;
+  description: string;
+  startedAt: IsoDateTime;
+  /** Horas del registro que caen en tareas del sprint. */
+  hoursInSprint: number;
+  participantIds: Id[];
+  clarificationRequested: boolean;
+}
+
+export interface SprintCloseReport {
+  sprint: Sprint;
+  partners: SprintPartnerReport[];
+  /** Horas aún pendientes de validar (al cerrar, las que no se validaron). */
+  pendingEntries: SprintCloseEntry[];
 }
 
 export type TaskStatus = "todo" | "in_progress" | "review" | "done";
@@ -171,6 +206,8 @@ export interface TimeEntry {
   createdAt: IsoDateTime;
   voidedAt: IsoDateTime | null;
   voidReason: string | null;
+  /** Sprint cuyo cierre validó y bloqueó este registro (ya no se edita). */
+  lockedBySprintId?: Id | null;
   projectId?: Id | null;
   description?: string;
   evidenceUrl?: string | null;

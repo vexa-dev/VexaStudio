@@ -22,6 +22,7 @@ import type {
   RecurringExpense,
   Settings,
   Sprint,
+  SprintPartnerReport,
   Task,
   TimeEntry,
 } from "@vexa/domain/types";
@@ -120,7 +121,13 @@ export function mapLabel(row: Tables<"project_labels">): ProjectLabel {
   };
 }
 
-export function mapSprint(row: Tables<"sprints">): Sprint {
+type SprintRow = Omit<
+  Tables<"sprints">,
+  "closed_at" | "closed_by" | "close_report"
+> &
+  Partial<Pick<Tables<"sprints">, "closed_at" | "closed_by" | "close_report">>;
+
+export function mapSprint(row: SprintRow): Sprint {
   return {
     id: row.id,
     projectId: row.project_id,
@@ -128,6 +135,27 @@ export function mapSprint(row: Tables<"sprints">): Sprint {
     endDate: row.end_date,
     goal: row.goal,
     status: row.status,
+    // Un sprint sin cerrar no lleva datos de cierre.
+    ...(row.closed_at
+      ? { closedAt: iso(row.closed_at), closedById: row.closed_by ?? null }
+      : {}),
+    ...closeReportOf(row.close_report),
+  };
+}
+
+/** `close_report` = {partners, pendingEntryIds}; vacío mientras el sprint no se cierra. */
+function closeReportOf(
+  value: Json | null | undefined,
+): Pick<Sprint, "deliveryReport" | "closePendingEntryIds"> {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return {};
+  const report = value as { partners?: Json; pendingEntryIds?: Json };
+  return {
+    deliveryReport: Array.isArray(report.partners)
+      ? (report.partners as unknown as SprintPartnerReport[])
+      : [],
+    closePendingEntryIds: Array.isArray(report.pendingEntryIds)
+      ? (report.pendingEntryIds as string[])
+      : [],
   };
 }
 
@@ -178,7 +206,8 @@ function jsonArray<T>(value: Json | null): T[] | undefined {
 export const TIME_ENTRY_SELECT =
   "*, time_entry_participants(*), time_entry_evidence(*)";
 
-export type TimeEntryRow = Tables<"time_entries"> & {
+export type TimeEntryRow = Omit<Tables<"time_entries">, "locked_by_sprint"> &
+  Partial<Pick<Tables<"time_entries">, "locked_by_sprint">> & {
   time_entry_participants?: Tables<"time_entry_participants">[] | null;
   time_entry_evidence?: Tables<"time_entry_evidence">[] | null;
 };
@@ -209,6 +238,7 @@ export function mapTimeEntry(row: TimeEntryRow): TimeEntry {
     createdAt: isoInstant(row.created_at),
     voidedAt: iso(row.voided_at),
     voidReason: row.void_reason,
+    ...(row.locked_by_sprint ? { lockedBySprintId: row.locked_by_sprint } : {}),
     projectId: row.project_id,
     description: row.description ?? undefined,
     evidenceUrl: row.evidence_url,

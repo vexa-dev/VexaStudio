@@ -358,6 +358,70 @@ describe.skipIf(!url || !key)("Supabase local (integración)", () => {
       .toEqual([]);
     await rober.services.time.void(created.id, "Prueba de integración");
   });
+  it("cierra un sprint: valida y bloquea horas elegidas, guarda el reporte y manda lo pendiente al backlog", async () => {
+    const project = await admin.services.projects.create({
+      name: `Cierre ${Date.now()}`,
+      type: "internal",
+      status: "active",
+      memberIds: [ROBER],
+    });
+    const sprint = await admin.services.sprints.create({
+      projectId: project.id,
+      startDate: todayLima(),
+      endDate: todayLima(new Date(Date.now() + 13 * 86_400_000)),
+      goal: "Sprint de integración",
+    });
+    expect(sprint.status).toBe("active");
+    const base = {
+      sprintId: sprint.id,
+      projectId: project.id,
+      assigneeId: ROBER,
+      estimateHours: 2,
+      link: null,
+    };
+    const done = await admin.services.tasks.create({ ...base, title: "Hecha" });
+    const open = await admin.services.tasks.create({ ...base, title: "Pendiente" });
+    await admin.services.tasks.move(done.id, "done");
+    const yesterday = todayLima(new Date(Date.now() - 86_400_000));
+    const hours = await rober.services.time.addManual({
+      taskId: done.id,
+      date: yesterday,
+      hours: 1.5,
+      description: "Horas del sprint de integración",
+    });
+
+    const before = await admin.services.sprints.getCloseReport!(sprint.id);
+    expect(before.partners.find((p) => p.userId === ROBER)).toMatchObject({
+      committed: 2,
+      delivered: 1,
+      loggedHours: 1.5,
+    });
+    expect(before.pendingEntries.map((e) => e.id)).toContain(hours.id);
+
+    // Un socio no cierra.
+    await expect(rober.services.sprints.close(sprint.id, [hours.id])).rejects.toThrow();
+    const closed = await admin.services.sprints.close(sprint.id, [hours.id]);
+    expect(closed.status).toBe("closed");
+    expect(closed.deliveryReport?.find((p) => p.userId === ROBER)).toMatchObject({
+      committed: 2,
+      delivered: 1,
+    });
+
+    const [entry] = (await rober.services.time.listEntries({ userId: ROBER })).filter(
+      (e) => e.id === hours.id,
+    );
+    expect(entry).toMatchObject({ validated: true, lockedBySprintId: sprint.id });
+    // Bloqueada: el dueño ya no la edita.
+    await expect(rober.services.time.update(hours.id, { hours: 3 })).rejects.toThrow();
+    const tasks = await admin.services.tasks.list({ projectId: project.id });
+    expect(tasks.find((t) => t.id === open.id)?.sprintId).toBeNull();
+    expect(tasks.find((t) => t.id === done.id)?.sprintId).toBe(sprint.id);
+    // Un sprint cerrado no se cierra otra vez y su reporte es el guardado.
+    await expect(admin.services.sprints.close(sprint.id, [])).rejects.toThrow();
+    const after = await admin.services.sprints.getCloseReport!(sprint.id);
+    expect(after.sprint.status).toBe("closed");
+    expect(after.pendingEntries).toEqual([]);
+  });
   it("comparte el daily: un envío por día, visible para socios y solo propio para el colaborador", async () => {
     const today = todayLima();
     const first = await rober.services.daily.submit({ done: "  Avance de integración ", willDo: "Seguir", blockers: "" });

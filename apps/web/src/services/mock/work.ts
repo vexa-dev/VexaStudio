@@ -18,7 +18,8 @@ import {
   releaseEvidence,
   retainEvidence,
 } from "./hours-extras";
-import { delay, pending } from "./utils";
+import { closeSprint, SPRINT_LOCK_MESSAGE, sprintCloseReport } from "./sprint-close";
+import { delay } from "./utils";
 /**
  * Sprints, tareas y horas. Los permisos se aplican aquí igual que lo hará RLS en la etapa 2:
  * cada persona crea y edita solo sus propios registros de horas, y nadie borra (se anula con motivo).
@@ -410,7 +411,17 @@ export const sprints: SprintService = scoped<SprintService>({
     save();
     return delay(sprint);
   },
-  close: pending("SprintService.close"),
+  async close(sprintId, validatedEntryIds) {
+    return delay(closeSprint(currentUser(), sprintId, validatedEntryIds));
+  },
+  async getCloseReport(sprintId) {
+    const user = currentUser();
+    const sprint = getDb().sprints.find((s) => s.id === sprintId);
+    if (sprint) projectAccess(sprint.projectId);
+    if (user.role === "collaborator")
+      throw new Error("Tu rol no permite esta acción");
+    return delay(sprintCloseReport(sprintId));
+  },
 });
 export const tasks: TaskService = scoped<TaskService>({
   async list(filter = {}) {
@@ -847,6 +858,7 @@ const timeImplementation: CoreTimeService = scoped<CoreTimeService>({
     const entry = ownEntry(id, user.id);
     if (entry.endedAt === null)
       throw new Error("Detén el temporizador antes de editar el registro");
+    if (entry.lockedBySprintId) throw new Error(SPRINT_LOCK_MESSAGE);
     if (!canEditEntry(entry, new Date(), getDb().settings)) {
       throw new Error(
         "Este registro ya no se puede editar: pasaron los días permitidos o está pagado/anulado",
