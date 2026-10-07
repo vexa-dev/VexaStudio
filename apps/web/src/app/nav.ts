@@ -32,8 +32,9 @@ export const navItems: NavItem[] = [
 ];
 
 export function navigationFor(role: Role | undefined) {
-  return navItems.filter(
-    (item) =>
-      !["/gastos", "/equipo", "/actividad"].includes(item.to) || canAccessStudio(role),
+  return navItems.filter((item) =>
+    item.to === "/gastos"
+      ? role === "admin"
+      : !["/equipo", "/actividad"].includes(item.to) || canAccessStudio(role),
   );
 }

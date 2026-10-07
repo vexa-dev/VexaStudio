@@ -55,7 +55,7 @@ function notificationAction(item: Notification, user: Profile) {
     case "expense_vote":
     case "expense_result":
     case "renewal":
-      return canAccessStudio(user.role)
+      return user.role === "admin"
         ? { label: "Revisar gastos", to: "/gastos" }
         : null;
     case "mention":

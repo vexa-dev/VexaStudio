@@ -3,7 +3,7 @@ import type { HoursParticipantInput } from "@vexa/services";
 import { MAX_PARTICIPANTS } from "@vexa/domain/hours-credit";
 import { Avatar } from "@/components/ui/Avatar";
 import { Button } from "@/components/ui/Button";
-import { ChoicePicker } from "@/components/ui/ChoicePicker";
+import { ParticipantPicker } from "./ParticipantPicker";
 import { Field } from "@/components/ui/Field";
 import { useMembers } from "@/features/team/hooks/useMembers";
 import { creditHint, participantErrors } from "../participants";
@@ -30,10 +30,6 @@ export function ParticipantsField({
   const errors = participantErrors(ownerId, value);
   const nameOf = (id: string) =>
     members.data?.find((m) => m.id === id)?.name ?? "Socio";
-  const taken = new Set(value.map((p) => p.userId));
-  const options = (members.data ?? [])
-    .filter((m) => m.active && m.id !== ownerId && !taken.has(m.id))
-    .map((m) => ({ value: m.id, label: m.name }));
   const full = value.length >= MAX_PARTICIPANTS;
 
   return (
@@ -45,21 +41,28 @@ export function ParticipantsField({
         Define qué porcentaje de las horas cuenta para cada persona. Tú
         conservas el 100 %.
       </p>
-      {members.isError ? (
-        <p role="alert" className="text-sm text-danger">
-          No se pudo cargar al equipo. Intenta de nuevo más tarde.
-        </p>
-      ) : (
-        <ChoicePicker
-          label="Agregar persona"
-          value=""
-          disabled={disabled || full || members.isLoading || !options.length}
-          options={options}
-          onChange={(id) =>
-            id && onChange([...value, { userId: id, sharePercent: 100 }])
-          }
-        />
-      )}
+      <ParticipantPicker
+        people={(members.data ?? []).filter(
+          (m) => m.active && m.id !== ownerId,
+        )}
+        value={value.map((p) => p.userId)}
+        onChange={(ids) =>
+          onChange(
+            ids.map(
+              (userId) =>
+                value.find((p) => p.userId === userId) ?? {
+                  userId,
+                  sharePercent: 100,
+                },
+            ),
+          )
+        }
+        onBlur={() => {}}
+        disabled={disabled || full}
+        loading={members.isPending}
+        error={members.isError}
+        showSelected={false}
+      />
       {full ? (
         <p className="text-sm text-muted">
           Llegaste al máximo de {MAX_PARTICIPANTS} personas.
@@ -84,7 +87,9 @@ export function ParticipantsField({
                   <Avatar
                     name={name}
                     size="sm"
-                    src={members.data?.find((m) => m.id === p.userId)?.avatarUrl}
+                    src={
+                      members.data?.find((m) => m.id === p.userId)?.avatarUrl
+                    }
                   />
                   <strong className="min-w-0 flex-1 truncate text-sm">
                     {name}

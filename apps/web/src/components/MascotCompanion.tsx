@@ -239,7 +239,7 @@ export function MascotCompanion({
               className="mascot-handle"
               aria-label="Mascota: arrastra para moverla o usa las flechas"
               aria-keyshortcuts="ArrowUp ArrowDown ArrowLeft ArrowRight"
-              title="Arrastra para mover"
+              data-tooltip="Arrastra para mover"
               onPointerDown={pointerDown}
               onPointerMove={pointerMove}
               onPointerUp={pointerEnd}

@@ -595,16 +595,17 @@
   cursor: default;
 }
 .hours-calendar {
-  width: 270px;
+  width: 100%;
   max-width: 100%;
 }
+.hours-calendar-popup { padding: 12px; }
 .hours-calendar-heading {
   display: flex;
   justify-content: space-between;
   align-items: center;
   gap: 4px;
-  font-size: 12px;
-  margin-bottom: 8px;
+  font-size: 13px;
+  margin-bottom: 12px;
 }
 .hours-calendar-heading button {
   width: 36px;
@@ -619,16 +620,19 @@
   gap: 2px;
 }
 .hours-calendar-days > span {
-  font-size: 10px;
+  font-size: 11px;
   color: var(--muted);
   text-align: center;
-  padding-block: 6px;
+  padding-block: 8px;
 }
 .hours-calendar-days button {
   font-size: 12px;
   min-height: 36px;
+  aspect-ratio: 1;
   border-radius: 7px;
 }
+.hours-calendar-days button[data-today]:not([aria-pressed="true"]) { box-shadow: inset 0 0 0 1px var(--border); color: var(--primary-text); }
+.hours-calendar-days button[aria-pressed="true"] { background: var(--primary-solid); color: var(--primary-fg); }
 .hours-calendar-months {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -654,6 +658,7 @@
   color: var(--primary-text);
   border-radius: 7px;
 }
+.hours-calendar-footer button:last-child { margin-left: auto; }
 .hours-month-heading .hours-picker-popup {
   left: auto;
   right: 0;

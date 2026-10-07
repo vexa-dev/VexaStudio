@@ -10,7 +10,6 @@ import { TimerAlerts } from "@/features/time/components/TimerAlerts";
 import { TimerBar, TimerChip } from "@/features/time/components/TimerBar";
 import { useRunningEntry } from "@/features/time/hooks/useTime";
 import { cn } from "@/lib/utils";
-import { isSupabaseSource } from "@/services/supabase/data-source";
 import { navItems, navigationFor } from "./nav";
 import { ThemeToggle } from "./ThemeToggle";
 import { UserMenu } from "./UserMenu";
@@ -66,11 +65,6 @@ export function AppLayout() {
           <strong>{currentPage}</strong>
         </div>
         <div className="ml-auto flex items-center gap-1">
-          {isSupabaseSource() ? null : (
-            <span className="mr-2 hidden text-xs text-muted sm:inline">
-              Demo local
-            </span>
-          )}
           <TimerChip />
           <ThemeToggle />
           {user && <NotificationMenu key={user.id} user={user} />}

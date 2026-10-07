@@ -1,0 +1,49 @@
+.vexa-tooltip {
+  position: fixed;
+  z-index: 10000;
+  max-width: min(280px, calc(100vw - 20px));
+  width: max-content;
+  padding: 9px 12px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--surface);
+  color: var(--fg);
+  box-shadow: var(--sh-pop);
+  font-family: var(--font-sans);
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 1.6;
+  white-space: pre-line;
+  overflow-wrap: anywhere;
+  animation: tooltip-appear 120ms ease-out;
+}
+.vexa-tooltip::after {
+  content: "";
+  position: absolute;
+  width: 6px;
+  height: 6px;
+  left: calc(50% - 3px);
+  bottom: -4px;
+  background: var(--surface);
+  border-right: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+  transform: rotate(45deg);
+}
+.vexa-tooltip[data-placement="bottom"]::after {
+  bottom: auto;
+  top: -4px;
+  transform: rotate(225deg);
+}
+@keyframes tooltip-appear {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .vexa-tooltip {
+    animation: none;
+  }
+}
