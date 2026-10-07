@@ -45,6 +45,8 @@ export const profileAuth: Pick<
   | "updateProfile"
   | "updatePassword"
   | "signOutOthers"
+  | "listSessions"
+  | "revokeSession"
   | "listMfaFactors"
   | "enrollMfa"
   | "verifyMfaEnrollment"
@@ -57,6 +59,8 @@ export const profileAuth: Pick<
   },
   updatePassword: supabaseOnly,
   signOutOthers: supabaseOnly,
+  listSessions: supabaseOnly,
+  revokeSession: supabaseOnly,
   listMfaFactors: supabaseOnly,
   enrollMfa: supabaseOnly,
   verifyMfaEnrollment: supabaseOnly,

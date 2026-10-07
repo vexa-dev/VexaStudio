@@ -1,7 +1,7 @@
 -- Topic/JWT-bound Presence permissions; every fixture rolls back.
 begin;
 create extension if not exists pgtap with schema extensions;
-select plan(12);
+select plan(13);
 create function pg_temp.as_user(n int) returns void language plpgsql as $$
 begin
   reset role;
@@ -28,11 +28,12 @@ select throws_ok('select pg_temp.send()', '42501', 'new row violates row-level s
 select pg_temp.topic(2);
 select throws_ok($$insert into realtime.messages(topic,extension,payload,event,private) values (realtime.topic(),'broadcast','{}','event',true)$$,'42501','new row violates row-level security policy for table "messages"','Presence authorization does not grant broadcast');
 reset role;
-insert into public.chat_status(user_id,presence) values ('00000000-0000-4000-8000-000000000005',false) on conflict(user_id) do update set presence=false;
+select throws_ok($$insert into public.chat_status(user_id,presence) values ('00000000-0000-4000-8000-000000000005',false) on conflict(user_id) do update set presence=false$$,'23514',null,'Presence cannot be disabled');
+insert into public.chat_status(user_id) values ('00000000-0000-4000-8000-000000000005') on conflict do nothing;
 select pg_temp.as_user(2); select pg_temp.topic(5);
-select is((select count(*)::int from realtime.messages),0,'Presence disabled topic is unreadable');
+select ok((select count(*)::int from realtime.messages)>0,'Every active member topic stays readable');
 select pg_temp.as_user(5);
-select throws_ok('select pg_temp.send()','42501','new row violates row-level security policy for table "messages"','Disabled user cannot publish own presence');
+select lives_ok('select pg_temp.send()','Member always publishes own presence');
 reset role;
 update public.profiles set active=false where id='00000000-0000-4000-8000-000000000002';
 select pg_temp.as_user(2); select pg_temp.topic(2);

@@ -1,4 +1,5 @@
 import type {
+  AuthSession,
   Id,
   MfaChallenge,
   MfaEnrollment,
@@ -278,6 +279,22 @@ export function createAuthService(
     async signOutOthers() {
       const { error } = await client.auth.signOut({ scope: "others" });
       if (error) throw toAuthError(error);
+    },
+    async listSessions() {
+      const rows = unwrap(await client.rpc("list_my_sessions"));
+      return rows.map(
+        (row): AuthSession => ({
+          id: row.id,
+          createdAt: isoInstant(row.created_at),
+          lastActiveAt: isoInstant(row.updated_at),
+          userAgent: row.user_agent,
+          aal: row.aal === "aal2" ? "aal2" : "aal1",
+          isCurrent: row.is_current,
+        }),
+      );
+    },
+    async revokeSession(id) {
+      unwrapMaybe(await client.rpc("revoke_my_session", { p_id: id }));
     },
     async listMfaFactors() {
       const { data, error } = await client.auth.mfa.listFactors();

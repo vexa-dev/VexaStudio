@@ -68,8 +68,11 @@ select is(
   (select coalesce(string_agg(p.proname, ', '), '') from pg_proc p join pg_namespace n on n.oid = p.pronamespace
    where n.nspname = 'public' and p.prosecdef and p.proname not in (
      'auth_role', 'is_admin', 'is_partner_or_admin', 'is_project_member', 'can_access_project',
-     'can_view_task', 'chat_can_access', 'hours_entry_tagged', 'verify_audit_chain')),
+     'can_view_task', 'chat_can_access', 'hours_entry_tagged', 'verify_audit_chain',
+     'list_my_sessions', 'revoke_my_session')),
   -- chat_can_access es un ayudante de permisos (integrante del hilo, o admin en grupos), igual que can_view_task.
+  -- list_my_sessions y revoke_my_session no son ayudantes de permisos: son definers porque el esquema `auth`
+  -- no esta expuesto a la API; solo leen/borran filas de auth.sessions de auth.uid() (sin IP) y solo `authenticated` las ejecuta.
   -- hours_entry_tagged responde solo si quien llama esta etiquetado en un registro (evita recursion de RLS).
   '', 'las unicas funciones publicas SECURITY DEFINER son los ayudantes de permisos y la verificacion de la cadena');
 select is(

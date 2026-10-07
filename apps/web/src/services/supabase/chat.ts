@@ -553,7 +553,7 @@ export function createChatService(client: VexaSupabase): ChatService {
       const status: TablesInsert<"chat_status"> = { user_id: userId };
       if (patch.status !== undefined)
         status.status = patch.status.trim().slice(0, 80);
-      if (patch.presence !== undefined) status.presence = patch.presence;
+      // `patch.presence` is ignored: presence is always on (the database enforces it too).
       if (patch.currentProjectId !== undefined)
         status.current_project_id = patch.currentProjectId || null;
       const prefs: TablesInsert<"chat_preferences"> = { user_id: userId };

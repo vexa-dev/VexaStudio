@@ -542,7 +542,7 @@ describe("regla 9: ajustes", () => {
     const status = await chat.listMemberStatus();
     expect(status[JHONY]).toEqual({
       status: "Ocupado",
-      presence: false,
+      presence: true,
       currentProjectId: "p-vexa",
     });
     expect(status[ROBER]).toEqual({
@@ -550,6 +550,11 @@ describe("regla 9: ajustes", () => {
       presence: true,
       currentProjectId: null,
     });
+  });
+  it("la presencia no se puede apagar", async () => {
+    const next = await chat.updateSettings({ presence: false });
+    expect(next.presence).toBe(true);
+    expect((await chat.getSettings()).presence).toBe(true);
   });
   it("el fondo propio se guarda por persona y se valida", async () => {
     const image = "data:image/png;base64,iVBORw0KGgo=";

@@ -7,7 +7,9 @@ import {
   expenseNeedsApproval,
   expensePoints,
   hoursBetween,
+  expenseVoteTally,
   monthlyMinimum,
+  parseReceiptDataUrl,
   resolveExpenseStatus,
 } from './rules'
 
@@ -146,5 +148,33 @@ describe('hoursBetween', () => {
   })
   it('no devuelve horas negativas', () => {
     expect(hoursBetween('2026-09-01T15:00:00Z', '2026-09-01T14:00:00Z')).toBe(0)
+  })
+})
+
+describe('expenseVoteTally', () => {
+  it('cuenta votos a favor y en contra y cuántos faltan para aprobar', () => {
+    const t = expenseVoteTally([{ inFavor: true }, { inFavor: false }, { inFavor: true }])
+    expect(t).toEqual({ inFavor: 2, against: 1, required: 3, missing: 1 })
+  })
+  it('no deja faltantes negativos', () => {
+    const yes = { inFavor: true }
+    expect(expenseVoteTally([yes, yes, yes, yes]).missing).toBe(0)
+  })
+})
+
+describe('parseReceiptDataUrl', () => {
+  it('lee el tipo y el tamaño real de un comprobante permitido', () => {
+    // "hello" -> aGVsbG8= (5 bytes)
+    expect(parseReceiptDataUrl('data:image/png;base64,aGVsbG8=')).toEqual({
+      mime: 'image/png',
+      bytes: 5,
+    })
+    expect(parseReceiptDataUrl('data:application/pdf;base64,aGVsbG8h')?.bytes).toBe(6)
+  })
+  it('rechaza tipos no permitidos, formatos rotos y archivos vacíos', () => {
+    expect(parseReceiptDataUrl('data:text/html;base64,aGVsbG8=')).toBeNull()
+    expect(parseReceiptDataUrl('https://example.com/a.png')).toBeNull()
+    expect(parseReceiptDataUrl('data:image/png;base64,')).toBeNull()
+    expect(parseReceiptDataUrl('data:image/png;base64,@@@')).toBeNull()
   })
 })

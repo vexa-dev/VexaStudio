@@ -183,7 +183,7 @@ function EntryForm({
     setParticipants.isPending ||
     addEvidence.isPending;
   return (
-    <form onSubmit={submit} noValidate className="flex flex-col gap-4">
+    <form onSubmit={submit} noValidate className="flex flex-col gap-3">
       <Controller
         name="taskId"
         control={control}
@@ -222,7 +222,7 @@ function EntryForm({
       />
       <TextareaField
         label="¿Qué hiciste y qué avanzaste?"
-        rows={3}
+        rows={2}
         error={formState.errors.description?.message}
         {...register("description")}
       />
@@ -327,11 +327,11 @@ function EntryForm({
           <p className="text-xs text-muted">{EVIDENCE_RETENTION_TEXT}</p>
         </div>
       )}
-      <p className="text-xs text-muted">
-        Editar un registro aprobado lo devuelve a revisión. Queda pendiente de
-        revisión por otro socio. El horario debe haber terminado y no
-        superponerse con otro registro.
-      </p>
+      {entry ? (
+        <p className="text-xs text-muted">
+          Editar un registro aprobado lo devuelve a revisión.
+        </p>
+      ) : null}
       <div className="flex flex-col-reverse gap-2 pt-1 sm:flex-row sm:justify-end">
         <Button variant="secondary" onClick={onClose}>
           Cancelar

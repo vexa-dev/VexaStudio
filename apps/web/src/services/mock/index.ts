@@ -3,7 +3,6 @@ import type {
   AuthService,
   CommentService,
   DailyService,
-  ExpenseService,
   MeetingService,
   MemberService,
   Services,
@@ -14,6 +13,7 @@ import { chatService } from "./chat";
 import { getDb, getSessionUserId, setSessionUserId } from "./db";
 import { requireStudioAccess } from "./studio-access";
 import { dashboard } from "./dashboard";
+import { expenseService } from "./expenses";
 import { projects, sprints, tasks, time } from "./work";
 import { delay, notImplemented } from "./utils";
 import { profileAuth } from "./auth";
@@ -78,28 +78,6 @@ const daily: DailyService = {
   suggestDone: (...args) => notImplemented<DailyService>("DailyService").suggestDone(...args),
 };
 
-const expenses: ExpenseService = {
-  async list() {
-    requireStudioAccess();
-    return delay(getDb().expenses);
-  },
-  async listVotes(expenseId) {
-    requireStudioAccess();
-    return delay(
-      getDb().expenseVotes.filter((vote) => vote.expenseId === expenseId),
-    );
-  },
-  async listRecurring() {
-    requireStudioAccess();
-    return delay(getDb().recurringExpenses);
-  },
-  create: (...args) =>
-    notImplemented<ExpenseService>("ExpenseService").create(...args),
-  vote: (...args) =>
-    notImplemented<ExpenseService>("ExpenseService").vote(...args),
-  void: (...args) =>
-    notImplemented<ExpenseService>("ExpenseService").void(...args),
-};
 /** Servicios del mock. Los de F2–F4 se van implementando bloque a bloque. */
 export function createMockServices(): Services {
   return {
@@ -110,7 +88,7 @@ export function createMockServices(): Services {
     sprints,
     tasks,
     time,
-    expenses,
+    expenses: expenseService,
     dashboard,
     daily,
     comments: notImplemented<CommentService>("CommentService"),

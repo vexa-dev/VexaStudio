@@ -1,18 +1,17 @@
 import { describe, it, expect } from "vitest";
 import {
-  creditExample,
+  creditHint,
   hasParticipantErrors,
   participantErrors,
   sameParticipants,
 } from "./participants";
 
 describe("participantes etiquetados", () => {
-  it("explica el crédito con un ejemplo", () => {
-    expect(creditExample(2, 75, "Rober")).toBe("2 h al 75 % = 1.5 h para Rober");
-    expect(creditExample(undefined, 50, "Rober")).toBe(
-      "50 % de las horas para Rober",
-    );
-    expect(creditExample(2, Number.NaN, "Rober")).toBe("");
+  it("muestra solo las horas resultantes, sin nombres", () => {
+    expect(creditHint(2, 75)).toBe("= 1.5 h");
+    expect(creditHint(undefined, 50)).toBe("");
+    expect(creditHint(0, 50)).toBe("");
+    expect(creditHint(2, Number.NaN)).toBe("");
   });
   it("reporta errores por fila y de lista", () => {
     const errors = participantErrors("me", [

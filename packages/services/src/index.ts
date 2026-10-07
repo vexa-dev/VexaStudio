@@ -30,6 +30,7 @@ import type {
   MeetingSlot,
   MfaChallenge,
   MfaEnrollment,
+  AuthSession,
   MfaFactor,
   Notification,
   NotificationPreferences,
@@ -73,6 +74,10 @@ export interface AuthService {
   updatePassword(input: { currentPassword: string; newPassword: string }): Promise<void>;
   /** Cierra la sesión en los demás dispositivos y conserva esta. Solo con Supabase. */
   signOutOthers(): Promise<void>;
+  /** Sesiones activas de la persona (sin IP), la actual primero. Solo con Supabase. */
+  listSessions(): Promise<AuthSession[]>;
+  /** Cierra una sesión propia que no sea la actual. Solo con Supabase. */
+  revokeSession(id: Id): Promise<void>;
   /**
    * Segundo paso con TOTP (solo con Supabase). Hoy se exige únicamente en el cliente: el RLS no
    * pide aal2, así que un token aal1 aún puede llamar a la API REST (endurecer con aal2 queda
@@ -236,6 +241,7 @@ export interface NewExpenseInput {
   currency: Expense["currency"];
   concept: string;
   category: Expense["category"];
+  /** Comprobante como data URL (jpeg, png, webp o pdf); `null` si no hay. */
   receiptUrl: string | null;
   beforeSigning?: boolean;
 }
@@ -247,6 +253,8 @@ export interface ExpenseService {
   vote(expenseId: Id, inFavor: boolean): Promise<Expense>;
   void(id: Id, reason: string): Promise<Expense>;
   listRecurring(): Promise<RecurringExpense[]>;
+  /** Dirección para mostrar el comprobante (data URL en el mock, URL firmada en Supabase). */
+  getReceiptUrl(expenseId: Id): Promise<string | null>;
 }
 
 export interface DashboardService {

@@ -50,8 +50,7 @@ function ChatEntry({ user }: { user: Profile }) {
   // Read through a ref so a members refresh never re-runs the incoming-message effect.
   const membersRef = useRef<Profile[]>([]);
   membersRef.current = useMembers().data ?? [];
-  // Until the settings load nobody is shown as online.
-  const online = useChatPresence(settings?.presence ?? false);
+  const online = useChatPresence();
   // Null until the first load, so history is never announced as new.
   const previousIds = useRef<Set<string> | null>(null);
   const unread = countUnread(threads.data ?? [], user.id);

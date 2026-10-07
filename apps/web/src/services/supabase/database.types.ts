@@ -959,6 +959,11 @@ isOneToOne: false
 "is_project_member":
 { Args: { "p_project": string }; Returns: boolean
                            },
+"list_my_sessions":
+{ Args: Record<PropertyKey, never>; Returns: {
+              "aal": string,"created_at": string,"id": string,"is_current": boolean,"updated_at": string,"user_agent": string
+            }[]
+                           },
 "mark_all_notifications_read":
 { Args: Record<PropertyKey, never>; Returns: number
                            },
@@ -1093,6 +1098,9 @@ isOneToOne: false
         isOneToOne: true
         isSetofReturn: false
       } },
+"revoke_my_session":
+{ Args: { "p_id": string }; Returns: undefined
+                           },
 "set_hours_participants":
 { Args: { "p_entry": string,"p_participants": Json }; Returns: {
               "allocations": Json | null,

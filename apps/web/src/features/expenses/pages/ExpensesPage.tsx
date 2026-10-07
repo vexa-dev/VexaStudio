@@ -14,10 +14,26 @@ import type { Expense, ExpenseStatus } from "@vexa/domain/types";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { PageHeader } from "@/components/ui/PageHeader";
 
+import { useAuth } from "@/features/auth/hooks/useAuth";
+import { isSupabaseSource } from "@/services/supabase/data-source";
+import { Button } from "@/components/ui/Button";
+import { useExpenseMutations } from "../hooks/useExpenseMutations";
+import { CreateExpenseSheet } from "../components/CreateExpenseSheet";
+import { ExpenseActions } from "../components/ExpenseActions";
+import { ExpenseReceipt } from "../components/ExpenseReceipt";
+import {
+  canCreateExpense,
+  expenseCategories,
+  selectedExpense,
+} from "../expense-actions";
 import { ChoicePicker } from "@/components/ui/ChoicePicker";
 
 export default function ExpensesPage() {
   const overview = useExpenseOverview();
+  const { user } = useAuth();
+  const mutations = useExpenseMutations();
+  const [creating, setCreating] = useState(false);
+  const source = isSupabaseSource() ? "supabase" : "mock";
   const members = useMembers();
   const [searchParams, setSearchParams] = useSearchParams();
   const data = {
@@ -29,10 +45,7 @@ export default function ExpensesPage() {
   const [filter, setFilter] = useState<ExpenseStatus | "all">(
     searchParams.get("filter") === "pending" ? "pending" : "all",
   );
-  const selected =
-    data.expenses.find(
-      (expense) => expense.id === searchParams.get("expense"),
-    ) ?? null;
+  const selected = selectedExpense(data.expenses, searchParams.get("expense"));
   const setSelected = (expense: Expense | null) => {
     const next = new URLSearchParams(searchParams);
     if (expense) next.set("expense", expense.id);
@@ -45,13 +58,7 @@ export default function ExpensesPage() {
     rejected: "Rechazado",
     voided: "Anulado",
   };
-  const categories = {
-    infrastructure: "Infraestructura",
-    software: "Software",
-    marketing: "Marketing",
-    legal: "Legal",
-    other: "Otro",
-  };
+  const categories = expenseCategories;
   const expenses = data.expenses.filter(
     (expense) => filter === "all" || expense.status === filter,
   );
@@ -61,7 +68,10 @@ export default function ExpensesPage() {
   const votes = selected
     ? data.expenseVotes.filter((vote) => vote.expenseId === selected.id)
     : [];
-  if (overview.isError || members.isError)
+  if (
+    (overview.isError && !overview.data) ||
+    (members.isError && !members.data)
+  )
     return (
       <ErrorState
         message="No se pudo cargar el resumen de gastos."
@@ -83,7 +93,21 @@ export default function ExpensesPage() {
       <PageHeader
         title="Gastos"
         description="Cada aporte, a la vista. Claridad para decidir en equipo."
-        actions={<Badge>Vista con datos de ejemplo</Badge>}
+        actions={
+          <div className="flex flex-wrap items-center gap-2">
+            <Badge>
+              {source === "mock" ? "Datos de ejemplo" : "Datos del estudio"}
+            </Badge>
+            {canCreateExpense(user) && (
+              <Button
+                disabled={mutations.isPending}
+                onClick={() => setCreating(true)}
+              >
+                Registrar gasto
+              </Button>
+            )}
+          </div>
+        }
       />
       <div className="mb-6 grid gap-4 sm:grid-cols-3">
         {(["PEN", "USD"] as const).map((currency) => (
@@ -187,15 +211,35 @@ export default function ExpensesPage() {
           </ul>
         )}
       </Card>
-      <p className="mt-4 text-xs text-muted">
-        Vista de ejemplo: aquí puedes consultar y filtrar, sin crear gastos ni
-        emitir votos.
-      </p>
+      {(overview.isError || members.isError) && (
+        <div role="alert" className="mt-4 text-sm text-danger">
+          No se pudo actualizar el resumen.{" "}
+          <Button
+            variant="ghost"
+            onClick={() => {
+              void overview.refetch();
+              void members.refetch();
+            }}
+          >
+            Reintentar
+          </Button>
+        </div>
+      )}
+      <CreateExpenseSheet
+        open={creating}
+        onClose={() => setCreating(false)}
+        pending={mutations.isPending}
+        allowed={canCreateExpense(user)}
+        source={source}
+        onCreate={(draft) => mutations.execute({ kind: "create", draft })}
+      />
       <Sheet
         open={Boolean(selected)}
-        onClose={() => setSelected(null)}
+        onClose={() => {
+          if (!mutations.isPending) setSelected(null);
+        }}
         title={selected?.concept ?? "Detalle del gasto"}
-        description="Información simulada del aporte al estudio"
+        description="Información del aporte al estudio"
       >
         {selected && (
           <div className="grid gap-5">
@@ -231,9 +275,11 @@ export default function ExpensesPage() {
               <div>
                 <dt>Comprobante</dt>
                 <dd>
-                  {selected.receiptUrl
-                    ? "Adjunto de ejemplo"
-                    : "Sin comprobante adjunto"}
+                  {selected.receiptUrl ? (
+                    <ExpenseReceipt key={selected.id} expenseId={selected.id} />
+                  ) : (
+                    "Sin comprobante adjunto"
+                  )}
                 </dd>
               </div>
             </dl>
@@ -261,10 +307,18 @@ export default function ExpensesPage() {
                 </ul>
               ) : (
                 <p className="text-sm text-muted">
-                  Todavía no hay votos en este ejemplo.
+                  Todavía no hay votos en este gasto.
                 </p>
               )}
             </div>
+            <ExpenseActions
+              key={selected.id}
+              expense={selected}
+              votes={votes}
+              user={user}
+              pending={mutations.isPending}
+              onAction={mutations.execute}
+            />
           </div>
         )}
       </Sheet>

@@ -128,6 +128,9 @@ const CANONICAL_MESSAGES = [
   "El nombre debe tener de 1 a 80 caracteres",
   "El usuario debe tener de 3 a 30 caracteres: letras, números, punto o guion bajo",
   "La biografía puede tener hasta 280 caracteres",
+  "Debes iniciar sesión.",
+  "No puedes cerrar la sesión de este dispositivo desde aquí.",
+  "No se encontró esa sesión.",
 ];
 
 const fold = (text: string) =>
@@ -137,6 +140,9 @@ const CANONICAL = new Map(CANONICAL_MESSAGES.map((m) => [fold(m), m]));
 
 /** Restricciones de la base con su mensaje para la persona usuaria. */
 const CONSTRAINT_MESSAGES: Record<string, string> = {
+  expense_votes_pkey: "Ya votaste en este gasto",
+  expenses_amount_check: "El monto debe ser mayor a cero",
+  expenses_concept_check: "Escribe el concepto del gasto",
   chat_preferences_wallpaper_path_owner_check:
     "La imagen debe estar en tu carpeta",
   chat_messages_body_len_check: "El mensaje puede tener hasta 4000 caracteres.",

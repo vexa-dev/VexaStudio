@@ -3,7 +3,7 @@
 -- proyecto 1). Proyectos: 1 Vexa Studio, 2 Fivuza, 3 Vantage.
 begin;
 create extension if not exists pgtap with schema extensions;
-select plan(114);
+select plan(115);
 
 create function pg_temp.uid(p_name text) returns uuid language sql immutable as $$
   select ('00000000-0000-4000-8000-00000000000' || case p_name
@@ -130,12 +130,14 @@ select is((select count(*)::int from public.chat_preferences), 0, '9a: sin fila 
 
 -- ================================================================ 9b: un parche conserva el resto
 select pg_temp.as_user('rober');
-select lives_ok(format($$update public.chat_status set presence = false, current_project_id = %L
-  where user_id = auth.uid()$$, pg_temp.pid(2)), 'rober apaga su presencia y elige Fivuza');
+select throws_ok($$update public.chat_status set presence = false where user_id = auth.uid()$$,
+  '23514', null, 'la presencia no se puede apagar (siempre activa)');
+select lives_ok(format($$update public.chat_status set current_project_id = %L
+  where user_id = auth.uid()$$, pg_temp.pid(2)), 'rober elige Fivuza');
 select lives_ok($$update public.chat_status set status = 'En reunion' where user_id = auth.uid()$$,
   'rober cambia solo el estado');
 select is((select (status, presence, current_project_id)::text from public.chat_status
-  where user_id = pg_temp.uid('rober')), format('("En reunion",f,%s)', pg_temp.pid(2)),
+  where user_id = pg_temp.uid('rober')), format('("En reunion",t,%s)', pg_temp.pid(2)),
   '9b: cambiar el estado conserva presencia y proyecto');
 select pg_temp.as_user('alex');
 select lives_ok($$update public.chat_preferences set sound = 'bell' where user_id = auth.uid()$$, 'alex elige otro sonido');
@@ -280,8 +282,8 @@ select lives_ok(format($$insert into public.chat_preferences (user_id, sound) va
 
 -- 10: la presencia es una columna que los demas pueden leer.
 select pg_temp.as_user('alex');
-select is((select presence from public.chat_status where user_id = pg_temp.uid('rober')), false,
-  '10: los demas leen que rober oculta su presencia');
+select is((select presence from public.chat_status where user_id = pg_temp.uid('rober')), true,
+  '10: los demas leen que rober tiene la presencia activa (no se puede ocultar)');
 select is((select presence from public.chat_status where user_id = pg_temp.uid('diego')), true,
   '10: y que diego la tiene activada');
 select is((select count(*)::int from public.chat_status), 5, 'cualquier miembro activo lee el estado de todos');

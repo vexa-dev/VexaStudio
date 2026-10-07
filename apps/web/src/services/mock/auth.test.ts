@@ -75,6 +75,8 @@ describe("funciones solo de Supabase (mock)", () => {
   it.each([
     ["updatePassword", () => services.auth.updatePassword({ currentPassword: "a", newPassword: "b" })],
     ["signOutOthers", () => services.auth.signOutOthers()],
+    ["listSessions", () => services.auth.listSessions()],
+    ["revokeSession", () => services.auth.revokeSession("s")],
     ["listMfaFactors", () => services.auth.listMfaFactors()],
     ["enrollMfa", () => services.auth.enrollMfa()],
     ["verifyMfaEnrollment", () => services.auth.verifyMfaEnrollment("f", "123456")],

@@ -46,6 +46,17 @@ export interface MfaFactor {
   createdAt: IsoDateTime;
 }
 
+/** Sesión activa de la persona: dispositivo, última actividad y si es la de este navegador. Sin IP. */
+export interface AuthSession {
+  id: Id;
+  createdAt: IsoDateTime;
+  /** Última actividad. */
+  lastActiveAt: IsoDateTime;
+  userAgent: string | null;
+  aal: "aal1" | "aal2";
+  isCurrent: boolean;
+}
+
 /** Alta de un factor TOTP: la persona escanea el QR (o escribe el secreto) y confirma con un código. */
 export interface MfaEnrollment {
   factorId: Id;

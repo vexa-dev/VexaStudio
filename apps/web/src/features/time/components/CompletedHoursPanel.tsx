@@ -40,8 +40,7 @@ export function CompletedHoursPanel() {
         <div>
           <h2>Pendientes de registrar</h2>
           <p className="hours-help">
-            Tareas terminadas y sesiones medidas. Selecciona varias y confirma
-            el tiempo real.
+            Selecciona las que quieras y confirma el tiempo real.
           </p>
         </div>
         <CheckCheck size={20} className="text-primary-text" />
@@ -177,8 +176,7 @@ export function CompletedHoursPanel() {
                 }}
               />
               <p className="hours-help">
-                El total se reparte entre las tareas seleccionadas. Puedes
-                ajustar cada una arriba.
+                El total se reparte entre las tareas seleccionadas.
               </p>
               <DatePicker
                 label="Fecha de trabajo"

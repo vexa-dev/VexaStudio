@@ -43,6 +43,7 @@ export function chatSettingsFor(
   return {
     ...defaultChatSettings,
     ...stored,
+    presence: true,
     wallpaper: normalizeWallpaper(stored.wallpaper),
     currentProjectId: normalizeProjectId(stored.currentProjectId),
   };
@@ -57,6 +58,8 @@ export function patchChatSettings(
   next.wallpaper = normalizeWallpaper(next.wallpaper);
   next.currentProjectId = normalizeProjectId(next.currentProjectId);
   next.status = next.status.slice(0, STATUS_MAX_LENGTH);
+  // Presence is always on: the column stays for compatibility but cannot be switched off.
+  next.presence = true;
   store.settings[userId] = next;
 }
 /** Reads the persisted store; falls back to an empty one when unavailable. */

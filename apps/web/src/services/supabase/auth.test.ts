@@ -344,6 +344,51 @@ describe("signOutOthers", () => {
   });
 });
 
+describe("sesiones", () => {
+  it("lista las sesiones sin IP, con la actual marcada", async () => {
+    const { client, rpc } = richClient({
+      rpcRow: [
+        {
+          id: "s1",
+          created_at: "2026-10-06T10:00:00+00:00",
+          updated_at: "2026-10-06T12:30:00+00:00",
+          user_agent: "Mozilla/5.0 (Macintosh) Chrome/120.0",
+          aal: "aal2",
+          is_current: true,
+        },
+      ] as unknown as Record<string, unknown>,
+    });
+    const sessions = await createAuthService(client).listSessions();
+    expect(rpc).toHaveBeenCalledWith("list_my_sessions");
+    expect(sessions).toEqual([
+      {
+        id: "s1",
+        createdAt: "2026-10-06T10:00:00.000Z",
+        lastActiveAt: "2026-10-06T12:30:00.000Z",
+        userAgent: "Mozilla/5.0 (Macintosh) Chrome/120.0",
+        aal: "aal2",
+        isCurrent: true,
+      },
+    ]);
+  });
+
+  it("cierra una sesión por id", async () => {
+    const { client, rpc } = richClient({ rpcRow: null });
+    await createAuthService(client).revokeSession("s2");
+    expect(rpc).toHaveBeenCalledWith("revoke_my_session", { p_id: "s2" });
+  });
+
+  it("traduce el error de la base al español", async () => {
+    const { client } = richClient({
+      rpcRow: null,
+      rpcError: { message: "No se encontró esa sesión.", code: "P0002" },
+    });
+    await expect(createAuthService(client).revokeSession("x")).rejects.toThrow(
+      "No se encontró esa sesión.",
+    );
+  });
+});
+
 describe("segundo paso (TOTP)", () => {
   it("lista solo los factores TOTP con su estado", async () => {
     const { client } = richClient({

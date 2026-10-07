@@ -2,16 +2,14 @@ import type { HoursParticipantInput } from "@vexa/services";
 import { formatHours } from "@vexa/domain/format";
 import { participantsSchema } from "./schemas";
 
-/** `2 h al 75 % = 1.5 h para Rober`; without hours yet, only the share. */
-export function creditExample(
+/** Neutral line per tagged person (`= 1.5 h`); empty until the hours are known. */
+export function creditHint(
   hours: number | undefined,
   sharePercent: number,
-  name: string,
 ): string {
   if (!Number.isFinite(sharePercent)) return "";
-  if (!hours || !Number.isFinite(hours) || hours <= 0)
-    return `${sharePercent} % de las horas para ${name}`;
-  return `${formatHours(hours)} al ${sharePercent} % = ${formatHours((hours * sharePercent) / 100)} para ${name}`;
+  if (!hours || !Number.isFinite(hours) || hours <= 0) return "";
+  return `= ${formatHours((hours * sharePercent) / 100)}`;
 }
 
 /** Error message per row (by index) plus a list-level one, empty when the tags are valid. */
