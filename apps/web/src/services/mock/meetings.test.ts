@@ -89,6 +89,7 @@ describe("mock meetings", () => {
   it("marks attendance only by the admin, only after the slot started and only for studio members", async () => {
     setSessionUserId("u-jhony");
     const { meeting, slots } = (await services.meetings.getCurrent())!;
+    getDb().meetingSlots.find((s) => s.id === slots[0].id)!.startsAt = new Date(Date.now() + HOUR).toISOString();
     await services.meetings.confirm(meeting.id, slots[0].id, "https://meet.google.com/abc-defg-hij");
     await expect(services.meetings.markAttendance(meeting.id, ["u-jhony"])).rejects.toThrow("ya empezó");
     getDb().meetingSlots.find((s) => s.id === slots[0].id)!.startsAt = new Date(Date.now() - HOUR).toISOString();

@@ -2,6 +2,7 @@ import { canAccessStudio } from "@vexa/domain/access";
 import type { Role } from "@vexa/domain/types";
 import {
   Clock,
+  CalendarDays,
   History,
   Sun,
   FolderKanban,
@@ -26,6 +27,7 @@ export const navItems: NavItem[] = [
   { to: "/proyectos", label: "Proyectos", icon: FolderKanban, mobile: true },
   { to: "/tareas", label: "Mis tareas", icon: ListChecks, mobile: true },
   { to: "/horas", label: "Horas", icon: Clock, mobile: true },
+  { to: "/reuniones", label: "Reuniones", icon: CalendarDays, mobile: false },
   { to: "/gastos", label: "Gastos", icon: Wallet, mobile: true },
   { to: "/equipo", label: "Equipo", icon: Users, mobile: false },
   { to: "/actividad", label: "Actividad", icon: History, mobile: false },
@@ -33,7 +35,7 @@ export const navItems: NavItem[] = [
 
 export function navigationFor(role: Role | undefined) {
   return navItems.filter((item) =>
-    item.to === "/gastos"
+    ["/gastos", "/reuniones"].includes(item.to)
       ? role === "admin"
       : !["/equipo", "/actividad"].includes(item.to) || canAccessStudio(role),
   );

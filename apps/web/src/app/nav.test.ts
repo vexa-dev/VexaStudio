@@ -20,6 +20,8 @@ describe("role navigation", () => {
         expect.arrayContaining(["/equipo"]),
       );
     expect(navigationFor("admin").map((item) => item.to)).toContain("/gastos");
+    expect(navigationFor("admin").map((item) => item.to)).toContain("/reuniones");
+    expect(navigationFor("partner").map((item) => item.to)).not.toContain("/reuniones");
     expect(navigationFor("partner").map((item) => item.to)).not.toContain(
       "/gastos",
     );
