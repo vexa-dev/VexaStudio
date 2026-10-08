@@ -7,6 +7,8 @@ import {
   History,
   ChartNoAxesColumn,
   CheckCheck,
+  Lightbulb,
+  ArrowUpRight,
 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
@@ -30,9 +32,10 @@ import {
   todayLima,
   formatDate,
   formatDateTime,
+  weekRange,
 } from "@vexa/domain/dates";
 import { formatHours } from "@vexa/domain/format";
-import { EntryFormSheet } from "../components/EntryFormSheet";
+import { EntryFormSheet, InlineEntryForm } from "../components/EntryFormSheet";
 import { VoidEntrySheet } from "../components/VoidEntrySheet";
 import { EntityHistoryToggle } from "@/features/activity/components/EntityHistory";
 import {
@@ -142,6 +145,48 @@ export default function TimePage() {
     b.startedAt.localeCompare(a.startedAt),
   );
   const statistics = creditedActivity(history.data ?? [], userId, month);
+  const week = weekRange(reference);
+  const weeklyEntries = mine.filter(
+    (entry) =>
+      entry.endedAt &&
+      !entry.voidedAt &&
+      creditedHours(entry, userId) > 0 &&
+      new Date(entry.startedAt) >= week.start &&
+      new Date(entry.startedAt) <= week.end,
+  );
+  const weeklyHours = weeklyEntries.reduce(
+    (sum, entry) => sum + creditedHours(entry, userId),
+    0,
+  );
+  const approvedWeeklyHours = weeklyEntries
+    .filter((entry) => entry.validated)
+    .reduce((sum, entry) => sum + creditedHours(entry, userId), 0);
+  const todayHours = weeklyEntries
+    .filter(
+      (entry) => todayLima(new Date(entry.startedAt)) === todayLima(reference),
+    )
+    .reduce((sum, entry) => sum + creditedHours(entry, userId), 0);
+  const recordedDays = new Set(
+    weeklyEntries.map((entry) => todayLima(new Date(entry.startedAt))),
+  ).size;
+  const hoursTip =
+    weeklyHours === 0
+      ? {
+          title: "Cada avance cuenta",
+          text: "Registra una actividad y su tiempo real. Cada avance cuenta.",
+          action: "Registrar mi primera actividad",
+        }
+      : todayHours === 0
+        ? {
+            title: "Registra al terminar",
+            text: "Anota el tiempo y el resultado al terminar: recordarás mejor los detalles.",
+            action: "Registrar el trabajo de hoy",
+          }
+        : {
+            title: "Dale contexto a tus horas",
+            text: "Cuenta el resultado, además de la actividad. Un registro claro facilita la revisión del equipo.",
+            action: "Añadir otra actividad",
+          };
   const editing = history.data?.find((e) => e.id === editingId);
   const title = (entry: TimeEntry) =>
     entry.description ||
@@ -155,6 +200,17 @@ export default function TimePage() {
           ? tasks.data?.find((t) => t.id === entry.taskId)?.projectId
           : entry.projectId),
     )?.name || "Trabajo del estudio";
+  const weeklyProjects = Array.from(
+    weeklyEntries.reduce((totals, entry) => {
+      const label = projectName(entry);
+      totals.set(
+        label,
+        (totals.get(label) ?? 0) + creditedHours(entry, userId),
+      );
+      return totals;
+    }, new Map<string, number>()),
+  ).sort((a, b) => b[1] - a[1]);
+  const latestEntry = mine.find((entry) => !entry.voidedAt && entry.endedAt);
   const name = (id?: string | null) =>
     members.data?.find((m) => m.id === id)?.name ?? "Socio";
   const status = (e: TimeEntry) =>
@@ -311,13 +367,20 @@ export default function TimePage() {
     </div>
   );
   return (
-    <div className="hours-workspace">
+    <div className="hours-workspace" data-hours-view={selected}>
       <header className="hours-page-header">
         <div>
           <h1>Horas</h1>
           <p>Registra tu trabajo y consulta tu avance.</p>
         </div>
-        <Button aria-label="Registrar horas" onClick={() => openForm()}>
+        <Button
+          aria-label="Registrar horas"
+          onClick={() =>
+            selected === "registro"
+              ? document.getElementById("hours-manual-activity")?.focus()
+              : openForm()
+          }
+        >
           <Plus size={18} aria-hidden="true" />
           <span>Registrar horas</span>
         </Button>
@@ -348,54 +411,165 @@ export default function TimePage() {
           onRetry={() => history.refetch()}
         />
       ) : (
-        <>
+        <div
+          className={
+            selected === "registro"
+              ? "hours-register-layout"
+              : "hours-secondary-view"
+          }
+        >
           {selected === "registro" ? (
             <>
-              <div className="hours-register-grid">
+              <div className="hours-register-top">
                 <CompletedHoursPanel />
+                <Card className="hours-week-status">
+                  <span className="hours-week-period">
+                    {formatDate(week.start).slice(0, 5)} —{" "}
+                    {formatDate(week.end).slice(0, 5)}
+                  </span>
+                  <div className="hours-week-status-heading">
+                    <h2>Tu semana en horas</h2>
+                    <span>{weeklyEntries.length} registros</span>
+                  </div>
+                  <strong className="hours-week-status-total num">
+                    {formatHours(weeklyHours)}
+                  </strong>
+                  <span className="hours-week-status-caption">
+                    Registradas esta semana
+                  </span>
+                  <div className="hours-week-status-breakdown">
+                    <span>
+                      Aprobadas{" "}
+                      <b className="num">{formatHours(approvedWeeklyHours)}</b>
+                    </span>
+                    <span>
+                      Por revisar{" "}
+                      <b className="num">
+                        {formatHours(
+                          Math.max(0, weeklyHours - approvedWeeklyHours),
+                        )}
+                      </b>
+                    </span>
+                  </div>
+                  <section className="hours-week-projects">
+                    <h3>En qué trabajaste</h3>
+                    {weeklyProjects.length ? (
+                      weeklyProjects.slice(0, 3).map(([label, hours]) => (
+                        <div className="hours-week-project" key={label}>
+                          <span>{label}</span>
+                          <strong className="num">{formatHours(hours)}</strong>
+                        </div>
+                      ))
+                    ) : (
+                      <p>
+                        Los proyectos aparecerán aquí cuando registres tu
+                        trabajo de esta semana.
+                      </p>
+                    )}
+                    <div className="hours-week-personal">
+                      <div>
+                        <span>Hoy</span>
+                        <strong className="num">
+                          {formatHours(todayHours)}
+                        </strong>
+                      </div>
+                      <div>
+                        <span>Días con registro</span>
+                        <strong className="num">
+                          {recordedDays}
+                          <small> / 7</small>
+                        </strong>
+                      </div>
+                    </div>
+                  </section>
+                  <section
+                    className="hours-week-tip"
+                    aria-label="Consejo para tus registros"
+                  >
+                    <Lightbulb size={17} aria-hidden="true" />
+                    <div>
+                      <span>CONSEJO PARA HOY</span>
+                      <h3>{hoursTip.title}</h3>
+                      <p>{hoursTip.text}</p>
+                      <button
+                        type="button"
+                        onClick={() =>
+                          document
+                            .getElementById("hours-manual-activity")
+                            ?.focus()
+                        }
+                      >
+                        {hoursTip.action}{" "}
+                        <ArrowUpRight size={12} aria-hidden="true" />
+                      </button>
+                    </div>
+                  </section>
+                  <section className="hours-latest-summary">
+                    <span>Último registro</span>
+                    {latestEntry ? (
+                      <>
+                        <strong>{title(latestEntry)}</strong>
+                        <p>
+                          {formatDate(latestEntry.startedAt)} ·{" "}
+                          {formatHours(creditedHours(latestEntry, userId))}
+                        </p>
+                      </>
+                    ) : (
+                      <p>Aún no has registrado una actividad.</p>
+                    )}
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setParams({ vista: "resumen" })}
+                    >
+                      Ver resumen completo
+                    </Button>
+                  </section>
+                </Card>
+              </div>
+              <aside
+                className="hours-register-sidebar"
+                aria-label="Registro manual de horas"
+              >
                 <Card className="hours-manual-card">
                   <div className="hours-manual-heading">
                     <span className="hours-manual-icon">
                       <Plus size={20} aria-hidden="true" />
                     </span>
                     <div>
-                      <span className="hours-eyebrow">Sin temporizador</span>
+                      <span className="hours-eyebrow">Registro manual</span>
                       <h2>Registra trabajo terminado</h2>
                     </div>
                   </div>
-                  <p>
-                    Agrega una actividad que ya realizaste. Solo necesitas el
-                    horario y un breve resumen.
-                  </p>
-                  <div className="hours-manual-steps">
-                    <span>01 · Fecha y tiempo</span>
-                    <span>02 · Qué avanzaste</span>
-                    <span>03 · Respaldo opcional</span>
-                  </div>
-                  <Button variant="secondary" onClick={() => openForm()}>
-                    Registrar a mano <Plus size={15} aria-hidden="true" />
-                  </Button>
+                  <InlineEntryForm />
                 </Card>
-              </div>
-              <div className="hours-section-heading">
-                <h2>Registros recientes</h2>
-                <Button
-                  variant="ghost"
-                  onClick={() => setParams({ vista: "historial" })}
+              </aside>
+              <Card className="hours-recent-card">
+                <div className="hours-section-heading">
+                  <h2>Registros recientes</h2>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setParams({ vista: "historial" })}
+                  >
+                    Ver historial
+                  </Button>
+                </div>
+                <div
+                  className="hours-recent-fixed"
+                  role="region"
+                  aria-label="Registros recientes"
                 >
-                  Ver historial
-                </Button>
-              </div>
-              <Card>
-                {mine.length ? (
-                  list(mine.slice(0, 5))
-                ) : (
-                  <EmptyState
-                    icon={Clock3}
-                    title="Tu primer registro empieza aquí"
-                    description="Inicia una sesión o registra una actividad que ya terminaste."
-                  />
-                )}
+                  {mine.length ? (
+                    list(mine.slice(0, 5))
+                  ) : (
+                    <EmptyState
+                      icon={Clock3}
+                      title="Tu primer registro empieza aquí"
+                      description="Registra una actividad que ya terminaste para ver tus horas."
+                    />
+                  )}
+                </div>
               </Card>
             </>
           ) : null}
@@ -591,7 +765,7 @@ export default function TimePage() {
               </Card>
             </>
           ) : null}
-        </>
+        </div>
       )}
       <EntryFormSheet
         key={editingId ?? "new"}

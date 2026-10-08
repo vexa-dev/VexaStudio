@@ -18,26 +18,34 @@ import {
 } from "../hooks/useTime";
 import { toast } from "sonner";
 
-const ACCEPT = ".png,.jpg,.jpeg,.webp,.gif,.pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.zip,.txt,.csv";
+const ACCEPT =
+  ".png,.jpg,.jpeg,.webp,.gif,.pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.zip,.txt,.csv";
 
 /** File picker that validates before handing the files over; also usable for files queued before the entry exists. */
 export function EvidencePicker({
   existing,
   busy = false,
   onFiles,
+  compact = false,
 }: {
   /** Files already stored or queued, to enforce the cap. */
   existing: number;
   busy?: boolean;
   onFiles: (files: File[]) => void;
+  compact?: boolean;
 }) {
   const id = useId();
   const input = useRef<HTMLInputElement>(null);
   const full = existing >= EVIDENCE_MAX_FILES;
   const limit = evidenceMaxBytes();
   return (
-    <div className="flex flex-col gap-1.5">
-      <label htmlFor={id} className="text-sm font-medium">
+    <div
+      className={compact ? "hours-evidence-picker" : "flex flex-col gap-1.5"}
+    >
+      <label
+        htmlFor={id}
+        className={compact ? "sr-only" : "text-sm font-medium"}
+      >
         Adjuntar archivos
       </label>
       <input
@@ -48,16 +56,39 @@ export function EvidencePicker({
         accept={ACCEPT}
         disabled={busy || full}
         aria-describedby={`${id}-hint`}
-        className="min-h-11 w-full rounded-lg border border-dashed border-[var(--control-border)] bg-[var(--input)] px-3 py-2 text-sm text-muted file:mr-3 file:rounded-md file:border-0 file:bg-surface-2 file:px-3 file:py-2 file:text-fg disabled:opacity-60"
+        className={
+          compact
+            ? "sr-only"
+            : "min-h-11 w-full rounded-lg border border-dashed border-[var(--control-border)] bg-[var(--input)] px-3 py-2 text-sm text-muted file:mr-3 file:rounded-md file:border-0 file:bg-surface-2 file:px-3 file:py-2 file:text-fg disabled:opacity-60"
+        }
         onChange={(e) => {
           const picked = Array.from(e.target.files ?? []);
           e.target.value = "";
           if (!picked.length) return;
-          const { accepted, errors } = pickEvidenceFiles(picked, existing, limit);
+          const { accepted, errors } = pickEvidenceFiles(
+            picked,
+            existing,
+            limit,
+          );
           for (const message of errors) toast.error(message);
           if (accepted.length) onFiles(accepted);
         }}
       />
+      {compact && (
+        <Button
+          variant="secondary"
+          size="sm"
+          disabled={busy || full}
+          onClick={() => input.current?.click()}
+        >
+          <Paperclip size={14} /> Adjuntar evidencia{" "}
+          <span>
+            {existing > 0
+              ? `${existing}/${EVIDENCE_MAX_FILES}`
+              : `${EVIDENCE_MAX_FILES} archivos · ${formatBytes(limit)} c/u`}
+          </span>
+        </Button>
+      )}
       <p id={`${id}-hint`} className="text-xs text-muted">
         {full
           ? `Llegaste al máximo de ${EVIDENCE_MAX_FILES} archivos.`
@@ -98,7 +129,10 @@ export function EvidenceFiles({
       }
     }
     setUploading(0);
-    if (ok) toast.success(ok === 1 ? "Archivo adjuntado" : `${ok} archivos adjuntados`);
+    if (ok)
+      toast.success(
+        ok === 1 ? "Archivo adjuntado" : `${ok} archivos adjuntados`,
+      );
   }
 
   return (
@@ -113,9 +147,15 @@ export function EvidenceFiles({
                 key={file.id}
                 className="flex flex-wrap items-center gap-2 rounded-lg border border-border bg-surface-2 p-2.5"
               >
-                <FileText size={18} aria-hidden="true" className="shrink-0 text-muted" />
+                <FileText
+                  size={18}
+                  aria-hidden="true"
+                  className="shrink-0 text-muted"
+                />
                 <span className="min-w-0 flex-1 text-sm">
-                  <span className="block truncate font-medium">{file.name}</span>
+                  <span className="block truncate font-medium">
+                    {file.name}
+                  </span>
                   <span className="num text-xs text-muted">
                     {formatBytes(file.size)}
                     {state === "due" ? " · Se eliminarán pronto" : ""}
@@ -164,7 +204,8 @@ export function EvidenceFiles({
           />
           {uploading > 0 ? (
             <output className="text-sm text-muted">
-              Subiendo {uploading === 1 ? "1 archivo" : `${uploading} archivos`}…
+              Subiendo {uploading === 1 ? "1 archivo" : `${uploading} archivos`}
+              …
             </output>
           ) : null}
         </>

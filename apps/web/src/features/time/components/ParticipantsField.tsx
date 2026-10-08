@@ -16,6 +16,7 @@ interface ParticipantsFieldProps {
   /** Hours of the entry, to show what each person gets. */
   hours?: number;
   disabled?: boolean;
+  compact?: boolean;
 }
 
 /** Tag the members who helped and set which share of the hours counts for each one. */
@@ -25,6 +26,7 @@ export function ParticipantsField({
   onChange,
   hours,
   disabled = false,
+  compact = false,
 }: ParticipantsFieldProps) {
   const members = useMembers();
   const errors = participantErrors(ownerId, value);
@@ -33,15 +35,20 @@ export function ParticipantsField({
   const full = value.length >= MAX_PARTICIPANTS;
 
   return (
-    <fieldset className="flex flex-col gap-3" disabled={disabled}>
-      <legend className="text-sm font-medium">
+    <fieldset
+      className={compact ? "hours-collaborators" : "flex flex-col gap-3"}
+      disabled={disabled}
+    >
+      <legend className={compact ? "sr-only" : "text-sm font-medium"}>
         Personas que te ayudaron (opcional)
       </legend>
       <p className="text-sm text-muted">
-        Define qué porcentaje de las horas cuenta para cada persona. Tú
-        conservas el 100 %.
+        {compact
+          ? "¿Quién te ayudó? Tú conservas el 100 %."
+          : "Define qué porcentaje de las horas cuenta para cada persona. Tú conservas el 100 %."}
       </p>
       <ParticipantPicker
+        compact={compact}
         people={(members.data ?? []).filter(
           (m) => m.active && m.id !== ownerId,
         )}
@@ -73,7 +80,71 @@ export function ParticipantsField({
           {errors.list}
         </p>
       ) : null}
-      {value.length ? (
+      {compact && value.length > 0 && (
+        <div
+          className="hours-collaborator-bubbles"
+          aria-label="Colaboradores seleccionados"
+        >
+          {value.map((p, index) => {
+            const name = nameOf(p.userId);
+            const share = p.sharePercent ?? 100;
+            return (
+              <details className="hours-collaborator-bubble" key={p.userId}>
+                <summary
+                  aria-label={`Editar colaboración de ${name}`}
+                  title={name}
+                >
+                  <Avatar
+                    name={name}
+                    size="sm"
+                    src={
+                      members.data?.find((m) => m.id === p.userId)?.avatarUrl
+                    }
+                  />
+                </summary>
+                <div className="hours-collaborator-popover">
+                  <strong>{name}</strong>
+                  <Field
+                    label={`Porcentaje para ${name}`}
+                    type="number"
+                    min={1}
+                    max={100}
+                    value={Number.isNaN(share) ? "" : share}
+                    error={errors.rows[index]}
+                    hint={creditHint(hours, share)}
+                    onChange={(e) =>
+                      onChange(
+                        value.map((x) =>
+                          x.userId === p.userId
+                            ? {
+                                ...x,
+                                sharePercent:
+                                  e.target.value === ""
+                                    ? Number.NaN
+                                    : Number(e.target.value),
+                              }
+                            : x,
+                        ),
+                      )
+                    }
+                  />
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() =>
+                      onChange(value.filter((x) => x.userId !== p.userId))
+                    }
+                    aria-label={`Quitar a ${name}`}
+                  >
+                    <X size={14} /> Quitar
+                  </Button>
+                </div>
+              </details>
+            );
+          })}
+        </div>
+      )}
+      {!compact && value.length ? (
         <ul className="flex flex-col gap-3">
           {value.map((p, index) => {
             const share = p.sharePercent ?? 100;

@@ -20,12 +20,17 @@ import {
   useSetParticipants,
   useUpdateEntry,
 } from "../hooks/useTime";
-import { hasParticipantErrors, participantErrors, sameParticipants } from "../participants";
+import {
+  hasParticipantErrors,
+  participantErrors,
+  sameParticipants,
+} from "../participants";
 import { EVIDENCE_RETENTION_TEXT } from "../evidence-files";
 import { EvidenceFiles, EvidencePicker } from "./EvidenceFiles";
 import { ParticipantsField } from "./ParticipantsField";
 import { lastEndOnDate } from "../last-end";
 import { ClockTimeField } from "./ClockTimeField";
+import { DurationField } from "./DurationField";
 import { ChoicePicker, DatePicker } from "./TimePickers";
 import { entrySchema, type EntryFormValues } from "../schemas";
 
@@ -39,9 +44,11 @@ interface EntryFormSheetProps {
 function EntryForm({
   entry,
   onClose,
+  inline = false,
 }: {
   entry?: TimeEntry;
   onClose: () => void;
+  inline?: boolean;
 }) {
   const { user } = useAuth();
   const tasks = useTasks({ assigneeId: user?.id });
@@ -60,7 +67,7 @@ function EntryForm({
   );
   const [queued, setQueued] = useState<File[]>([]);
 
-  const { register, handleSubmit, formState, control } =
+  const { register, handleSubmit, formState, control, reset } =
     useForm<EntryFormValues>({
       resolver: zodResolver(entrySchema),
       defaultValues: {
@@ -167,10 +174,16 @@ function EntryForm({
           }
           if (uploaded)
             toast.success(
-              uploaded === 1 ? "Archivo adjuntado" : `${uploaded} archivos adjuntados`,
+              uploaded === 1
+                ? "Archivo adjuntado"
+                : `${uploaded} archivos adjuntados`,
             );
         }
-        onClose();
+        if (inline) {
+          reset();
+          setQueued([]);
+          setLocalParticipants([]);
+        } else onClose();
       } catch {
         /* El hook muestra el error y conserva el formulario. */
       }
@@ -182,6 +195,176 @@ function EntryForm({
     update.isPending ||
     setParticipants.isPending ||
     addEvidence.isPending;
+  if (inline)
+    return (
+      <form onSubmit={submit} noValidate className="hours-manual-inline">
+        <div className="hours-manual-fields">
+          <section className="hours-manual-section">
+            <h3>
+              <span>01</span> Actividad y tiempo
+            </h3>
+            <TextareaField
+              id="hours-manual-activity"
+              label="Actividad realizada"
+              placeholder="Describe lo que hiciste y el resultado…"
+              rows={2}
+              error={formState.errors.description?.message}
+              {...register("description")}
+            />
+            <div className="hours-manual-time-fields">
+              <div>
+                <Controller
+                  name="date"
+                  control={control}
+                  render={({ field }) => (
+                    <DatePicker
+                      label="Fecha"
+                      value={field.value}
+                      max={todayLima()}
+                      onChange={field.onChange}
+                    />
+                  )}
+                />
+                {formState.errors.date && (
+                  <p className="text-xs text-danger">
+                    {formState.errors.date.message}
+                  </p>
+                )}
+              </div>
+              <Controller
+                name="startTime"
+                control={control}
+                render={({ field }) => (
+                  <ClockTimeField
+                    label="Inicio · Lima"
+                    value={field.value}
+                    onChange={field.onChange}
+                    error={formState.errors.startTime?.message}
+                    date={watchedDate}
+                    hours={watchedHours}
+                    target={lastEnd}
+                    compact
+                  />
+                )}
+              />
+              <Controller
+                name="hours"
+                control={control}
+                render={({ field }) => (
+                  <DurationField
+                    value={field.value}
+                    onChange={field.onChange}
+                    error={formState.errors.hours?.message}
+                  />
+                )}
+              />
+            </div>
+          </section>
+          <section className="hours-manual-section">
+            <h3>
+              <span>02</span> Proyecto y tarea <small>Opcional</small>
+            </h3>
+            <div className="hours-manual-context-fields">
+              <Controller
+                name="projectId"
+                control={control}
+                render={({ field }) => (
+                  <ChoicePicker
+                    label="Proyecto"
+                    value={field.value}
+                    onChange={field.onChange}
+                    options={[
+                      { value: "", label: "Trabajo del estudio" },
+                      ...(projects.data ?? []).map((p) => ({
+                        value: p.id,
+                        label: p.name,
+                      })),
+                    ]}
+                  />
+                )}
+              />
+              <Controller
+                name="taskId"
+                control={control}
+                render={({ field }) => (
+                  <ChoicePicker
+                    label="Tarea"
+                    value={field.value}
+                    onChange={field.onChange}
+                    options={[
+                      { value: "", label: "Sin tarea asignada" },
+                      ...options.map((t) => ({
+                        value: t.id,
+                        label: `${projectName(t.projectId)} · ${t.title}`,
+                      })),
+                    ]}
+                  />
+                )}
+              />
+            </div>
+          </section>
+          {user && (
+            <section className="hours-manual-section">
+              <h3>
+                <span>03</span> Colaboración <small>Opcional</small>
+              </h3>
+              <ParticipantsField
+                compact
+                ownerId={user.id}
+                value={participants}
+                onChange={setLocalParticipants}
+                hours={Number.isFinite(watchedHours) ? watchedHours : undefined}
+                disabled={pending}
+              />
+            </section>
+          )}
+          <section className="hours-manual-section">
+            <h3>
+              <span>04</span> Evidencia <small>Opcional</small>
+            </h3>
+            <Field
+              label="Enlace"
+              type="url"
+              placeholder="https://…"
+              error={formState.errors.evidenceUrl?.message}
+              {...register("evidenceUrl")}
+            />
+            <EvidencePicker
+              compact
+              existing={queued.length}
+              busy={pending}
+              onFiles={(files) => setQueued((prev) => [...prev, ...files])}
+            />
+            <div className="hours-manual-attachments">
+              {queued.map((file, index) => (
+                <div
+                  key={`${file.name}-${index}`}
+                  className="hours-manual-attachment"
+                >
+                  <span>{file.name}</span>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    aria-label={`Quitar ${file.name}`}
+                    onClick={() =>
+                      setQueued((prev) => prev.filter((_, i) => i !== index))
+                    }
+                  >
+                    <X size={14} />
+                  </Button>
+                </div>
+              ))}
+            </div>
+          </section>
+        </div>
+        <div className="hours-manual-submit">
+          <span>Se enviará a revisión</span>
+          <Button type="submit" disabled={pending}>
+            {pending ? "Registrando…" : "Registrar actividad"}
+          </Button>
+        </div>
+      </form>
+    );
   return (
     <form onSubmit={submit} noValidate className="flex flex-col gap-3">
       <Controller
@@ -289,11 +472,7 @@ function EntryForm({
         />
       ) : null}
       {entry ? (
-        <EvidenceFiles
-          entryId={entry.id}
-          evidence={entry.evidence}
-          editable
-        />
+        <EvidenceFiles entryId={entry.id} evidence={entry.evidence} editable />
       ) : (
         <div className="flex flex-col gap-2">
           <EvidencePicker
@@ -342,6 +521,10 @@ function EntryForm({
       </div>
     </form>
   );
+}
+
+export function InlineEntryForm() {
+  return <EntryForm inline onClose={() => {}} />;
 }
 
 export function EntryFormSheet({ open, onClose, entry }: EntryFormSheetProps) {
