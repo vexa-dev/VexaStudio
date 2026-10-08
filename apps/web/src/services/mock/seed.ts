@@ -1,5 +1,10 @@
 import { todayLima, weekRange } from "@vexa/domain/dates";
-import type { Expense, ExpenseVote, Profile, TimeEntry } from "@vexa/domain/types";
+import type {
+  Expense,
+  ExpenseVote,
+  Profile,
+  TimeEntry,
+} from "@vexa/domain/types";
 import type { MockDb } from "./db";
 
 const HOUR_MS = 60 * 60 * 1000;
@@ -11,6 +16,38 @@ export const USER = {
   jose: "u-jose",
   diego: "u-diego",
 } as const;
+
+export function buildDayPlanningTasks(): MockDb["tasks"] {
+  return [
+    {
+      id: "t-day-proposal",
+      title: "Revisar propuesta para el cliente",
+      estimateHours: 2,
+    },
+    {
+      id: "t-day-presentation",
+      title: "Preparar presentación del proyecto",
+      estimateHours: 3,
+    },
+    {
+      id: "t-day-budget",
+      title: "Actualizar presupuesto de la semana",
+      estimateHours: 1,
+    },
+    {
+      id: "t-day-deliverables",
+      title: "Organizar entregables del equipo",
+      estimateHours: 2,
+    },
+  ].map((task) => ({
+    ...task,
+    projectId: "p-vexa",
+    sprintId: null,
+    assigneeId: USER.jhony,
+    status: "todo",
+    link: null,
+  }));
+}
 
 const PROFILES: Profile[] = [
   {
@@ -338,7 +375,8 @@ export function buildSeed(now: Date): MockDb {
         status: "active",
       },
     ],
-    tasks,
+    tasks: [...buildDayPlanningTasks(), ...tasks],
+    dayPlanningTasksSeeded: true,
     timeEntries,
     expenses,
     expenseVotes,

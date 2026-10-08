@@ -68,74 +68,103 @@ export function DayFocus({ userId }: { userId: string }) {
     <Card className="day-focus-card" data-mode={session.mode}>
       <div className="day-card-title">
         <h2>
-          <Target size={18} /> Concentración
+          <Target size={18} /> Pomodoro
         </h2>
-        <span className="day-note">Personal</span>
-      </div>
-      <div className="day-focus-tools">
-        <div className="day-focus-modes">
-          <button
-            aria-pressed={session.mode === "focus"}
-            onClick={() => reset("focus")}
-          >
-            <Target size={14} /> Foco
-          </button>
-          <button
-            aria-pressed={session.mode === "break"}
-            onClick={() => reset("break")}
-          >
-            <Coffee size={14} /> Descanso
-          </button>
-        </div>
         <ChoicePicker
           label="Duración"
           hideLabel
           value={String(session.minutes)}
           options={(session.mode === "focus" ? [15, 25, 50] : [5, 10]).map(
-            (n) => ({ value: String(n), label: `${n} min` }),
+            (n) => ({ value: String(n), label: String(n) + " min" }),
           )}
           onChange={(value) => reset(session.mode, Number(value))}
         />
       </div>
-      <div className="day-focus-display">
-        <span
-          role="timer"
-          aria-label={
-            session.mode === "focus"
-              ? "Tiempo de concentración"
-              : "Tiempo de descanso"
-          }
-        >
-          {String(Math.floor(seconds / 60)).padStart(2, "0")}
-          <span>:</span>
-          {String(seconds % 60).padStart(2, "0")}
-        </span>
-        <p>
-          {session.completed
-            ? "Sesión completada"
-            : running
-              ? session.mode === "focus"
-                ? "Una cosa a la vez"
-                : "Tómate un respiro"
-              : "Elige tu ritmo"}
-        </p>
+      <div className="day-focus-body">
+        <div className="day-focus-dial">
+          <svg viewBox="0 0 120 120" aria-hidden="true">
+            <circle className="day-dial-ticks" cx="60" cy="60" r="55" />
+            <circle className="day-dial-track" cx="60" cy="60" r="47" />
+            <circle
+              className="day-dial-remaining"
+              cx="60"
+              cy="60"
+              r="47"
+              strokeDasharray="295.31"
+              strokeDashoffset={295.31 * (1 - seconds / (session.minutes * 60))}
+            />
+          </svg>
+          <div className="day-focus-display">
+            <span
+              role="timer"
+              aria-label={
+                session.mode === "focus"
+                  ? "Tiempo de concentración"
+                  : "Tiempo de descanso"
+              }
+            >
+              {String(Math.floor(seconds / 60)).padStart(2, "0")}
+              <span>:</span>
+              {String(seconds % 60).padStart(2, "0")}
+            </span>
+            <p>
+              {session.completed
+                ? "Completado"
+                : running
+                  ? "En curso"
+                  : seconds === session.minutes * 60
+                    ? "Listo para empezar"
+                    : "En pausa"}
+            </p>
+          </div>
+        </div>
+        <div className="day-focus-modes">
+          <button
+            aria-pressed={session.mode === "focus"}
+            onClick={() => reset("focus")}
+          >
+            <Target size={15} />
+            <span>
+              Concentración<small>Una cosa a la vez</small>
+            </span>
+          </button>
+          <button
+            aria-pressed={session.mode === "break"}
+            onClick={() => reset("break")}
+          >
+            <Coffee size={15} />
+            <span>
+              Descanso<small>Recarga tu energía</small>
+            </span>
+          </button>
+        </div>
       </div>
       <progress
-        className="day-focus-progress"
+        className="sr-only"
         aria-label="Avance de concentración"
         max={session.minutes * 60}
         value={session.minutes * 60 - seconds}
       />
       <div className="day-focus-actions">
-        <Button onClick={toggle}>
+        <Button
+          onClick={
+            session.completed
+              ? () => reset(session.mode === "focus" ? "break" : "focus")
+              : toggle
+          }
+        >
           {running ? <Pause size={15} /> : <Play size={15} />}{" "}
-          {running
-            ? "Pausar"
-            : seconds === session.minutes * 60 || session.completed
-              ? session.mode === "focus"
-                ? "Comenzar foco"
-                : "Comenzar descanso"
-              : "Continuar"}
+          {session.completed
+            ? session.mode === "focus"
+              ? "Tomar descanso"
+              : "Volver al foco"
+            : running
+              ? "Pausar"
+              : seconds === session.minutes * 60 || session.completed
+                ? session.mode === "focus"
+                  ? "Comenzar foco"
+                  : "Comenzar descanso"
+                : "Continuar"}
         </Button>
         <Button
           variant="ghost"
@@ -145,16 +174,8 @@ export function DayFocus({ userId }: { userId: string }) {
           <RotateCcw size={15} />
         </Button>
       </div>
-      {session.completed && (
-        <Button
-          variant="secondary"
-          onClick={() => reset(session.mode === "focus" ? "break" : "focus")}
-        >
-          {session.mode === "focus" ? "Tomar descanso" : "Volver al foco"}
-        </Button>
-      )}
       <p className="day-note day-focus-footer">
-        Tu sesión se conserva al navegar. No suma horas de trabajo.
+        Se conserva al navegar. No suma horas de trabajo.
       </p>
       {notice && (
         <output aria-live="polite" className="day-note">
