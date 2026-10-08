@@ -1,31 +1,37 @@
-import { useState } from "react";
-import { toast } from "sonner";
-import type { HoursParticipantInput } from "@vexa/services";
-import { useAuth } from "@/features/auth/hooks/useAuth";
+import { useId, useState } from "react";
 import { Link } from "react-router-dom";
-import { CheckCheck } from "lucide-react";
+import { Check, CheckCheck, Clock3 } from "lucide-react";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
-import { Field, TextareaField } from "@/components/ui/Field";
+import { Field } from "@/components/ui/Field";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { ErrorState } from "@/components/ui/ErrorState";
 import { Skeleton } from "@/components/ui/Skeleton";
-import { todayLima } from "@vexa/domain/dates";
-import { formatHours } from "@vexa/domain/format";
+import { Sheet } from "@/components/ui/Sheet";
+import { formatIsoDate, todayLima } from "@vexa/domain/dates";
 import { useHoursDrafts, useSubmitDrafts } from "../hooks/useTime";
-import { DatePicker } from "./TimePickers";
-import { ParticipantsField } from "./ParticipantsField";
-import { hasParticipantErrors, participantErrors } from "../participants";
+
+function sessionDuration(hours: number) {
+  const seconds = Number.isFinite(hours)
+    ? Math.max(0, Math.round(hours * 3600))
+    : 0;
+  const h = Math.floor(seconds / 3600);
+  const m = Math.floor((seconds % 3600) / 60);
+  const s = seconds % 60;
+  return (
+    [h && `${h} h`, m && `${m} min`, s && `${s} s`].filter(Boolean).join(" ") ||
+    "0 min"
+  );
+}
 
 export function CompletedHoursPanel() {
   const drafts = useHoursDrafts();
   const submit = useSubmitDrafts();
-  const { user } = useAuth();
-  const [participants, setParticipants] = useState<HoursParticipantInput[]>([]);
+  const formId = useId();
   const [values, setValues] = useState<Record<string, string>>({});
   const [selected, setSelected] = useState<string[]>([]);
-  const [description, setDescription] = useState("");
   const [date, setDate] = useState(todayLima());
+  const [confirmOpen, setConfirmOpen] = useState(false);
   const chosen = (drafts.data ?? []).filter((d) => selected.includes(d.id));
   const value = (id: string, fallback: number) =>
     values[id] ??
@@ -38,12 +44,18 @@ export function CompletedHoursPanel() {
     <Card className="hours-completed-panel">
       <div className="hours-section-heading">
         <div>
-          <h2>Pendientes de registrar</h2>
+          <h2>
+            <Clock3 size={17} aria-hidden="true" /> Pendientes de registrar
+          </h2>
           <p className="hours-help">
-            Selecciona las que quieras y confirma el tiempo real.
+            Revisa tus sesiones y confirma las horas trabajadas.
           </p>
         </div>
-        <CheckCheck size={20} className="text-primary-text" />
+        {Boolean(drafts.data?.length) && (
+          <span className="hours-draft-count num">
+            {drafts.data?.length} por registrar
+          </span>
+        )}
       </div>
       {drafts.isLoading ? (
         <Skeleton className="h-32" />
@@ -65,13 +77,24 @@ export function CompletedHoursPanel() {
         />
       ) : (
         <form
+          id={formId}
           onSubmit={async (e) => {
             e.preventDefault();
             if (
-              user &&
-              hasParticipantErrors(participantErrors(user.id, participants))
-            ) {
-              toast.error("Revisa las personas etiquetadas.");
+              submit.isPending ||
+              !chosen.length ||
+              !Number.isFinite(total) ||
+              total <= 0 ||
+              total > 24 ||
+              chosen.some(
+                (d) =>
+                  !Number.isFinite(Number(value(d.id, d.hours))) ||
+                  Number(value(d.id, d.hours)) <= 0,
+              )
+            )
+              return;
+            if (!confirmOpen) {
+              setConfirmOpen(true);
               return;
             }
             try {
@@ -82,24 +105,48 @@ export function CompletedHoursPanel() {
                     values[d.id] === undefined ? d.hours : Number(values[d.id]),
                 })),
                 date,
-                description,
-                participants,
+                description: "",
+                participants: [],
               });
               setSelected([]);
               setValues({});
-              setDescription("");
-              setParticipants([]);
+              setConfirmOpen(false);
             } catch {
               /* Keep draft edits on failure. */
             }
           }}
         >
+          <div className="hours-draft-list-heading">
+            <button
+              type="button"
+              disabled={submit.isPending}
+              onClick={() => {
+                setSelected(
+                  chosen.length === drafts.data.length
+                    ? []
+                    : drafts.data.map((draft) => draft.id),
+                );
+                if (!selected.length) setDate(drafts.data[0].date);
+              }}
+            >
+              {chosen.length === drafts.data.length
+                ? "Quitar selección"
+                : "Seleccionar todas"}
+            </button>
+            <span>Horas trabajadas</span>
+          </div>
           <div className="hours-draft-list">
             {drafts.data.map((d) => (
-              <div key={d.id} className="hours-draft-row">
+              <div
+                key={d.id}
+                className="hours-draft-row"
+                data-selected={selected.includes(d.id) || undefined}
+              >
                 <label aria-label={`Seleccionar ${d.title}`}>
                   <input
+                    className="hours-session-select-input"
                     type="checkbox"
+                    disabled={submit.isPending}
                     checked={selected.includes(d.id)}
                     onChange={(e) => {
                       setSelected(
@@ -110,9 +157,13 @@ export function CompletedHoursPanel() {
                       if (!selected.length) setDate(d.date);
                     }}
                   />
+                  <span className="hours-session-select" aria-hidden="true">
+                    <Check size={12} />
+                  </span>
                   <span>
                     <strong>{d.title}</strong>
                     <small>
+                      {formatIsoDate(d.date).slice(0, 5)} ·{" "}
                       {d.measured
                         ? "Tiempo medido"
                         : d.hours
@@ -121,100 +172,114 @@ export function CompletedHoursPanel() {
                     </small>
                   </span>
                 </label>
-                <Field
-                  label={`Horas: ${d.title}`}
-                  aria-label={`Horas: ${d.title}`}
-                  type="number"
-                  min="0.0001"
-                  max="24"
-                  step="any"
-                  inputMode="decimal"
-                  value={value(d.id, d.hours)}
-                  onChange={(e) =>
-                    setValues({ ...values, [d.id]: e.target.value })
-                  }
-                />
+                <div className="hours-draft-time hours-session-edit">
+                  <Field
+                    label={`Horas: ${d.title}`}
+                    aria-label={`Horas: ${d.title}`}
+                    type="number"
+                    min="0.0001"
+                    max="24"
+                    step="any"
+                    inputMode="decimal"
+                    disabled={submit.isPending}
+                    value={value(d.id, d.hours)}
+                    onChange={(e) =>
+                      setValues({ ...values, [d.id]: e.target.value })
+                    }
+                  />
+                  <span aria-hidden="true">h</span>
+                </div>
               </div>
             ))}
           </div>
-          {chosen.length > 0 && (
-            <div className="hours-draft-confirm">
-              <div className="hours-section-heading">
-                <strong className="num">
-                  {chosen.length} tareas · Total: {formatHours(total)}
-                </strong>
-                <span className="text-xs text-muted">
-                  Se registra una sola vez
-                </span>
-              </div>
-              <Field
-                label="Tiempo total (h)"
-                type="number"
-                step="any"
-                min="0.0001"
-                max="24"
-                inputMode="decimal"
-                value={Number(total.toFixed(4)) || ""}
-                onChange={(e) => {
-                  const amount = Number(e.target.value);
-                  if (!Number.isFinite(amount)) return;
-                  const next = { ...values };
-                  let assigned = 0;
-                  chosen.forEach((d, index) => {
-                    const weight =
-                      total > 0
-                        ? (Number(value(d.id, d.hours)) || 0) / total
-                        : 1 / chosen.length;
-                    const hours =
-                      index === chosen.length - 1
-                        ? amount - assigned
-                        : Math.round(amount * weight * 10000) / 10000;
-                    next[d.id] = String(Math.max(0, Number(hours.toFixed(4))));
-                    assigned += hours;
-                  });
-                  setValues(next);
-                }}
-              />
-              <p className="hours-help">
-                El total se reparte entre las tareas seleccionadas.
-              </p>
-              <DatePicker
-                label="Fecha de trabajo"
-                value={date}
-                onChange={setDate}
-                max={todayLima()}
-              />
-              <TextareaField
-                label="Avance adicional (opcional)"
-                rows={2}
-                value={description}
-                onChange={(e) => setDescription(e.target.value)}
-                placeholder="Se incluirán los nombres de las tareas si lo dejas vacío."
-              />
-              {user ? (
-                <ParticipantsField
-                  ownerId={user.id}
-                  value={participants}
-                  onChange={setParticipants}
-                  hours={total}
-                  disabled={submit.isPending}
-                />
-              ) : null}
-              <Button
-                type="submit"
-                disabled={
-                  submit.isPending ||
-                  total <= 0 ||
-                  total > 24 ||
-                  chosen.some((d) => Number(value(d.id, d.hours)) <= 0)
-                }
-              >
-                Confirmar y enviar a revisión
-              </Button>
-            </div>
-          )}
         </form>
       )}
+      {Boolean(drafts.data?.length) && (
+        <div className="hours-draft-overview">
+          <div>
+            <span>
+              {chosen.length
+                ? `${chosen.length} seleccionadas`
+                : "Tiempo por confirmar"}
+            </span>
+            <strong className="num">
+              {sessionDuration(
+                chosen.length
+                  ? total
+                  : (drafts.data ?? []).reduce(
+                      (sum, draft) =>
+                        sum + (Number(value(draft.id, draft.hours)) || 0),
+                      0,
+                    ),
+              )}
+            </strong>
+          </div>
+          <Button
+            size="sm"
+            type="submit"
+            form={formId}
+            disabled={
+              submit.isPending ||
+              !chosen.length ||
+              total <= 0 ||
+              total > 24 ||
+              chosen.some(
+                (d) =>
+                  !Number.isFinite(Number(value(d.id, d.hours))) ||
+                  Number(value(d.id, d.hours)) <= 0,
+              )
+            }
+          >
+            {submit.isPending ? "Registrando…" : "Registrar horas"}{" "}
+            <CheckCheck size={14} aria-hidden="true" />
+          </Button>
+        </div>
+      )}
+      <Sheet
+        open={confirmOpen && chosen.length > 0}
+        onClose={() => setConfirmOpen(false)}
+        title="Confirmar registro de horas"
+        description="Estas actividades se registrarán y quedarán pendientes de revisión."
+        className="hours-registration-confirm"
+      >
+        <div className="hours-confirm-date">
+          <span>Fecha de registro</span>
+          <strong>{formatIsoDate(date)}</strong>
+        </div>
+        <ul className="hours-confirm-items">
+          {chosen.map((draft) => (
+            <li key={draft.id}>
+              <span>{draft.title}</span>
+              <strong className="num">{value(draft.id, draft.hours)} h</strong>
+            </li>
+          ))}
+        </ul>
+        <div className="hours-confirm-total">
+          <span>
+            Total · {chosen.length}{" "}
+            {chosen.length === 1 ? "actividad" : "actividades"}
+          </span>
+          <strong className="num">{Number(total.toFixed(4))} h</strong>
+          <small>{sessionDuration(total)}</small>
+        </div>
+        <div className="hours-confirm-actions">
+          <Button
+            variant="ghost"
+            disabled={submit.isPending}
+            onClick={() => setConfirmOpen(false)}
+          >
+            Volver a editar
+          </Button>
+          <Button
+            type="submit"
+            form={formId}
+            disabled={submit.isPending || !chosen.length}
+          >
+            <CheckCheck size={16} aria-hidden="true" />
+            {submit.isPending ? "Registrando…" : "Confirmar registro"}
+          </Button>
+        </div>
+      </Sheet>
     </Card>
   );
 }

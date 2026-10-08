@@ -22,6 +22,7 @@ const TasksPage = lazy(routeLoaders.tasks);
 const TeamPage = lazy(routeLoaders.team);
 const TimePage = lazy(routeLoaders.time);
 const MyDayPage = lazy(routeLoaders.day);
+const MeetingsPage = lazy(routeLoaders.meetings);
 
 export default function App() {
   const { pathname } = useLocation();
@@ -68,6 +69,7 @@ export default function App() {
         >
           <Route index element={<DashboardPage />} />
           <Route path="mi-dia" element={<MyDayPage />} />
+          <Route path="reuniones" element={<MeetingsPage />} />
           <Route path="proyectos" element={<ProjectsPage />} />
           <Route path="proyectos/:projectId" element={<BoardPage />} />
           <Route path="tareas" element={<TasksPage />} />

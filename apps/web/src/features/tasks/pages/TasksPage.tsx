@@ -59,7 +59,7 @@ export default function TasksPage() {
     (t) => !onlyMine || t.assigneeId === user?.id,
   );
   return (
-    <>
+    <div className="tasks-workspace">
       <PageHeader
         title={admin ? "Tareas del equipo" : "Mis tareas"}
         description="Organiza tu trabajo. Al terminar una tarea, revisa y confirma sus horas en Horas."
@@ -76,9 +76,13 @@ export default function TasksPage() {
           ) : undefined
         }
       />
-      <TaskTimer />
+      {running.data && (
+        <div className="tasks-timer">
+          <TaskTimer />
+        </div>
+      )}
       {admin && (
-        <div className="mb-4 flex items-center gap-3">
+        <div className="tasks-toolbar flex items-center gap-3">
           <Button
             variant={onlyMine ? "primary" : "secondary"}
             onClick={() => setOnlyMine(!onlyMine)}
@@ -168,6 +172,6 @@ export default function TasksPage() {
           </div>
         )}
       </Sheet>
-    </>
+    </div>
   );
 }

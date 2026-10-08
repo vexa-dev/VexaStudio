@@ -30,10 +30,11 @@ import {
   type AuditSnapshot,
   type AuditTable,
 } from "@vexa/domain/audit";
-import { buildSeed } from "./seed";
+import { buildDayPlanningTasks, buildSeed } from "./seed";
 
 /** Base de datos simulada en memoria; una colección por tabla del modelo del PRD. */
 export interface MockDb {
+  dayPlanningTasksSeeded?: boolean;
   hoursDrafts?: HoursDraft[];
   /** Bytes (data URL) of the files attached to hours, by evidence id. Kept apart from the entries. */
   evidenceFiles?: Record<Id, string>;
@@ -198,6 +199,13 @@ const DEMO_JOINED_AT = "2026-03-02T14:00:00.000Z";
 const LEGACY_JOINED_AT = "2026-01-12T14:00:00.000Z";
 
 function migrate(db: MockDb): MockDb {
+  if (!db.dayPlanningTasksSeeded) {
+    const planningTasks = buildDayPlanningTasks().filter(
+      (task) => !db.tasks.some((existing) => existing.id === task.id),
+    );
+    db.tasks.unshift(...planningTasks);
+    db.dayPlanningTasksSeeded = true;
+  }
   for (const profile of db.profiles)
     profile.joinedAt ??=
       profile.id === "u-demo-collaborator" ? DEMO_JOINED_AT : LEGACY_JOINED_AT;

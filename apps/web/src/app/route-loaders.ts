@@ -12,12 +12,14 @@ export const routeLoaders = {
   team: () => import("@/features/team/pages/TeamPage"),
   time: () => import("@/features/time/pages/TimePage"),
   day: () => import("@/features/day/MyDayPage"),
+  meetings: () => import("@/features/meetings/MeetingsPage"),
   layout: () => import("./AppLayout"),
 } as const;
 
 const loaderByPath: Record<string, () => Promise<unknown>> = {
   "/": routeLoaders.dashboard,
   "/mi-dia": routeLoaders.day,
+  "/reuniones": routeLoaders.meetings,
   "/proyectos": routeLoaders.projects,
   "/tareas": routeLoaders.tasks,
   "/horas": routeLoaders.time,

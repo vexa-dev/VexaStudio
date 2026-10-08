@@ -49,6 +49,7 @@ export function ParticipantPicker({
   loading,
   error,
   showSelected = true,
+  compact = false,
 }: {
   people: Participant[];
   value: string[];
@@ -58,6 +59,7 @@ export function ParticipantPicker({
   loading: boolean;
   error: boolean;
   showSelected?: boolean;
+  compact?: boolean;
 }) {
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
@@ -118,11 +120,14 @@ export function ParticipantPicker({
     );
 
   return (
-    <div ref={root} className="flex flex-col gap-2">
+    <div
+      ref={root}
+      className={compact ? "hours-collaborator-search" : "flex flex-col gap-2"}
+    >
       <label
         id={`${id}-label`}
         htmlFor={`${id}-search`}
-        className="text-sm font-semibold"
+        className={compact ? "sr-only" : "text-sm font-semibold"}
       >
         Participantes adicionales{" "}
         <span className="font-normal text-muted">(opcional)</span>
@@ -133,7 +138,9 @@ export function ParticipantPicker({
           ref={search}
           id={`${id}-search`}
           type="search"
-          placeholder="Buscar participante por nombre…"
+          placeholder={
+            compact ? "Añadir colaborador…" : "Buscar participante por nombre…"
+          }
           value={query}
           onFocus={show}
           onClick={show}

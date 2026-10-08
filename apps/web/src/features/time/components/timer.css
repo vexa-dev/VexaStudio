@@ -1,11 +1,64 @@
 .active-timer-chip {
   align-items: center;
-  gap: 10px;
-  padding: 4px 5px 4px 10px;
-  border: 1px solid var(--metric-border);
-  border-radius: 12px;
-  background: var(--metric-surface);
-  margin-right: 8px;
+  gap: 3px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  margin-right: 14px;
+}
+.active-timer-chip::after {
+  content: "";
+  width: 1px;
+  height: 20px;
+  margin-left: 12px;
+  background: var(--border);
+}
+.active-timer-chip .active-timer-navbar-clock {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0;
+  margin-right: 10px;
+  font-size: 21px;
+  font-weight: 500;
+  font-variant-numeric: tabular-nums lining-nums;
+  letter-spacing: 0.02em;
+  line-height: 1;
+}
+.active-timer-part {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 4px;
+}
+.active-timer-part + .active-timer-part {
+  margin-left: 4px;
+}
+.active-timer-digits {
+  min-width: 2ch;
+  text-align: center;
+}
+.active-timer-colon {
+  color: var(--muted);
+  font-size: 17px;
+  font-weight: 400;
+}
+.active-timer-chip[data-paused="true"] .active-timer-navbar-clock {
+  color: var(--muted);
+}
+.active-timer-chip > button {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  min-height: 32px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--muted);
+  border-radius: 6px;
+}
+.active-timer-chip > button:hover:not(:disabled) {
+  background: var(--surface-2);
+  color: var(--fg);
 }
 .active-timer-indicator {
   color: var(--primary-text);
@@ -36,13 +89,17 @@
 .active-timer-chip .active-timer-stop {
   display: grid;
   place-items: center;
-  width: 36px;
-  height: 36px;
-  min-height: 36px;
+  width: 32px;
+  height: 32px;
+  min-height: 32px;
   padding: 0;
-  border-radius: 9px;
-  color: var(--primary-text);
-  background: var(--primary-soft);
+  border-radius: 6px;
+  color: var(--danger);
+  background: transparent;
+}
+.active-timer-chip .active-timer-stop:hover:not(:disabled) {
+  color: var(--danger);
+  background: color-mix(in srgb, var(--danger) 10%, transparent);
 }
 .active-timer-mobile {
   position: fixed;

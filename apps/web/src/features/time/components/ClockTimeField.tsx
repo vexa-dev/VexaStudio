@@ -24,12 +24,17 @@ interface ClockTimeFieldProps {
   hours?: number;
   /** End of the user's previous entry: ghost marker plus a one-tap shortcut. */
   target?: ClockTime | null;
+  compact?: boolean;
 }
 
 const FALLBACK: ClockTime = { hour24: 9, minute: 0 };
 
 /** Soft warning only: the form schema and the service stay the authority. */
-function unfinishedHint(date: string | undefined, time: ClockTime, hours?: number) {
+function unfinishedHint(
+  date: string | undefined,
+  time: ClockTime,
+  hours?: number,
+) {
   if (!date || !/^\d{4}-\d{2}-\d{2}$/.test(date)) return null;
   if (!hours || !Number.isFinite(hours) || hours <= 0) return null;
   const end = limaInstant(date, time).getTime() + hours * 3600000;
@@ -46,6 +51,7 @@ export function ClockTimeField({
   date,
   hours,
   target,
+  compact = false,
 }: ClockTimeFieldProps) {
   const [open, setOpen] = useState(false);
   const [host, setHost] = useState<HTMLElement | null>(null);
@@ -108,7 +114,7 @@ export function ClockTimeField({
         aria-haspopup="dialog"
         aria-expanded={open}
         aria-label={`${label}: ${formatClockLabel(time)}`}
-        aria-describedby={hint || error ? hintId : undefined}
+        aria-describedby={error || (hint && !compact) ? hintId : undefined}
         onClick={() => {
           setHost(trigger.current?.closest("dialog") ?? document.body);
           setOpen(true);
@@ -121,12 +127,12 @@ export function ClockTimeField({
         <p id={hintId} className="text-xs text-danger">
           {error}
         </p>
-      ) : hint ? (
+      ) : hint && !compact ? (
         <p id={hintId} className="clock-field-hint is-warning">
           {hint}
         </p>
       ) : null}
-      {target ? (
+      {target && !compact ? (
         <p className="clock-field-hint">
           Tu último registro terminó a las {formatClockTime(target)}. Acomoda
           las manecillas ahí para encadenar tus horas.{" "}
@@ -164,7 +170,18 @@ export function ClockTimeField({
                   onChange={(next) => onChange(formatClockTime(next))}
                   target={target}
                 />
+                {compact && hint && (
+                  <p className="clock-field-hint is-warning">{hint}</p>
+                )}
                 <div className="clock-card-actions">
+                  {compact && target && (
+                    <Button
+                      variant="ghost"
+                      onClick={() => onChange(formatClockTime(target))}
+                    >
+                      Usar último cierre
+                    </Button>
+                  )}
                   <Button onClick={close}>Listo</Button>
                 </div>
               </div>

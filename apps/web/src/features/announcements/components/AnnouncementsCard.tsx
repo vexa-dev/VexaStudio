@@ -18,7 +18,7 @@ import { useAnnouncementActions, useAnnouncements } from "../hooks/useAnnounceme
 const VISIBLE = 4;
 
 /**
- * Anuncios del estudio en Mi día: fijados primero y luego los más nuevos. Los ven admin y socios; solo
+ * Anuncios del estudio en Notificaciones: fijados primero y luego los más nuevos. Los ven admin y socios; solo
  * el admin publica y fija o desfija. Un colaborador no ve la tarjeta. Los anuncios no se borran.
  */
 export function AnnouncementsCard() {

@@ -598,7 +598,9 @@
   width: 100%;
   max-width: 100%;
 }
-.hours-calendar-popup { padding: 12px; }
+.hours-calendar-popup {
+  padding: 12px;
+}
 .hours-calendar-heading {
   display: flex;
   justify-content: space-between;
@@ -631,8 +633,14 @@
   aspect-ratio: 1;
   border-radius: 7px;
 }
-.hours-calendar-days button[data-today]:not([aria-pressed="true"]) { box-shadow: inset 0 0 0 1px var(--border); color: var(--primary-text); }
-.hours-calendar-days button[aria-pressed="true"] { background: var(--primary-solid); color: var(--primary-fg); }
+.hours-calendar-days button[data-today]:not([aria-pressed="true"]) {
+  box-shadow: inset 0 0 0 1px var(--border);
+  color: var(--primary-text);
+}
+.hours-calendar-days button[aria-pressed="true"] {
+  background: var(--primary-solid);
+  color: var(--primary-fg);
+}
 .hours-calendar-months {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -658,7 +666,9 @@
   color: var(--primary-text);
   border-radius: 7px;
 }
-.hours-calendar-footer button:last-child { margin-left: auto; }
+.hours-calendar-footer button:last-child {
+  margin-left: auto;
+}
 .hours-month-heading .hours-picker-popup {
   left: auto;
   right: 0;
@@ -944,4 +954,1770 @@
     gap: 0.5rem;
     grid-template-columns: minmax(0, 1fr) 5rem;
   }
+}
+
+/* Registration stays within the viewport; recent entries are limited to five. */
+.hours-register-layout {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  flex: 1;
+  min-height: 0;
+}
+.hours-register-top {
+  display: grid;
+  grid-template-columns: minmax(0, 1.55fr) minmax(0, 1fr);
+  gap: 18px;
+  height: 210px;
+  flex-shrink: 0;
+}
+.hours-register-top .glass-card {
+  padding: 18px;
+  min-height: 0;
+}
+.hours-register-top .hours-completed-panel {
+  display: flex;
+  flex-direction: column;
+}
+.hours-register-top .hours-completed-panel > .hours-section-heading {
+  flex-shrink: 0;
+  margin-bottom: 4px;
+}
+.hours-register-top .hours-completed-panel > form,
+.hours-register-top .hours-completed-panel > .border-dashed {
+  min-height: 0;
+  overflow: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+}
+.hours-register-top .hours-draft-row {
+  gap: 12px;
+  padding-block: 8px;
+  grid-template-columns: minmax(0, 1fr) 80px;
+}
+.hours-register-top .hours-draft-row strong {
+  font-size: 12px;
+}
+.hours-register-top .hours-draft-row small {
+  font-size: 10px;
+}
+.hours-register-top .hours-help {
+  font-size: 11px;
+  margin: 5px 0;
+}
+.hours-register-top .hours-draft-row input[type="number"] {
+  min-height: 36px;
+  height: 36px;
+  font-size: 12px;
+  padding: 7px 9px;
+}
+.hours-register-top .hours-manual-card {
+  justify-content: center;
+  gap: 12px;
+}
+.hours-register-top .hours-manual-card h2 {
+  font-size: 14px;
+}
+.hours-register-top .hours-manual-card > p {
+  max-width: none;
+  font-size: 12px;
+  line-height: 1.6;
+}
+.hours-register-top .hours-manual-card > button {
+  margin-top: 0;
+}
+.hours-recent-card {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  flex: none;
+  padding: 18px !important;
+}
+.hours-recent-card > .hours-section-heading {
+  margin-bottom: 6px;
+  flex-shrink: 0;
+}
+.hours-recent-card > .hours-section-heading > button {
+  min-height: 32px;
+  height: 32px;
+}
+.hours-recent-fixed {
+  flex: none;
+  min-height: 0;
+}
+.hours-recent-fixed .hours-entry-list {
+  height: auto;
+  display: flex;
+  flex-direction: column;
+}
+.hours-recent-fixed .hours-table-labels {
+  flex-shrink: 0;
+  padding-bottom: 8px;
+}
+.hours-recent-fixed .hours-entry {
+  flex: none;
+  min-height: 0;
+  padding: 10px 0;
+  gap: 12px;
+}
+.hours-recent-fixed .hours-entry-open {
+  min-height: 32px;
+}
+.hours-recent-fixed .hours-entry-actions button {
+  min-height: 32px;
+  height: 32px;
+}
+.hours-recent-fixed .hours-row-title {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.hours-recent-fixed .hours-entry-open small {
+  margin-top: 2px;
+}
+@media (min-width: 1024px) {
+  main[data-view="horas"] {
+    height: calc(100dvh - 56px);
+    max-width: none !important;
+    padding: 16px 28px 28px !important;
+  }
+  main[data-view="horas"] > .page-view {
+    height: 100%;
+    min-height: 0;
+  }
+  .hours-workspace {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+  }
+  .hours-page-header {
+    flex-shrink: 0;
+    margin-bottom: 10px;
+  }
+  .hours-nav {
+    flex-shrink: 0;
+    margin-bottom: 14px;
+    padding-bottom: 6px;
+  }
+  .hours-secondary-view {
+    flex: 1;
+    min-height: 0;
+    overflow: auto;
+    overscroll-behavior: contain;
+    scrollbar-width: thin;
+  }
+}
+@media (min-width: 1024px) and (max-height: 800px) {
+  .hours-register-top {
+    height: 190px;
+  }
+  .hours-register-top .glass-card,
+  .hours-recent-card {
+    padding: 12px 16px !important;
+  }
+  .hours-register-top .hours-manual-card {
+    gap: 8px;
+  }
+  .hours-register-top .hours-manual-icon {
+    width: 32px;
+    height: 32px;
+  }
+  .hours-register-top .hours-manual-card > button {
+    min-height: 36px;
+    height: 36px;
+  }
+  .hours-recent-fixed .hours-row-title small {
+    display: none;
+  }
+  .hours-recent-fixed .hours-row-date small {
+    display: none;
+  }
+  .hours-recent-card > .hours-section-heading > button {
+    min-height: 32px;
+    height: 32px;
+  }
+  .hours-recent-fixed .hours-entry {
+    padding-block: 3px;
+  }
+  .hours-recent-card > .hours-section-heading {
+    margin-bottom: 2px;
+  }
+}
+@media (max-width: 1023px) {
+  main[data-view="horas"] {
+    height: calc(100dvh - 64px - env(safe-area-inset-top));
+    padding: 12px 16px calc(88px + env(safe-area-inset-bottom)) !important;
+  }
+  main[data-view="horas"] > .page-view {
+    height: 100%;
+    min-height: 0;
+  }
+  .hours-workspace {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+  }
+  .hours-page-header,
+  .hours-nav {
+    flex-shrink: 0;
+    margin-bottom: 10px;
+  }
+  .hours-register-top {
+    height: 170px;
+    grid-template-columns: 1.2fr 1fr;
+    gap: 8px;
+  }
+  .hours-register-top .glass-card {
+    padding: 10px !important;
+  }
+  .hours-register-top h2 {
+    font-size: 12px;
+  }
+  .hours-register-top .hours-help,
+  .hours-register-top .hours-manual-card > p,
+  .hours-manual-icon,
+  .hours-eyebrow {
+    display: none;
+  }
+  .hours-register-top .hours-manual-card h2 {
+    font-size: 12px;
+  }
+  .hours-register-top .hours-manual-heading {
+    gap: 0;
+  }
+  .hours-register-top .hours-manual-card > button {
+    font-size: 11px;
+    padding: 8px;
+  }
+  .hours-register-top .hours-draft-row {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 3px;
+    padding-block: 5px;
+  }
+  .hours-register-top .hours-draft-row strong {
+    font-size: 11px;
+  }
+  .hours-register-top .hours-draft-row small {
+    display: none;
+  }
+  .hours-recent-card {
+    padding: 10px 12px !important;
+  }
+  .hours-recent-card .hours-row-project,
+  .hours-recent-card .hours-row-title small {
+    display: none;
+  }
+  .hours-recent-card .hours-entry-open {
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 2px 8px;
+  }
+  .hours-recent-card .hours-row-title {
+    font-size: 11px;
+  }
+  .hours-recent-card .hours-row-date {
+    font-size: 9px;
+  }
+  .hours-recent-card .hours-row-date small {
+    display: none;
+  }
+  .hours-recent-card .hours-row-status {
+    grid-column: 2;
+    grid-row: 2;
+  }
+  .hours-recent-card .hours-row-duration {
+    font-size: 12px;
+  }
+  .hours-recent-card .hours-entry-actions {
+    display: none;
+  }
+  .hours-recent-card > .hours-section-heading h2 {
+    font-size: 13px;
+  }
+  .hours-recent-card .hours-entry {
+    display: block;
+    padding: 4px 0;
+  }
+  .hours-recent-fixed .hours-entry {
+    padding: 4px 0;
+  }
+  .hours-secondary-view {
+    flex: 1;
+    min-height: 0;
+    overflow: auto;
+  }
+}
+/* Group each pending task with its hours. */
+@media (min-width: 1024px) {
+  .hours-register-top {
+    grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr);
+    height: 190px;
+  }
+}
+.hours-completed-panel h2 {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.hours-completed-panel h2 > svg {
+  color: var(--primary-text);
+}
+.hours-draft-count {
+  display: grid;
+  place-items: center;
+  min-width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  background: var(--primary-soft);
+  color: var(--primary-text);
+  font-size: 12px;
+}
+.hours-register-top .hours-completed-panel > .hours-section-heading {
+  margin-bottom: 12px;
+}
+.hours-register-top .hours-draft-list {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+.hours-register-top .hours-draft-row {
+  grid-template-columns: minmax(0, 1fr) 75px;
+  gap: 10px;
+  padding: 10px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--surface-2);
+}
+.hours-register-top .hours-draft-row[data-selected] {
+  background: var(--primary-soft);
+  border-color: var(--primary);
+}
+.hours-register-top .hours-draft-row > label {
+  gap: 9px;
+}
+.hours-register-top .hours-draft-row strong {
+  line-height: 1.5;
+  font-weight: 500;
+}
+.hours-register-top .hours-draft-row input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+}
+.hours-draft-time {
+  position: relative;
+}
+.hours-draft-time label {
+  display: none;
+}
+.hours-draft-time > span {
+  position: absolute;
+  right: 9px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 11px;
+  color: var(--muted);
+  pointer-events: none;
+}
+.hours-register-top .hours-draft-time input[type="number"] {
+  padding-right: 24px;
+  width: 100%;
+  appearance: textfield;
+}
+.hours-draft-time input::-webkit-inner-spin-button,
+.hours-draft-time input::-webkit-outer-spin-button {
+  appearance: none;
+  margin: 0;
+}
+@media (max-width: 1200px) {
+  .hours-register-top .hours-draft-list {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+@media (max-width: 1023px) {
+  .hours-register-top .hours-draft-row {
+    grid-template-columns: minmax(0, 1fr);
+    padding: 7px;
+    gap: 5px;
+  }
+}
+/* Balance the registration row with a concise weekly status. */
+@media (min-width: 1024px) {
+  .hours-register-top {
+    grid-template-columns: minmax(0, 1.45fr) minmax(0, 1fr) minmax(
+        230px,
+        0.75fr
+      );
+    gap: 16px;
+  }
+  .hours-register-top .hours-draft-list {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+.hours-week-status {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+}
+.hours-week-status-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+.hours-week-status-heading h2 {
+  font-size: 14px;
+}
+.hours-week-status-heading > span {
+  font-size: 10px;
+  color: var(--muted);
+  white-space: nowrap;
+}
+.hours-week-status-total {
+  font-family: var(--font-display);
+  font-size: 32px;
+  line-height: 1.3;
+  font-weight: 600;
+  letter-spacing: -0.04em;
+  margin-top: 12px;
+}
+.hours-week-status-caption {
+  color: var(--muted);
+  font-size: 10px;
+}
+.hours-week-status-breakdown {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  border-top: 1px solid var(--border);
+  margin-top: 12px;
+  padding-top: 10px;
+}
+.hours-week-status-breakdown > span {
+  color: var(--muted);
+  font-size: 10px;
+}
+.hours-week-status-breakdown b {
+  display: block;
+  color: var(--fg);
+  font-size: 13px;
+  font-weight: 500;
+  margin-top: 3px;
+}
+@media (max-width: 1023px) {
+  .hours-register-top {
+    grid-template-columns: 1.2fr 1fr;
+    height: 220px;
+  }
+  .hours-register-top .hours-week-status {
+    grid-column: 1 / -1;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 4px 12px;
+    padding: 8px 10px !important;
+  }
+  .hours-week-status-heading h2 {
+    font-size: 11px;
+  }
+  .hours-week-status-heading > span {
+    display: none;
+  }
+  .hours-week-status-total {
+    grid-column: 2;
+    grid-row: 1;
+    font-size: 18px;
+    margin: 0;
+  }
+  .hours-week-status-caption {
+    display: none;
+  }
+  .hours-week-status-breakdown {
+    grid-column: 1 / -1;
+    display: flex;
+    gap: 16px;
+    margin: 0;
+    padding: 0;
+    border: 0;
+  }
+  .hours-week-status-breakdown b {
+    display: inline;
+    font-size: 10px;
+    margin-left: 4px;
+  }
+  .hours-recent-fixed .hours-entry {
+    padding-block: 1px;
+  }
+}
+@media (min-width: 1024px) {
+  .hours-register-top {
+    height: 230px;
+  }
+  .hours-register-top .hours-draft-list {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+@media (min-width: 1024px) and (max-height: 800px) {
+  .hours-register-top {
+    height: 200px;
+  }
+}
+@media (max-width: 1023px) {
+  .hours-register-top {
+    height: 190px;
+    grid-template-rows: minmax(0, 1fr) 56px;
+  }
+  .hours-recent-fixed .hours-entry {
+    padding: 1px 0;
+  }
+}
+/* A continuous right sidebar alongside pending work and the recent records. */
+@media (min-width: 1024px) {
+  .hours-register-layout {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(320px, 0.38fr);
+    grid-template-rows: minmax(230px, 1fr) auto;
+    gap: 16px;
+    flex: 1;
+    min-height: 0;
+    margin-bottom: clamp(0px, calc((100dvh - 800px) * 0.1), 72px);
+    align-items: stretch;
+  }
+  .hours-register-top {
+    grid-column: 1;
+    grid-row: 1;
+    display: grid;
+    grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr);
+    height: auto;
+  }
+  .hours-register-top > .hours-completed-panel {
+    width: 100%;
+  }
+  .hours-register-layout > .hours-recent-card {
+    grid-column: 1;
+    grid-row: 2;
+  }
+  .hours-register-sidebar {
+    grid-column: 2;
+    grid-row: 1 / 3;
+    display: grid;
+    grid-template-rows: minmax(0, 1fr);
+    gap: 16px;
+    min-width: 0;
+    min-height: 0;
+  }
+  .hours-register-sidebar > .glass-card {
+    padding: 22px;
+  }
+  .hours-register-sidebar .hours-manual-card {
+    justify-content: center;
+    gap: 16px;
+  }
+  .hours-register-sidebar .hours-manual-card > p {
+    font-size: 12px;
+    max-width: none;
+  }
+  .hours-register-sidebar .hours-manual-card h2 {
+    font-size: 14px;
+  }
+  .hours-register-sidebar .hours-week-status {
+    gap: 3px;
+  }
+  .hours-register-sidebar .hours-week-status-total {
+    font-size: 38px;
+    margin-top: 18px;
+  }
+  .hours-register-sidebar .hours-week-status-breakdown {
+    margin-top: 20px;
+    padding-top: 16px;
+  }
+}
+@media (min-width: 1024px) and (max-height: 800px) {
+  .hours-register-layout {
+    grid-template-rows: minmax(200px, 1fr) auto;
+  }
+  .hours-register-top {
+    height: auto;
+  }
+  .hours-register-sidebar > .glass-card {
+    padding: 16px;
+  }
+  .hours-register-sidebar .hours-manual-card {
+    gap: 10px;
+  }
+  .hours-register-sidebar .hours-week-status-total {
+    font-size: 30px;
+    margin-top: 10px;
+  }
+  .hours-register-sidebar .hours-week-status-breakdown {
+    margin-top: 12px;
+    padding-top: 10px;
+  }
+}
+@media (max-width: 1023px) {
+  .hours-register-layout {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: 140px auto auto;
+    gap: 10px;
+    flex: none;
+  }
+  .hours-register-top {
+    display: grid;
+    grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr);
+    grid-template-rows: minmax(0, 1fr);
+    height: 140px;
+  }
+  .hours-register-top .hours-completed-panel {
+    width: 100%;
+  }
+  .hours-register-sidebar {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 8px;
+  }
+  .hours-register-sidebar > .glass-card {
+    padding: 10px;
+  }
+  .hours-register-sidebar .hours-manual-card {
+    gap: 8px;
+  }
+  .hours-register-sidebar .hours-manual-card > p,
+  .hours-register-sidebar .hours-week-status-caption,
+  .hours-register-sidebar .hours-week-status-heading > span {
+    display: none;
+  }
+  .hours-register-sidebar h2 {
+    font-size: 11px;
+  }
+  .hours-register-sidebar .hours-manual-card > button {
+    font-size: 11px;
+    padding: 8px;
+  }
+  .hours-register-sidebar .hours-week-status-total {
+    margin-top: 4px;
+    font-size: 20px;
+  }
+  .hours-register-sidebar .hours-week-status-breakdown {
+    margin-top: 4px;
+    padding-top: 4px;
+    gap: 6px;
+  }
+  .hours-register-sidebar .hours-week-status-breakdown b {
+    display: inline;
+    font-size: 10px;
+  }
+  .hours-register-layout > .hours-recent-card {
+    grid-row: 3;
+  }
+}
+/* Give each section a clear purpose instead of vertically centering sparse content. */
+.hours-week-period {
+  color: var(--muted);
+  font-size: 11px;
+  margin-bottom: 10px;
+}
+.hours-week-projects {
+  border-top: 1px solid var(--border);
+  margin-top: 24px;
+  padding-top: 18px;
+}
+.hours-week-projects h3 {
+  font-size: 12px;
+  font-weight: 600;
+  margin: 0 0 12px;
+}
+.hours-week-projects p,
+.hours-latest-summary p {
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.6;
+  margin: 6px 0 0;
+}
+.hours-week-project {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 8px 0;
+  font-size: 12px;
+}
+.hours-week-project strong {
+  white-space: nowrap;
+  font-weight: 500;
+}
+.hours-latest-summary {
+  margin-top: auto;
+  padding-top: 18px;
+  border-top: 1px solid var(--border);
+}
+.hours-latest-summary > span {
+  display: block;
+  color: var(--muted);
+  font-size: 11px;
+  margin-bottom: 8px;
+}
+.hours-latest-summary > strong {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  font-size: 13px;
+}
+.hours-latest-summary > button {
+  margin-top: 12px;
+  padding-left: 0;
+}
+.hours-manual-flow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 14px;
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  font-size: 10px;
+  color: var(--muted);
+}
+.hours-manual-flow li {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+.hours-manual-flow li > span {
+  color: var(--primary);
+  font-variant-numeric: tabular-nums;
+}
+.hours-draft-overview {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 5px 12px;
+  margin-top: auto;
+  padding-top: 12px;
+  border-top: 1px solid var(--border);
+  font-size: 11px;
+  color: var(--muted);
+  flex-shrink: 0;
+}
+.hours-draft-overview strong {
+  color: var(--fg);
+  font-weight: 500;
+}
+.hours-draft-overview small {
+  grid-column: 1 / -1;
+  font-size: 10px;
+}
+@media (min-width: 1024px) {
+  .hours-register-top .hours-manual-card {
+    justify-content: flex-start;
+    gap: 12px;
+  }
+  .hours-register-top .hours-manual-card > button {
+    margin-top: auto;
+  }
+  .hours-register-sidebar .hours-week-status {
+    gap: 0;
+  }
+}
+@media (min-width: 1024px) and (max-height: 800px) {
+  .hours-week-period {
+    margin-bottom: 6px;
+  }
+  .hours-week-projects {
+    margin-top: 12px;
+    padding-top: 10px;
+  }
+  .hours-week-projects p,
+  .hours-latest-summary p {
+    font-size: 11px;
+  }
+  .hours-latest-summary {
+    padding-top: 10px;
+  }
+  .hours-latest-summary > button {
+    margin-top: 6px;
+  }
+  .hours-register-top .hours-manual-card {
+    gap: 8px;
+  }
+}
+@media (max-width: 1023px) {
+  .hours-week-period,
+  .hours-week-projects,
+  .hours-latest-summary,
+  .hours-manual-flow,
+  .hours-draft-overview {
+    display: none;
+  }
+}
+/* Pending sessions: stable list, clear selection and review action. */
+.hours-register-top .hours-completed-panel > .hours-section-heading {
+  margin-bottom: 10px;
+  align-items: flex-start;
+}
+.hours-draft-count {
+  font-size: 10px;
+  white-space: nowrap;
+  padding: 5px 8px;
+}
+.hours-register-top .hours-completed-panel > form {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  overflow: visible;
+  gap: 6px;
+}
+.hours-draft-list-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  font-size: 10px;
+  color: var(--muted);
+  flex-shrink: 0;
+}
+.hours-draft-list-heading button {
+  color: var(--primary);
+  padding: 2px 0;
+  cursor: pointer;
+  border: 0;
+  background: transparent;
+}
+.hours-draft-list-heading button:hover {
+  text-decoration: underline;
+}
+.hours-register-top .hours-draft-list {
+  overflow-y: auto;
+  min-height: 0;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+  align-content: start;
+}
+.hours-register-top .hours-draft-row {
+  padding: 10px;
+  border-radius: 8px;
+  grid-template-columns: minmax(0, 1fr) 90px;
+}
+.hours-register-top .hours-draft-row strong {
+  font-size: 12px;
+  font-weight: 600;
+}
+.hours-register-top .hours-draft-row small {
+  margin-top: 4px;
+}
+.hours-draft-row > label {
+  cursor: pointer;
+}
+.hours-register-top .hours-draft-row input[type="checkbox"] {
+  accent-color: var(--primary);
+}
+.hours-draft-overview {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 12px;
+  padding-top: 10px;
+}
+.hours-draft-overview > div {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+.hours-draft-overview strong {
+  font-size: 17px;
+  line-height: 1.2;
+  font-family: var(--font-display);
+}
+.hours-draft-overview > button {
+  height: 34px;
+  padding: 0 12px;
+  font-size: 11px;
+}
+.hours-draft-sheet .hours-draft-confirm {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  gap: 12px;
+}
+.hours-draft-sheet .hours-section-heading {
+  margin-bottom: 0;
+}
+@media (max-width: 1023px) {
+  .hours-register-top .hours-completed-panel > .hours-section-heading {
+    margin-bottom: 3px;
+  }
+  .hours-draft-count {
+    font-size: 9px;
+  }
+  .hours-register-top .hours-draft-row {
+    padding: 5px;
+  }
+  .hours-draft-overview {
+    margin-top: 5px;
+    padding-top: 5px;
+  }
+  .hours-draft-overview > div > span {
+    font-size: 9px;
+  }
+  .hours-draft-overview strong {
+    font-size: 12px;
+  }
+  .hours-draft-overview > button {
+    height: 26px;
+    font-size: 10px;
+  }
+}
+@media (min-width: 1024px) and (max-height: 800px) {
+  .hours-register-top .hours-completed-panel > .hours-section-heading {
+    margin-bottom: 8px;
+  }
+  .hours-register-top
+    .hours-completed-panel
+    > .hours-section-heading
+    .hours-help {
+    display: none;
+  }
+  .hours-draft-overview {
+    margin-top: 8px;
+    padding-top: 8px;
+  }
+  .hours-draft-overview strong {
+    font-size: 15px;
+  }
+  .hours-draft-overview > button {
+    height: 30px;
+  }
+  .hours-register-top .hours-draft-row {
+    padding: 8px;
+  }
+}
+/* Sessions read as a simple list; time editing belongs to the review dialog. */
+.hours-register-top .hours-draft-list {
+  gap: 0;
+}
+.hours-register-top .hours-draft-row {
+  grid-template-columns: minmax(0, 1fr) auto;
+  padding: 12px 4px;
+  border: 0;
+  border-bottom: 1px solid var(--border);
+  border-radius: 0;
+  background: transparent;
+}
+.hours-register-top .hours-draft-row:last-child {
+  border-bottom: 0;
+}
+.hours-register-top .hours-draft-row[data-selected] {
+  background: transparent;
+  border-color: var(--border);
+}
+.hours-register-top .hours-draft-row:hover {
+  background: var(--surface-2);
+  border-radius: 12px;
+}
+.hours-register-top .hours-draft-row > label {
+  gap: 12px;
+}
+.hours-register-top .hours-draft-row input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+}
+.hours-session-duration {
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 6px;
+  white-space: nowrap;
+  color: var(--primary);
+  font-size: 12px;
+  font-weight: 500;
+}
+.hours-session-duration > svg {
+  color: var(--muted);
+}
+.hours-session-edits {
+  display: grid;
+  gap: 10px;
+}
+@media (max-height: 800px) {
+  .hours-register-top .hours-draft-row {
+    padding-block: 8px;
+  }
+}
+/* Direct registration, circular selection and subtle separators between sessions. */
+.hours-register-top .hours-draft-row {
+  position: relative;
+  border: 0;
+  padding: 12px 16px;
+}
+.hours-register-top .hours-draft-row:not(:last-child)::after {
+  content: "";
+  position: absolute;
+  bottom: 0;
+  left: 48px;
+  right: 16px;
+  height: 1px;
+  background: linear-gradient(
+    to right,
+    var(--border),
+    var(--border) 65%,
+    transparent
+  );
+}
+.hours-register-top .hours-draft-row > label {
+  position: relative;
+}
+.hours-register-top .hours-draft-row .hours-session-select-input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  overflow: hidden;
+}
+.hours-session-select {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 20px;
+  width: 20px;
+  height: 20px;
+  border: 1px solid var(--border);
+  border-radius: 50%;
+  color: var(--primary-fg);
+  transition:
+    background 150ms,
+    border-color 150ms;
+}
+.hours-session-select > svg {
+  opacity: 0;
+}
+.hours-session-select-input:checked + .hours-session-select {
+  background: var(--primary-solid);
+  border-color: var(--primary-solid);
+}
+.hours-session-select-input:checked + .hours-session-select > svg {
+  opacity: 1;
+}
+.hours-session-select-input:focus-visible + .hours-session-select {
+  outline: 2px solid var(--primary);
+  outline-offset: 3px;
+}
+.hours-register-top .hours-session-edit {
+  width: 88px;
+}
+.hours-register-top .hours-session-edit input[type="number"] {
+  border: 0;
+  border-bottom: 1px solid var(--border);
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+  text-align: right;
+  font-family: var(--font-display);
+  font-size: 15px;
+  padding-left: 0;
+  padding-right: 22px;
+}
+.hours-register-top .hours-session-edit input[type="number"]:hover {
+  border-bottom-color: var(--primary);
+}
+.hours-register-top .hours-session-edit input[type="number"]:focus {
+  outline: none;
+  border-bottom: 2px solid var(--primary);
+}
+.hours-register-top .hours-draft-row[data-selected] {
+  background: var(--surface-2);
+  border-radius: 12px;
+}
+@media (prefers-reduced-motion: reduce) {
+  .hours-session-select {
+    transition: none;
+  }
+}
+.hours-confirm-date {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  font-size: 12px;
+  color: var(--muted);
+}
+.hours-confirm-date strong {
+  color: var(--fg);
+  font-weight: 500;
+}
+.hours-confirm-items {
+  list-style: none;
+  margin: 18px 0;
+  padding: 0;
+}
+.hours-confirm-items li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 14px 0;
+  border-bottom: 1px solid var(--border);
+  font-size: 13px;
+}
+.hours-confirm-items li strong {
+  white-space: nowrap;
+  font-weight: 500;
+}
+.hours-confirm-total {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 5px 12px;
+  padding: 16px;
+  background: var(--surface-2);
+  border-radius: 12px;
+}
+.hours-confirm-total > span {
+  align-self: center;
+  font-size: 12px;
+  color: var(--muted);
+}
+.hours-confirm-total > strong {
+  font-size: 22px;
+  font-family: var(--font-display);
+  font-weight: 600;
+}
+.hours-confirm-total > small {
+  grid-column: 2;
+  text-align: right;
+  color: var(--muted);
+  font-size: 11px;
+}
+.hours-confirm-actions {
+  display: flex;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 22px;
+}
+.hours-register-top .hours-manual-card {
+  gap: 12px;
+}
+.hours-manual-inline {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  flex: 1;
+  min-height: 0;
+}
+.hours-manual-fields {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+  padding: 2px;
+}
+.hours-manual-inline label {
+  font-size: 11px;
+}
+.hours-manual-inline input,
+.hours-manual-inline textarea {
+  font-size: 12px;
+  min-height: 36px;
+}
+.hours-manual-inline textarea {
+  min-height: 58px;
+  resize: none;
+}
+.hours-manual-time-fields {
+  display: grid;
+  grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr) minmax(0, 0.65fr);
+  gap: 8px;
+}
+.hours-manual-time-fields button {
+  min-height: 36px;
+  height: 36px;
+  font-size: 11px;
+  padding: 0 8px;
+}
+.hours-manual-time-fields input {
+  padding-inline: 8px;
+}
+.hours-manual-options {
+  font-size: 11px;
+  color: var(--muted);
+}
+.hours-manual-options summary {
+  cursor: pointer;
+  padding: 3px 0;
+}
+.hours-manual-options[open] > :not(summary) {
+  margin-top: 12px;
+}
+.hours-manual-attachment {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.hours-manual-attachment > span {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.hours-manual-submit {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding-top: 10px;
+  border-top: 1px solid var(--border);
+  flex-shrink: 0;
+}
+.hours-manual-submit > span {
+  font-size: 10px;
+  color: var(--muted);
+}
+.hours-manual-submit > button {
+  font-size: 11px;
+  min-height: 34px;
+  height: 34px;
+  padding-inline: 12px;
+}
+@media (max-height: 800px) {
+  .hours-register-top .hours-manual-card {
+    gap: 8px;
+  }
+  .hours-manual-inline,
+  .hours-manual-fields {
+    gap: 8px;
+  }
+  .hours-manual-submit {
+    padding-top: 8px;
+  }
+}
+@media (min-width: 1024px) and (max-height: 800px) {
+  main[data-view="horas"] {
+    padding-bottom: 12px !important;
+  }
+  .hours-register-layout {
+    grid-template-rows: minmax(270px, 1fr) auto;
+  }
+  .hours-register-layout > .hours-recent-card {
+    padding: 8px 16px !important;
+  }
+  .hours-recent-fixed .hours-entry {
+    padding-block: 0;
+  }
+  .hours-recent-fixed .hours-entry-open,
+  .hours-recent-fixed .hours-entry-actions button {
+    min-height: 28px;
+    height: 28px;
+  }
+  .hours-manual-inline textarea {
+    min-height: 42px;
+    height: 42px;
+  }
+  .hours-manual-inline .hours-manual-time-fields {
+    gap: 5px;
+  }
+}
+.hours-manual-fields {
+  gap: 8px;
+}
+.hours-manual-fields > .flex,
+.hours-manual-time-fields .flex {
+  gap: 4px;
+}
+.hours-manual-inline textarea {
+  min-height: 42px;
+  height: 42px;
+}
+@media (min-width: 1024px) and (max-height: 800px) {
+  .hours-manual-fields > .flex,
+  .hours-manual-time-fields .flex {
+    gap: 3px;
+  }
+  .hours-manual-inline textarea {
+    min-height: 34px;
+    height: 34px;
+    padding-block: 6px;
+  }
+  .hours-manual-time-fields input,
+  .hours-manual-time-fields button {
+    min-height: 32px;
+    height: 32px;
+  }
+}
+@media (min-width: 1024px) and (max-height: 800px) {
+  .hours-manual-fields {
+    gap: 4px;
+  }
+}
+/* Weekly overview beside pending sessions; manual form uses the full sidebar. */
+.hours-register-sidebar .hours-manual-card {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  gap: 18px;
+  min-height: 0;
+}
+.hours-register-sidebar .hours-manual-inline {
+  gap: 16px;
+}
+.hours-register-sidebar .hours-manual-fields {
+  gap: 16px;
+}
+.hours-register-sidebar .hours-manual-inline textarea {
+  min-height: 96px;
+  height: 96px;
+}
+.hours-register-sidebar .hours-manual-inline input {
+  min-height: 40px;
+  height: 40px;
+}
+.hours-register-top .hours-week-status {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 6px 14px;
+  align-content: start;
+}
+.hours-register-top .hours-week-period {
+  grid-column: 1 / -1;
+  margin: 0;
+}
+.hours-register-top .hours-week-status-heading {
+  grid-column: 1 / -1;
+  margin-bottom: 6px;
+}
+.hours-register-top .hours-week-status-total {
+  grid-column: 1;
+  margin: 0;
+}
+.hours-register-top .hours-week-status-caption {
+  grid-column: 1;
+}
+.hours-register-top .hours-week-status-breakdown {
+  grid-column: 1;
+  margin-top: 6px;
+  padding-top: 10px;
+}
+.hours-register-top .hours-week-projects {
+  grid-column: 2;
+  grid-row: 3 / 6;
+  border-top: 0;
+  border-left: 1px solid var(--border);
+  padding: 4px 0 0 14px;
+  margin: 0;
+}
+.hours-register-top .hours-week-projects h3 {
+  font-size: 11px;
+  margin-bottom: 8px;
+}
+.hours-register-top .hours-week-projects p {
+  font-size: 11px;
+}
+.hours-register-top .hours-week-project {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  font-size: 11px;
+}
+.hours-register-top .hours-latest-summary {
+  grid-column: 1 / -1;
+  margin-top: 10px;
+  padding-top: 6px;
+  display: flex;
+  justify-content: flex-end;
+}
+.hours-register-top .hours-latest-summary > span,
+.hours-register-top .hours-latest-summary > strong,
+.hours-register-top .hours-latest-summary > p {
+  display: none;
+}
+.hours-register-top .hours-latest-summary > button {
+  margin: 0;
+  height: 32px;
+  min-height: 32px;
+  font-size: 11px;
+}
+@media (min-width: 1024px) and (max-height: 800px) {
+  .hours-register-top .hours-week-status-total {
+    font-size: 28px;
+  }
+  .hours-register-top .hours-week-status-breakdown {
+    margin-top: 3px;
+  }
+  .hours-register-sidebar .hours-manual-inline textarea {
+    min-height: 72px;
+    height: 72px;
+  }
+}
+@media (max-width: 1023px) {
+  .hours-register-top .hours-week-status {
+    display: flex;
+    gap: 2px;
+  }
+  .hours-register-top .hours-week-projects,
+  .hours-register-top .hours-latest-summary {
+    display: none;
+  }
+}
+/* Always-visible, numbered sections for manual registration. */
+.hours-register-sidebar .hours-manual-fields {
+  gap: 12px;
+  padding-right: 6px;
+}
+.hours-manual-section {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  flex: 0 0 auto;
+  border-top: 1px solid var(--border);
+  padding-top: 12px;
+}
+.hours-manual-section:first-child {
+  border-top: 0;
+  padding-top: 0;
+}
+.hours-manual-section h3 {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  margin: 0;
+  font-size: 12px;
+  font-weight: 600;
+}
+.hours-manual-section h3 > span {
+  font-size: 10px;
+  color: var(--primary);
+  font-variant-numeric: tabular-nums;
+  font-weight: 500;
+}
+.hours-manual-section h3 > small {
+  margin-left: auto;
+  color: var(--muted);
+  font-size: 10px;
+  font-weight: 400;
+}
+.hours-manual-context-fields {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 10px;
+}
+.hours-manual-context-fields button {
+  min-height: 36px;
+  height: 36px;
+  padding: 0 9px;
+  font-size: 11px;
+}
+.hours-register-sidebar .hours-manual-inline textarea {
+  min-height: 52px;
+  height: 52px;
+}
+.hours-register-sidebar .hours-manual-inline input {
+  min-height: 36px;
+  height: 36px;
+}
+.hours-manual-section fieldset {
+  gap: 8px;
+}
+.hours-manual-section fieldset p {
+  font-size: 11px;
+  line-height: 1.4;
+}
+.hours-manual-section fieldset button,
+.hours-manual-section fieldset input {
+  font-size: 11px;
+}
+.hours-manual-section input[type="file"] {
+  height: auto !important;
+  font-size: 10px;
+  padding: 6px 8px;
+}
+.hours-manual-section input[type="file"] + p {
+  font-size: 10px;
+  line-height: 1.4;
+}
+@media (max-width: 1023px) {
+  .hours-manual-context-fields {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+.hours-register-sidebar .hours-manual-fields {
+  gap: 10px;
+}
+.hours-manual-section {
+  gap: 8px;
+  padding-top: 10px;
+}
+.hours-manual-section:last-child {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 8px 10px;
+}
+.hours-manual-section:last-child > h3,
+.hours-manual-section:last-child > .hours-manual-attachment {
+  grid-column: 1 / -1;
+}
+.hours-manual-section input[type="file"]::file-selector-button {
+  padding: 4px 6px;
+  margin-right: 6px;
+  font-size: 10px;
+}
+.hours-week-personal {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-top: 12px;
+}
+.hours-week-personal > div {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+.hours-week-personal span {
+  font-size: 10px;
+  color: var(--muted);
+}
+.hours-week-personal strong {
+  font-family: var(--font-display);
+  font-size: 18px;
+  font-weight: 600;
+  line-height: 1.2;
+}
+.hours-week-personal strong small {
+  font-family: var(--font-body);
+  font-size: 11px;
+  color: var(--muted);
+  font-weight: 400;
+}
+.hours-week-tip {
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 9px 10px;
+  border-radius: 10px;
+  background: var(--primary-soft);
+  border-left: 2px solid var(--primary);
+  margin-top: 4px;
+}
+.hours-week-tip > svg {
+  color: var(--primary);
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+.hours-week-tip > div > span {
+  display: none;
+  font-size: 8px;
+  letter-spacing: 0.08em;
+  color: var(--primary);
+  margin-bottom: 4px;
+}
+.hours-week-tip h3 {
+  font-size: 12px;
+  font-weight: 600;
+  margin: 0;
+}
+.hours-week-tip p {
+  font-size: 11px;
+  line-height: 1.45;
+  color: var(--muted);
+  margin: 5px 0 0;
+}
+.hours-week-tip button {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  color: var(--primary);
+  font-size: 10px;
+  font-weight: 500;
+  margin-top: 5px;
+  cursor: pointer;
+}
+.hours-week-tip button:hover {
+  text-decoration: underline;
+}
+.hours-register-top .hours-week-status {
+  gap: 3px 12px;
+  position: relative;
+}
+.hours-register-top .hours-week-status-heading {
+  margin-bottom: 3px;
+}
+.hours-register-top .hours-week-status-total {
+  color: var(--primary);
+}
+.hours-register-top .hours-week-projects {
+  padding-top: 0;
+}
+.hours-register-top .hours-latest-summary {
+  position: absolute;
+  top: 12px;
+  right: 18px;
+  margin-top: 0;
+  padding-top: 0;
+  border-top: 0;
+}
+.hours-register-top .hours-week-status-breakdown {
+  padding-top: 7px;
+}
+@media (min-width: 1024px) and (max-height: 800px) {
+  .hours-register-top .hours-week-status {
+    gap: 1px 12px;
+  }
+  .hours-week-tip {
+    padding: 7px 9px;
+    margin-top: 4px;
+  }
+  .hours-week-tip > div > span {
+    display: none;
+  }
+  .hours-week-tip h3 {
+    font-size: 11px;
+  }
+  .hours-week-tip p {
+    font-size: 10px;
+    margin-top: 3px;
+  }
+  .hours-week-tip button {
+    margin-top: 4px;
+  }
+  .hours-week-personal {
+    margin-top: 4px;
+  }
+  .hours-register-top .hours-week-status-total {
+    font-size: 24px;
+  }
+  .hours-register-top .hours-week-status-breakdown {
+    padding-top: 4px;
+  }
+  .hours-week-personal strong {
+    font-size: 16px;
+  }
+}
+@media (max-width: 1023px) {
+  .hours-week-tip {
+    display: none;
+  }
+}
+
+/* Compact manual form: every section stays in the existing card. */
+.hours-register-sidebar .hours-manual-fields {
+  overflow: visible;
+  padding: 0;
+  gap: 10px;
+}
+.hours-register-sidebar .hours-manual-card { align-items: stretch; }
+.hours-register-sidebar .hours-manual-inline { width: 100%; }
+.hours-register-sidebar .hours-manual-section {
+  gap: 7px;
+  padding-top: 8px;
+}
+.hours-register-sidebar .hours-manual-section:first-child { padding-top: 0; }
+.hours-register-sidebar .hours-manual-section:last-child {
+  display: flex;
+  flex-direction: column;
+}
+.hours-manual-inline textarea:focus-visible,
+.hours-manual-inline input:not([type="file"]):focus-visible {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 1px var(--primary);
+}
+.hours-register-sidebar .hours-manual-inline textarea { height: 48px; min-height: 48px; }
+.hours-manual-time-fields {
+  grid-template-columns: minmax(0, 1.1fr) minmax(0, 1.1fr) minmax(0, 1.3fr);
+  align-items: start;
+}
+.hours-manual-time-fields .hours-picker-label,
+.hours-manual-time-fields label {
+  font-size: 11px;
+  line-height: 16px;
+  font-weight: 500;
+}
+.hours-manual-time-fields .hours-picker,
+.hours-manual-time-fields .hours-duration-inputs > div { gap: 6px; }
+.hours-manual-time-fields .hours-duration { grid-column: auto; }
+.hours-manual-time-fields .hours-picker-trigger { gap: 4px; padding-inline: 7px; }
+.hours-duration-inputs { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.hours-manual-context-fields { grid-template-columns: 1fr; gap: 7px; }
+.hours-manual-context-fields .choice-picker {
+  display: grid;
+  grid-template-columns: 58px minmax(0, 1fr);
+  align-items: center;
+  gap: 8px;
+}
+.hours-manual-context-fields .choice-picker-label { font-size: 11px; margin: 0; }
+.hours-manual-context-fields button { height: 32px; min-height: 32px; padding: 0 10px; }
+.hours-manual-section .hours-collaborators {
+  display: grid; grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center; gap: 6px; min-width: 0;
+}
+.hours-collaborators > p { margin: 0; grid-column: 1 / -1; }
+.hours-collaborator-search { min-width: 0; }
+.hours-collaborators .vexa-search { min-height: 32px; padding: 0 10px; }
+.hours-collaborators .vexa-search input { height: 30px; min-height: 30px; padding-block: 0; }
+.hours-collaborators .vexa-search:focus-within {
+  border-color: var(--primary); box-shadow: 0 0 0 1px var(--primary);
+}
+.hours-collaborators .vexa-search input:focus-visible {
+  border-color: transparent; box-shadow: none; outline: none;
+}
+.hours-manual-section:last-child > div:has(> input[type="url"]) {
+  display: grid; grid-template-columns: 98px minmax(0, 1fr); gap: 6px;
+  align-items: center;
+}
+.hours-manual-section:last-child > div:has(> input[type="url"]) > p { grid-column: 1 / -1; }
+.hours-collaborator-bubbles { display: flex; gap: 7px; }
+.hours-collaborator-bubble { position: relative; }
+.hours-collaborator-bubble summary {
+  display: flex; cursor: pointer; list-style: none; border-radius: 50%;
+  padding: 2px; background: var(--surface-2);
+}
+.hours-collaborator-bubble summary::-webkit-details-marker { display: none; }
+.hours-collaborator-bubble summary:focus-visible { outline: 2px solid var(--primary); }
+.hours-collaborator-bubble[open] summary { box-shadow: 0 0 0 1px var(--primary); }
+.hours-collaborator-popover {
+  position: absolute; bottom: calc(100% + 6px); right: 0; z-index: 30;
+  width: 210px; padding: 12px; border-radius: 12px; border: 1px solid var(--border);
+  background: var(--surface); box-shadow: var(--shadow-pop); display: flex;
+  flex-direction: column; gap: 8px; font-size: 12px;
+}
+.hours-evidence-picker > button {
+  width: 100%; justify-content: flex-start; min-height: 32px; height: 32px;
+  padding: 0 10px; font-size: 11px;
+}
+.hours-evidence-picker > button > span { margin-left: auto; font-size: 9px; color: var(--muted); }
+.hours-evidence-picker > p { display: none; }
+.hours-manual-attachments { display: flex; gap: 4px; }
+.hours-manual-attachments:empty { display: none; }
+.hours-manual-attachments .hours-manual-attachment {
+  min-width: 0; flex: 1; border-radius: 6px; background: var(--surface-2);
+  padding-left: 6px; font-size: 10px;
+}
+.hours-manual-attachments .hours-manual-attachment button { padding: 2px; min-height: 24px; }
+@media (min-width: 1024px) and (max-height: 800px) {
+  .hours-register-sidebar .hours-manual-card { gap: 10px; padding: 12px; }
+  .hours-register-sidebar .hours-manual-fields { gap: 6px; }
+  .hours-register-sidebar .hours-manual-section { gap: 5px; padding-top: 6px; }
+  .hours-register-sidebar .hours-manual-section:first-child { padding-top: 0; }
+  .hours-manual-section h3 { font-size: 11px; line-height: 14px; }
+  .hours-manual-section h3 > span { font-size: 9px; }
+  .hours-register-sidebar .hours-manual-inline textarea { height: 36px; min-height: 36px; padding: 6px 9px; }
+  .hours-manual-time-fields { gap: 5px 8px; }
+  .hours-register-sidebar .hours-manual-inline input,
+  .hours-manual-time-fields button,
+  .hours-manual-context-fields button { height: 26px; min-height: 26px; font-size: 10px; }
+  .hours-manual-time-fields .hours-picker,
+  .hours-manual-time-fields .hours-duration-inputs > div { gap: 3px; }
+  .hours-manual-inline label, .hours-manual-time-fields .hours-picker-label { font-size: 10px; line-height: 12px; }
+  .hours-manual-context-fields { gap: 5px; }
+  .hours-collaborators > p { display: none; }
+  .hours-collaborators .vexa-search { min-height: 26px; }
+  .hours-register-sidebar .hours-collaborators .vexa-search input {
+    min-height: 26px; height: 26px;
+  }
+  .hours-register-sidebar .hours-manual-section { padding-top: 4px; }
+  .hours-collaborator-bubbles { gap: 4px; }
+  .hours-collaborator-bubble summary > * { width: 24px; height: 24px; font-size: 9px; }
+  .hours-evidence-picker > button { height: 26px; min-height: 26px; font-size: 10px; }
+  .hours-manual-submit { padding-top: 8px; }
 }
