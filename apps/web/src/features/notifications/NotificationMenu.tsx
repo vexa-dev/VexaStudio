@@ -14,6 +14,7 @@ import {
   ListChecks,
 } from "lucide-react";
 import type { Notification, Profile } from "@vexa/domain/types";
+import { canAccessStudio } from "@vexa/domain/access";
 import { formatDateTime } from "@vexa/domain/dates";
 import { SidePanel } from "@/components/ui/SidePanel";
 import { Button } from "@/components/ui/Button";
@@ -21,7 +22,6 @@ import { Badge } from "@/components/ui/Badge";
 import { Sheet } from "@/components/ui/Sheet";
 import { Avatar } from "@/components/ui/Avatar";
 import { useNavigate } from "react-router-dom";
-import { canAccessStudio } from "@vexa/domain/access";
 import { isSupabaseSource } from "@/services/supabase/data-source";
 import { motionTokens, shouldAnimate } from "@/lib/motion-tokens";
 import {
@@ -31,6 +31,7 @@ import {
 import { useNotifications } from "./hooks/useNotifications";
 import "../../app/user-menu.css";
 import "./notifications.css";
+import { AnnouncementsCard } from "@/features/announcements/components/AnnouncementsCard";
 
 function notificationAction(item: Notification, user: Profile) {
   switch (item.type) {
@@ -73,9 +74,7 @@ function notificationAction(item: Notification, user: Profile) {
           : "/tareas",
       };
     case "meeting":
-      return canAccessStudio(user.role)
-        ? { label: "Ver equipo", to: "/equipo" }
-        : null;
+      return { label: "Ver mis reuniones", to: user.role === "admin" ? "/reuniones" : "/mi-dia" };
   }
 }
 
@@ -120,8 +119,7 @@ function examples(user: Profile): Notification[] {
         taskName: "Revisar la propuesta del proyecto",
         details:
           "Revisa los requisitos, identifica dudas y prepara tus observaciones antes de comenzar el trabajo.",
-        nextStep:
-          "Ve a Mis tareas para consultar tus asignaciones. Esta tarea es un ejemplo y no modifica el tablero.",
+        nextStep: "Ve a Mis tareas para consultar tus asignaciones. ",
       },
     },
     {
@@ -159,7 +157,7 @@ function examples(user: Profile): Notification[] {
         nextStep:
           "Revisa el contexto del proyecto y coordina tus observaciones con el equipo.",
         details:
-          "Abre Mis tareas para consultar el contexto del trabajo y revisar lo que necesita tu atención. Este aviso es un ejemplo de la vista.",
+          "Abre Mis tareas para consultar el contexto del trabajo y revisar lo que necesita tu atención. ",
       },
       read: false,
       createdAt: new Date(Date.now() - 3600000).toISOString(),
@@ -182,6 +180,7 @@ export function NotificationMenu({ user }: { user: Profile }) {
   const navigate = useNavigate();
   const action = selected ? notificationAction(selected, user) : null;
   const [onlyUnread, setOnlyUnread] = useState(false);
+  const [section, setSection] = useState("notifications");
   const [sound, setSound] = useState(true);
   const [scope, animate] = useAnimate();
   const reduced = useReducedMotion();
@@ -265,135 +264,125 @@ export function NotificationMenu({ user }: { user: Profile }) {
             <p>Lo que necesita tu atención, en un solo lugar.</p>
             {unread > 0 && <Badge tone="primary">{unread} sin revisar</Badge>}
           </div>
-          <div className="notification-toolbar">
-            <Button
-              variant="ghost"
-              aria-pressed={sound}
-              onClick={() => {
-                setSound(!sound);
-                if (!sound) void prepareNotificationSound();
-              }}
-            >
-              {sound ? (
-                <Volume2 size={17} aria-hidden="true" />
-              ) : (
-                <VolumeX size={17} aria-hidden="true" />
-              )}
-              {sound ? "Sonido activado" : "Sonido desactivado"}
-            </Button>
-            <Button
-              variant="ghost"
-              disabled={!unread}
-              onClick={markAllRead}
-            >
-              <CheckCheck size={17} aria-hidden="true" />
-              Revisar todas
-            </Button>
-          </div>
           <div className="notification-tabs">
             <button
               type="button"
-              aria-pressed={!onlyUnread}
-              onClick={() => setOnlyUnread(false)}
+              aria-pressed={section === "notifications"}
+              onClick={() => setSection("notifications")}
             >
-              Todas
+              Notificaciones
             </button>
-            <button
-              type="button"
-              aria-pressed={onlyUnread}
-              onClick={() => setOnlyUnread(true)}
-            >
-              Sin revisar {unread > 0 && <span>{unread}</span>}
-            </button>
-          </div>
-          {demo && (
-            <p className="notification-preview-note">
-              Notificaciones de ejemplo. Puedes probar cómo llega un aviso.
-            </p>
-          )}
-          <div className="notification-list">
-            {visible.length ? (
-              visible.map((item) => {
-                const Icon =
-                  item.type === "project_added"
-                    ? FolderPlus
-                    : item.type === "task_assigned"
-                      ? ListChecks
-                      : item.type === "mention"
-                        ? MessageSquare
-                        : Clock3;
-                return (
-                  <button
-                    type="button"
-                    key={item.id}
-                    className={`notification-item${item.read ? "" : " notification-item-unread"}`}
-                    aria-haspopup="dialog"
-                    onClick={() => {
-                      setSelected(item);
-                      if (!item.read) markRead(item.id);
-                    }}
-                  >
-                    <span className="notification-item-icon">
-                      <Icon size={18} aria-hidden="true" />
-                    </span>
-                    <span className="notification-item-content">
-                      <strong>{item.payload.title}</strong>
-                      <span className="notification-item-summary">
-                        {item.payload.message}
-                      </span>
-                      <time dateTime={item.createdAt}>
-                        {formatDateTime(item.createdAt)}
-                      </time>
-                    </span>
-                    {!item.read && (
-                      <span
-                        className="notification-item-dot"
-                        aria-label="Sin revisar"
-                      />
-                    )}
-                  </button>
-                );
-              })
-            ) : (
-              <div className="notification-empty">
-                <BellRing size={32} aria-hidden="true" />
-                <h3>{onlyUnread ? "Todo al día" : "Sin notificaciones"}</h3>
-                <p>
-                  {onlyUnread
-                    ? "Ya revisaste todos tus avisos."
-                    : "Tus próximos avisos aparecerán aquí."}
-                </p>
-              </div>
+            {canAccessStudio(user.role) && (
+              <button
+                type="button"
+                aria-pressed={section === "announcements"}
+                onClick={() => setSection("announcements")}
+              >
+                Anuncios
+              </button>
             )}
           </div>
-          {demo && (
-            <div className="notification-test">
-              <Button
-                variant="secondary"
-                onClick={async () => {
-                  if (sound) await prepareNotificationSound();
-                  setItems((current) =>
-                    [
-                      {
-                        id: crypto.randomUUID(),
-                        userId: user.id,
-                        type: "project_added" as const,
-                        payload: { ...examples(user)[0].payload },
-                        read: false,
-                        createdAt: new Date().toISOString(),
-                      },
-                      ...current,
-                    ].slice(0, 50),
-                  );
-                }}
-              >
-                Probar nueva notificación
-              </Button>
-              <p>
-                La prueba activa el sonido, la vibración de la campana y el
-                punto de pendientes.
-              </p>
-            </div>
+          {section === "announcements" ? (
+            <AnnouncementsCard />
+          ) : (
+            <>
+              <div className="notification-toolbar">
+                <Button
+                  variant="ghost"
+                  aria-pressed={sound}
+                  onClick={() => {
+                    setSound(!sound);
+                    if (!sound) void prepareNotificationSound();
+                  }}
+                >
+                  {sound ? (
+                    <Volume2 size={17} aria-hidden="true" />
+                  ) : (
+                    <VolumeX size={17} aria-hidden="true" />
+                  )}
+                  {sound ? "Sonido activado" : "Sonido desactivado"}
+                </Button>
+                <Button
+                  variant="ghost"
+                  disabled={!unread}
+                  onClick={markAllRead}
+                >
+                  <CheckCheck size={17} aria-hidden="true" />
+                  Revisar todas
+                </Button>
+              </div>
+              <div className="notification-tabs">
+                <button
+                  type="button"
+                  aria-pressed={!onlyUnread}
+                  onClick={() => setOnlyUnread(false)}
+                >
+                  Todas
+                </button>
+                <button
+                  type="button"
+                  aria-pressed={onlyUnread}
+                  onClick={() => setOnlyUnread(true)}
+                >
+                  Sin revisar {unread > 0 && <span>{unread}</span>}
+                </button>
+              </div>
+              <div className="notification-list">
+                {visible.length ? (
+                  visible.map((item) => {
+                    const Icon =
+                      item.type === "project_added"
+                        ? FolderPlus
+                        : item.type === "task_assigned"
+                          ? ListChecks
+                          : item.type === "mention"
+                            ? MessageSquare
+                            : Clock3;
+                    return (
+                      <button
+                        type="button"
+                        key={item.id}
+                        className={`notification-item${item.read ? "" : " notification-item-unread"}`}
+                        aria-haspopup="dialog"
+                        onClick={() => {
+                          setSelected(item);
+                          if (!item.read) markRead(item.id);
+                        }}
+                      >
+                        <span className="notification-item-icon">
+                          <Icon size={18} aria-hidden="true" />
+                        </span>
+                        <span className="notification-item-content">
+                          <strong>{item.payload.title}</strong>
+                          <span className="notification-item-summary">
+                            {item.payload.message}
+                          </span>
+                          <time dateTime={item.createdAt}>
+                            {formatDateTime(item.createdAt)}
+                          </time>
+                        </span>
+                        {!item.read && (
+                          <span
+                            className="notification-item-dot"
+                            aria-label="Sin revisar"
+                          />
+                        )}
+                      </button>
+                    );
+                  })
+                ) : (
+                  <div className="notification-empty">
+                    <BellRing size={32} aria-hidden="true" />
+                    <h3>{onlyUnread ? "Todo al día" : "Sin notificaciones"}</h3>
+                    <p>
+                      {onlyUnread
+                        ? "Ya revisaste todos tus avisos."
+                        : "Tus próximos avisos aparecerán aquí."}
+                    </p>
+                  </div>
+                )}
+              </div>
+            </>
           )}
         </SidePanel>
       )}
@@ -404,7 +393,6 @@ export function NotificationMenu({ user }: { user: Profile }) {
       >
         {selected && (
           <div className="notification-detail">
-            {demo && <Badge>Vista previa</Badge>}
             <h3>{selected.payload.title}</h3>
             <div className="notification-detail-person">
               <Avatar name={selected.payload.actorName || "Usuario"} />

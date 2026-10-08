@@ -274,3 +274,12 @@
   line-height: 1.6;
   margin-top: 10px;
 }
+.day-announcements-card .day-card-title h2 {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 16px;
+  font-weight: 600;
+  margin-bottom: 16px;
+}
+.day-announcements-card .day-note { font-size: 12px; color: var(--muted); }
