@@ -27,6 +27,12 @@ interface TaskCardProps {
   canTrack: boolean;
   isTracking: boolean;
   readOnly?: boolean;
+  showMoveControl?: boolean;
+  moveControl?: {
+    value: string;
+    options: { value: string; label: string }[];
+    onChange: (value: string) => void;
+  };
   busy?: boolean;
   /** Asa de arrastre (solo escritorio). */
   handle?: ReactNode;
@@ -44,6 +50,8 @@ export function TaskCard({
   canTrack,
   isTracking,
   readOnly,
+  showMoveControl = true,
+  moveControl,
   busy,
   handle,
   dragging,
@@ -112,49 +120,58 @@ export function TaskCard({
         ) : null}
       </div>
 
-      <div className="task-card-actions">
-        {readOnly ? (
-          <span className="text-sm text-muted">
-            {taskStatusLabel[task.status]}
-          </span>
-        ) : (
-          <ChoicePicker
-            label={`Mover «${task.title}» a`}
-            hideLabel
-            value={task.status}
-            disabled={busy}
-            onChange={(value) => onMove(task, value as TaskStatus)}
-            options={STATUSES.map((status) => ({
-              value: status,
-              label: taskStatusLabel[status],
-            }))}
-          />
-        )}
-        {canTrack && task.status !== "done" ? (
-          isTracking ? (
-            <Button
-              className="task-card-timer"
-              size="sm"
-              disabled={busy}
-              onClick={onStop}
-            >
-              <Square className="size-3.5 fill-current" aria-hidden="true" />
-              Detener
-            </Button>
-          ) : (
-            <Button
-              size="sm"
-              variant="ghost"
-              className="task-card-timer"
-              disabled={busy}
-              onClick={() => onStart(task)}
-            >
-              <Play className="size-3.5 fill-current" aria-hidden="true" />
-              Iniciar
-            </Button>
-          )
-        ) : null}
-      </div>
+      {(showMoveControl || (canTrack && task.status !== "done")) && (
+        <div className="task-card-actions">
+          {showMoveControl &&
+            (readOnly ? (
+              <span className="text-sm text-muted">
+                {taskStatusLabel[task.status]}
+              </span>
+            ) : (
+              <ChoicePicker
+                label={`Mover «${task.title}» a`}
+                hideLabel
+                value={moveControl?.value ?? task.status}
+                disabled={busy}
+                onChange={
+                  moveControl?.onChange ??
+                  ((value) => onMove(task, value as TaskStatus))
+                }
+                options={
+                  moveControl?.options ??
+                  STATUSES.map((status) => ({
+                    value: status,
+                    label: taskStatusLabel[status],
+                  }))
+                }
+              />
+            ))}
+          {canTrack && task.status !== "done" ? (
+            isTracking ? (
+              <Button
+                className="task-card-timer"
+                size="sm"
+                disabled={busy}
+                onClick={onStop}
+              >
+                <Square className="size-3.5 fill-current" aria-hidden="true" />
+                Detener
+              </Button>
+            ) : (
+              <Button
+                size="sm"
+                variant="ghost"
+                className="task-card-timer"
+                disabled={busy}
+                onClick={() => onStart(task)}
+              >
+                <Play className="size-3.5 fill-current" aria-hidden="true" />
+                Iniciar
+              </Button>
+            )
+          ) : null}
+        </div>
+      )}
     </article>
   );
 }
