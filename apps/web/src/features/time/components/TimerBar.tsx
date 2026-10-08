@@ -1,4 +1,4 @@
-import { Square, Clock3, Pause, Play } from "lucide-react";
+import { Square, Pause, Play } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import "./timer.css";
 import { useTasks } from "@/features/tasks/hooks/useTasks";
@@ -87,22 +87,28 @@ export function TimerChip() {
   const resume = useResumeTimer();
   if (!entry) return null;
   return (
-    <div className="active-timer-chip hidden lg:flex">
-      <span className="active-timer-indicator">
-        <Clock3 size={16} aria-hidden="true" />
+    <div
+      className="active-timer-chip hidden lg:flex"
+      data-paused={entry.timerState === "paused"}
+    >
+      <span
+        role="timer"
+        aria-label="Tiempo transcurrido"
+        className="num active-timer-clock active-timer-navbar-clock"
+        data-tooltip={`${title} · ${entry.timerState === "paused" ? "En pausa" : "En curso"}`}
+        tabIndex={0}
+      >
+        {formatClock(elapsed)
+          .split(":")
+          .map((part, index) => (
+            <span className="active-timer-part" key={index}>
+              {index > 0 && <span className="active-timer-colon">:</span>}
+              <span className="active-timer-digits">
+                {part.padStart(2, "0")}
+              </span>
+            </span>
+          ))}
       </span>
-      <div className="active-timer-info">
-        <span
-          role="timer"
-          aria-label="Tiempo transcurrido"
-          className="num active-timer-clock"
-        >
-          {formatClock(elapsed)}
-        </span>
-        <span className="active-timer-title" data-tooltip={title}>
-          {title}
-        </span>
-      </div>
       <Button
         variant="ghost"
         aria-label={
@@ -110,6 +116,12 @@ export function TimerChip() {
             ? "Continuar temporizador"
             : "Pausar temporizador"
         }
+        data-tooltip={
+          entry.timerState === "paused"
+            ? "Continuar temporizador"
+            : "Pausar temporizador"
+        }
+        disabled={pause.isPending || resume.isPending || stop.isPending}
         onClick={() =>
           entry.timerState === "paused" ? resume.mutate() : pause.mutate()
         }
